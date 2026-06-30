@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f6feb" />
+    <meta name="description" content="Aplikacja do tworzenia protokołów okresowej kontroli stanu technicznego budynku — zdjęcia i komendy głosowe (PL), eksport do Word." />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <title>Protokoły kontroli budynku</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <input id="plik-zdjecie" type="file" accept="image/*" multiple hidden />
+    <input id="plik-aparat" type="file" accept="image/*" capture="environment" hidden />
+    <div id="toast" class="toast"></div>
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>

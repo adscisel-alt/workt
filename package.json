@@ -1,0 +1,23 @@
+{
+  "name": "protokol-kontroli",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Aplikacja do tworzenia protokołów okresowej kontroli stanu technicznego budynku — zdjęcia + głos (PL) + eksport do Word .docx",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "icons": "node scripts/gen-icons.mjs",
+    "test": "node scripts/e2e.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1",
+    "vite": "^5.4.10",
+    "vite-plugin-pwa": "^0.20.5"
+  },
+  "dependencies": {
+    "docx": "^9.0.2",
+    "idb-keyval": "^6.2.1"
+  }
+}
