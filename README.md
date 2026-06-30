@@ -14,11 +14,28 @@ Cała praca odbywa się w przeglądarce — dane i zdjęcia zapisują się lokal
 
 - **Dane protokołu i obiektu** — numer, daty, adres, właściciel, zarządca, osoby kontrolujące,
   dane techniczne (kondygnacje, powierzchnia, kubatura).
+- **Dane budynku** — rodzaj konstrukcji i wyposażenie zaznaczane jak na wzorze
+  (eksport pokazuje ☑ / ☐).
+- **Rozdział I — wykonanie zaleceń z poprzedniej kontroli** — tabela zaleceń ze
+  stopniem pilności i statusem wykonania (Wykonano / Nie wykonano / …).
 - **Rozdział II — ustalenia** — sekcje (obszary kontroli) z:
   - oceną ogólną w 5-stopniowej skali (Dobry / Zadowalający / Dostateczny / Zły / Awaryjny),
   - listą ustaleń z **4-stopniowym stopniem pilności** napraw,
   - **galerią zdjęć** z podpisami.
 - **Rozdział III — podsumowanie i wnioski** + miejsce na podpisy.
+- **Eksport `.docx` wierny wzorowi** — czcionka Calibri, tabele jak w oryginale,
+  **stopka z numeracją stron** i identyfikacją protokołu.
+
+## Dyktowanie przez Wispr Flow (i inne)
+
+Aplikacja współpracuje z **Wispr Flow** oraz dowolnym systemowym dyktowaniem
+(klawiatura głosowa iOS/Android, dyktowanie Windows/macOS) **bez żadnej dodatkowej
+integracji** — te narzędzia działają na poziomie systemu i „wpisują" tekst do
+aktywnego pola. Wystarczy kliknąć pole opisu/ustalenia i dyktować; tekst jest od
+razu zapisywany. Wbudowany mikrofon w aplikacji obsługuje dodatkowo **komendy
+głosowe** (np. „nowa sekcja", „wstaw zdjęcie"), których narzędzia systemowe nie
+wykonują — można korzystać z obu naraz: Wispr Flow do długich opisów, wbudowany
+mikrofon do sterowania.
 - **Zdjęcia**: 📸 aparat (telefon), 🖼️ wybór z plików, **wklejanie `Ctrl+V`**,
   **przeciągnij i upuść**. Zdjęcia są automatycznie zmniejszane (maks. 1600 px).
 - **Głos (PL)** — patrz niżej.

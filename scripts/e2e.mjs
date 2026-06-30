@@ -71,6 +71,17 @@ try {
   sprawdz(liczbaZdjec >= 1, 'Dodano zdjęcie');
   await page.fill('.foto-opis', 'Uszkodzenie ściany przy śmietniku.');
 
+  // Dane budynku — checkboxy (rodzaj konstrukcji + wyposażenie)
+  await page.check('input[data-chk="rodzaj"][data-val="żelbetowa"]');
+  await page.check('input[data-chk="wyposazenie"][data-val="instalacje elektryczne"]');
+
+  // Rozdział I — zalecenie z poprzedniej kontroli (rozwiń sekcję)
+  await page.evaluate(() => document.querySelectorAll('details.karta').forEach((d) => { d.open = true; }));
+  await page.click('[data-action="dodaj-zal"]');
+  await page.waitForSelector('[data-field="text"][data-zal]');
+  await page.fill('[data-zal][data-field="text"]', 'Uszkodzenia ścian przy śmietniku — wykonać naprawy.');
+  await page.locator('[data-zal][data-field="status"]').first().selectOption('Nie wykonano');
+
   // Podsumowanie
   await page.fill('[data-field="podsumowanie"]', 'Budynek w stanie dostatecznym.\nZalecane naprawy bieżące.');
 
@@ -92,6 +103,11 @@ try {
   sprawdz(docXml.includes('Żeromskiego'), 'Dokument zawiera adres');
   sprawdz(docXml.includes('śmietnika'), 'Dokument zawiera treść ustalenia');
   sprawdz(docXml.includes('Elewacje'), 'Dokument zawiera nazwę sekcji');
+  sprawdz(docXml.includes('ROZDZIAŁ I'), 'Dokument zawiera Rozdział I');
+  sprawdz(docXml.includes('☑'), 'Dokument zawiera zaznaczone pola wyboru (dane budynku)');
+  // Stopka z numeracją stron (pole PAGE) w osobnym pliku footer
+  const listaFull = execSync(`unzip -l ${sciezka}`).toString();
+  sprawdz(/footer\d*\.xml/.test(listaFull), 'Dokument zawiera stopkę (numeracja stron)');
 
   // Test trwałości: po przeładowaniu dane są wczytane z IndexedDB
   await page.click('[data-action="zapisz"]');

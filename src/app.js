@@ -1,7 +1,8 @@
 import './styles.css';
 import {
-  pustyDokument, nowaSekcja, noweUstalenie, noweZdjecie,
+  pustyDokument, nowaSekcja, noweUstalenie, noweZdjecie, noweZalecenieI,
   STANY_TECHNICZNE, STOPNIE_PILNOSCI, SZABLONY_SEKCJI,
+  RODZAJE_KONSTRUKCJI, WYPOSAZENIE, STATUSY_WYKONANIA,
 } from './constants.js';
 import {
   wczytajDokument, zapiszDokument, zapiszZdjecie, wczytajZdjecie, usunZdjecie, sprzatnijZdjecia,
@@ -21,7 +22,14 @@ const app = document.getElementById('app');
 // ---------- Inicjalizacja ----------
 async function init() {
   const zapisany = await wczytajDokument();
-  if (zapisany) doc = { ...pustyDokument(), ...zapisany };
+  if (zapisany) {
+    const baza = pustyDokument();
+    doc = { ...baza, ...zapisany, meta: { ...baza.meta, ...(zapisany.meta || {}) } };
+    // Uzupełnij brakujące pola (zgodność ze starszymi zapisami)
+    if (!Array.isArray(doc.rozdzialI)) doc.rozdzialI = [];
+    if (!Array.isArray(doc.meta.rodzajKonstrukcji)) doc.meta.rodzajKonstrukcji = [];
+    if (!Array.isArray(doc.meta.wyposazenie)) doc.meta.wyposazenie = [];
+  }
   if (doc.sekcje.length) aktywnaSekcjaId = doc.sekcje[doc.sekcje.length - 1].id;
   render();
   podepnijZdarzeniaGlobalne();
@@ -181,6 +189,25 @@ async function usunZdjecieZSekcji(sekId, fotoId) {
   zapiszTeraz(); render();
 }
 
+function dodajZalecenieI() {
+  const z = noweZalecenieI('');
+  doc.rozdzialI.push(z);
+  zapiszTeraz(); render();
+  ustawFokus(`[data-zal="${z.id}"][data-field="text"]`);
+}
+function usunZalecenieI(id) {
+  doc.rozdzialI = doc.rozdzialI.filter((z) => z.id !== id);
+  zapiszTeraz(); render();
+}
+function przelaczWybor(grupa, wartosc, zazn) {
+  const pole = grupa === 'rodzaj' ? 'rodzajKonstrukcji' : 'wyposazenie';
+  const arr = doc.meta[pole] || (doc.meta[pole] = []);
+  const i = arr.indexOf(wartosc);
+  if (zazn && i === -1) arr.push(wartosc);
+  else if (!zazn && i !== -1) arr.splice(i, 1);
+  zapiszTeraz();
+}
+
 function dodajInspektora() {
   doc.meta.inspektorzy.push({ imie: '', specjalnosc: '', uprawnienia: '' });
   zapiszTeraz(); render();
@@ -236,6 +263,7 @@ function render() {
     ${pasekGorny()}
     <main class="kontener">
       ${sekcjaMeta()}
+      ${sekcjaRozdzialI()}
       ${sekcjaUstalen()}
       ${sekcjaPodsumowania()}
     </main>
@@ -300,9 +328,53 @@ function sekcjaMeta() {
       ${pole('Powierzchnia zabudowy', { meta: 'powierzchniaZabudowy' }, m.powierzchniaZabudowy)}
       ${pole('Kubatura', { meta: 'kubatura' }, m.kubatura)}
     </div>
+    <div class="podtytul">Rodzaj konstrukcji</div>
+    ${grupaWyboru(RODZAJE_KONSTRUKCJI, m.rodzajKonstrukcji, 'rodzaj')}
+    <div class="podtytul">Wyposażenie budynku</div>
+    ${grupaWyboru(WYPOSAZENIE, m.wyposazenie, 'wyposazenie')}
     <div class="podtytul">Osoby wykonujące przegląd</div>
     ${inspektorzy}
     <button class="btn-mini" data-action="dodaj-insp">➕ Dodaj osobę</button>
+  </details>`;
+}
+
+function grupaWyboru(opcje, zaznaczone, grupa) {
+  const set = new Set(zaznaczone || []);
+  const chips = opcje.map((o) => `
+    <label class="chip ${set.has(o) ? 'on' : ''}">
+      <input type="checkbox" data-chk="${grupa}" data-val="${esc(o)}" ${set.has(o) ? 'checked' : ''} />
+      <span>${o}</span>
+    </label>`).join('');
+  return `<div class="chips">${chips}</div>`;
+}
+
+function sekcjaRozdzialI() {
+  const m = doc.meta;
+  const wiersze = doc.rozdzialI.map((z, i) => `
+    <div class="zal-row">
+      <span class="ust-lp">${i + 1}</span>
+      <textarea data-zal="${z.id}" data-field="text" rows="2"
+        placeholder="Zalecenie z poprzedniej kontroli…">${escapeHtml(z.text)}</textarea>
+      <select data-zal="${z.id}" data-field="pilnosc" title="Stopień pilności">
+        ${STOPNIE_PILNOSCI.map((sp) =>
+    `<option value="${sp.value}" ${sp.value === z.pilnosc ? 'selected' : ''}>${sp.label}</option>`).join('')}
+      </select>
+      <select data-zal="${z.id}" data-field="status" title="Sprawdzenie wykonania">
+        ${STATUSY_WYKONANIA.map((s) =>
+    `<option value="${esc(s)}" ${s === z.status ? 'selected' : ''}>${s}</option>`).join('')}
+      </select>
+      <button class="btn-mini btn-del" data-action="usun-zal" data-zal="${z.id}">✕</button>
+    </div>`).join('');
+
+  return `
+  <div class="naglowek-rozdzialu">📋 ROZDZIAŁ I — Wykonanie zaleceń z poprzedniej kontroli</div>
+  <details class="karta" ${doc.rozdzialI.length ? 'open' : ''}>
+    <summary>Zalecenia z poprzedniego przeglądu (${doc.rozdzialI.length})</summary>
+    ${pole('Informacja o poprzedniej kontroli (data, osoby)', { meta: 'poprzedniaKontrola' },
+    m.poprzedniaKontrola, { textarea: true, rows: 2 })}
+    <div class="zal-naglowek"><span>L.p.</span><span>Zalecenie z poprzedniej kontroli</span><span>Pilność</span><span>Wykonanie</span><span></span></div>
+    ${wiersze || '<p class="pusto-mini">Brak zaleceń (np. pierwsza kontrola).</p>'}
+    <button class="btn-mini" data-action="dodaj-zal">➕ Dodaj zalecenie</button>
   </details>`;
 }
 
@@ -483,6 +555,8 @@ function onClick(e) {
     case 'usun-foto': usunZdjecieZSekcji(sec, b.getAttribute('data-foto')); break;
     case 'dodaj-insp': dodajInspektora(); break;
     case 'usun-insp': usunInspektora(parseInt(b.getAttribute('data-i'), 10)); break;
+    case 'dodaj-zal': dodajZalecenieI(); break;
+    case 'usun-zal': usunZalecenieI(b.getAttribute('data-zal')); break;
     default: break;
   }
 }
@@ -498,6 +572,13 @@ function onInput(e) {
   if (insp !== null) {
     const i = parseInt(insp, 10);
     doc.meta.inspektorzy[i][el.getAttribute('data-field')] = el.value;
+    zapisz(); return;
+  }
+  // Rozdział I — zalecenia z poprzedniej kontroli (tekst)
+  const zal = el.getAttribute('data-zal');
+  if (zal && el.getAttribute('data-field') === 'text') {
+    const z = doc.rozdzialI.find((x) => x.id === zal);
+    if (z) z.text = el.value;
     zapisz(); return;
   }
   // Sekcje / ustalenia / zdjęcia
@@ -523,6 +604,24 @@ function onInput(e) {
 
 function onChange(e) {
   const el = e.target;
+  // Checkboxy: rodzaj konstrukcji / wyposażenie
+  const chk = el.getAttribute('data-chk');
+  if (chk) {
+    przelaczWybor(chk, el.getAttribute('data-val'), el.checked);
+    el.closest('.chip')?.classList.toggle('on', el.checked);
+    return;
+  }
+  // Rozdział I — selecty (pilność, status)
+  const zal = el.getAttribute('data-zal');
+  if (zal) {
+    const z = doc.rozdzialI.find((x) => x.id === zal);
+    if (z) {
+      const f = el.getAttribute('data-field');
+      if (f === 'pilnosc') z.pilnosc = parseInt(el.value, 10);
+      else if (f === 'status') z.status = el.value;
+    }
+    zapisz(); return;
+  }
   if (el.tagName !== 'SELECT') return;
   const sec = el.getAttribute('data-sec');
   if (!sec) return;

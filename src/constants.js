@@ -56,10 +56,38 @@ export function pustyDokument() {
       pozwolenieUzytkowanie: '',
       powierzchniaZabudowy: '',
       kubatura: '',
+      // Podstawowe dane obiektu (zaznaczane)
+      rodzajKonstrukcji: [],      // np. ['murowana', 'żelbetowa']
+      wyposazenie: [],            // np. ['instalacja kanalizacji', ...]
+      poprzedniaKontrola: '',     // opis/data poprzedniej kontroli (Rozdział I)
     },
+    rozdzialI: [],                // wykonanie zaleceń z poprzedniej kontroli
     sekcje: [],
     podsumowanie: '',
   };
+}
+
+// Rodzaje konstrukcji (do zaznaczenia)
+export const RODZAJE_KONSTRUKCJI = [
+  'stalowa', 'murowana', 'drewniana', 'żelbetowa', 'mieszana', 'inna',
+];
+
+// Wyposażenie budynku (do zaznaczenia)
+export const WYPOSAZENIE = [
+  'instalacja kanalizacji', 'instalacja wentylacji', 'instalacja gazowa',
+  'instalacja wody ciepłej i zimnej', 'instalacje elektryczne', 'instalacje ogrzewania',
+  'instalacje i urządzenia ochrony środowiska', 'instalacja fotowoltaiczna',
+  'instalacja teletechniczna', 'instalacja przeciwpowodziowa', 'dźwig osobowy / winda',
+  'węzeł cieplny', 'kanalizacja deszczowa', 'inne',
+];
+
+// Status wykonania zalecenia z poprzedniej kontroli
+export const STATUSY_WYKONANIA = [
+  'Wykonano', 'Nie wykonano', 'Częściowo wykonano', 'Poddano obserwacji', 'Nie dotyczy',
+];
+
+export function noweZalecenieI(text = '') {
+  return { id: uid(), text, pilnosc: 0, status: 'Nie wykonano' };
 }
 
 export function nowaSekcja(title = '') {

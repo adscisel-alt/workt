@@ -78,6 +78,29 @@ input:focus, textarea:focus, select:focus {
 }
 
 .podtytul { font-weight: 700; margin: 14px 0 6px; }
+
+/* Chipy wyboru (checkboxy) */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  border: 1px solid var(--linia); border-radius: 999px; padding: 6px 12px;
+  font-size: 14px; background: #fff; user-select: none;
+}
+.chip input { width: auto; margin: 0; }
+.chip.on { background: #e7f0fe; border-color: var(--primary); color: var(--primary-d); font-weight: 600; }
+
+/* Wiersze Rozdziału I */
+.zal-naglowek, .zal-row {
+  display: grid; grid-template-columns: 34px 1fr 64px 150px 34px; gap: 6px; align-items: start;
+}
+.zal-naglowek { font-size: 12px; color: var(--szary); font-weight: 700; padding: 4px 0; }
+.zal-row { margin-bottom: 6px; }
+.zal-row select { width: 100%; padding: 9px 4px; }
+@media (max-width: 640px) {
+  .zal-naglowek { display: none; }
+  .zal-row { grid-template-columns: 28px 1fr 34px; grid-auto-rows: auto; }
+  .zal-row select { grid-column: 2 / 4; }
+}
 .insp-row { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr auto; gap: 6px; margin-bottom: 6px; }
 @media (max-width: 640px) { .insp-row { grid-template-columns: 1fr 1fr; } }
 
