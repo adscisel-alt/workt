@@ -101,7 +101,7 @@ export function nowaSekcja(title = '') {
 }
 
 export function noweUstalenie(text = '') {
-  return { id: uid(), text, pilnosc: 0 };
+  return { id: uid(), text, pilnosc: 0, zdjecia: [] };
 }
 
 export function noweZdjecie(opis = '') {

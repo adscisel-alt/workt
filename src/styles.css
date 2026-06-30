@@ -124,6 +124,17 @@ input:focus, textarea:focus, select:focus {
 .ust-row select { width: 64px; padding: 9px 4px; }
 
 /* ---------- Zdjęcia ---------- */
+/* Karta pojedynczego ustalenia z paskiem zdjęć */
+.ust-card { border: 1px solid var(--linia); border-radius: 10px; padding: 8px; margin-bottom: 10px; background: #fcfdfe; }
+.ust-foto { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--linia); }
+.ust-foto-akcje { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.foto-label { font-weight: 700; font-size: 13px; margin-right: 4px; }
+.galeria.mini { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); padding: 6px; }
+.galeria.mini .foto img { height: 100px; }
+.ogolne-zdj { margin-top: 6px; }
+.ogolne-zdj > summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--szary); padding: 4px 0; }
+.ogolne-zdj .zdj-akcje { margin: 8px 0; }
+
 .zdjecia-head {
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
   margin: 12px 0 8px; flex-wrap: wrap; font-weight: 700;

@@ -126,17 +126,37 @@ function tabelaRozdzialI(zalecenia) {
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] });
 }
 
-function tabelaUstalen(ustalenia) {
+// Zawartość komórki „Fotografia": zdjęcia z podpisami (jeden pod drugim).
+async function komorkaFoto(zdjecia) {
+  const dzieci = [];
+  for (const z of (zdjecia || [])) {
+    const run = await obrazRun(z, 190);
+    if (run) dzieci.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 20 }, children: [run] }));
+    if (z.opis) dzieci.push(p(z.opis, { align: AlignmentType.CENTER, size: 16, italics: true }));
+  }
+  if (!dzieci.length) dzieci.push(p('—', { align: AlignmentType.CENTER, color: '999999' }));
+  return dzieci;
+}
+
+// Tabela ustaleń w układzie wzoru: 4 kolumny z kolumną „Fotografia”.
+async function tabelaUstalen(ustalenia) {
   const header = new TableRow({ tableHeader: true, children: [
-    komorka('L.p.', { width: 7, bold: true, shade: 'D9D9D9' }),
-    komorka('Ustalenia / opis stanu technicznego', { width: 78, bold: true, shade: 'D9D9D9' }),
-    komorka('Stopień pilności', { width: 15, bold: true, shade: 'D9D9D9' }),
+    komorka('L.p.', { width: 5, bold: true, shade: 'D9D9D9' }),
+    komorka('Ustalenia / opis stanu technicznego', { width: 50, bold: true, shade: 'D9D9D9' }),
+    komorka('Stopień pilności', { width: 11, bold: true, shade: 'D9D9D9' }),
+    komorka('Fotografia', { width: 34, bold: true, shade: 'D9D9D9' }),
   ] });
-  const rows = ustalenia.map((u, i) => new TableRow({ children: [
-    komorka(String(i + 1), { width: 7, align: AlignmentType.CENTER }),
-    komorka(u.text || '', { width: 78, valign: VerticalAlign.TOP }),
-    komorka(u.pilnosc ? String(u.pilnosc) : '—', { width: 15, align: AlignmentType.CENTER }),
-  ] }));
+  const rows = [];
+  let i = 0;
+  for (const u of ustalenia) {
+    i += 1;
+    rows.push(new TableRow({ children: [
+      komorka(String(i), { width: 5, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
+      komorka(u.text || '', { width: 50, valign: VerticalAlign.TOP }),
+      komorka(u.pilnosc ? String(u.pilnosc) : '—', { width: 11, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
+      komorka(await komorkaFoto(u.zdjecia), { width: 34, valign: VerticalAlign.TOP }),
+    ] }));
+  }
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] });
 }
 
@@ -215,9 +235,9 @@ export async function generujDocx(doc) {
   for (const s of doc.sekcje) {
     dzieci.push(naglowek(s.title || '(bez nazwy)'));
     dzieci.push(p(`Ogólna ocena stanu technicznego: ${s.ogolnaOcena || '—'}`, { bold: true }));
-    if (s.ustalenia && s.ustalenia.length) dzieci.push(tabelaUstalen(s.ustalenia));
+    if (s.ustalenia && s.ustalenia.length) dzieci.push(await tabelaUstalen(s.ustalenia));
     if (s.zdjecia && s.zdjecia.length) {
-      dzieci.push(p('Dokumentacja fotograficzna:', { bold: true, spacing: { before: 120, after: 60 } }));
+      dzieci.push(p('Dokumentacja fotograficzna (zdjęcia ogólne):', { bold: true, spacing: { before: 120, after: 60 } }));
       dzieci.push(await tabelaZdjec(s.zdjecia));
     }
   }

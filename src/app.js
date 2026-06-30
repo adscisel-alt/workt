@@ -14,6 +14,7 @@ import { VoiceController, obslugiwane as glosWspierany } from './voice.js';
 // ---------- Stan globalny ----------
 let doc = pustyDokument();
 let aktywnaSekcjaId = null;       // sekcja docelowa dla komend głosowych
+let aktywneUstId = null;          // ustalenie docelowe (do wstawiania zdjęć)
 let aktywnePole = null;           // ostatnio aktywne pole tekstowe (do dyktowania)
 const urlCache = new Map();       // id zdjęcia -> object URL
 
@@ -29,6 +30,10 @@ async function init() {
     if (!Array.isArray(doc.rozdzialI)) doc.rozdzialI = [];
     if (!Array.isArray(doc.meta.rodzajKonstrukcji)) doc.meta.rodzajKonstrukcji = [];
     if (!Array.isArray(doc.meta.wyposazenie)) doc.meta.wyposazenie = [];
+    for (const s of (doc.sekcje || [])) {
+      if (!Array.isArray(s.zdjecia)) s.zdjecia = [];
+      for (const u of (s.ustalenia || [])) if (!Array.isArray(u.zdjecia)) u.zdjecia = [];
+    }
   }
   if (doc.sekcje.length) aktywnaSekcjaId = doc.sekcje[doc.sekcje.length - 1].id;
   render();
@@ -68,15 +73,23 @@ function obsluzKomende(cmd, arg) {
     case 'ocena':
       if (sek && arg) { sek.ogolnaOcena = arg; zapisz(); render(); pokazToast('Ocena: ' + arg); }
       break;
-    case 'zdjecie':
-      if (sek) wyborZdjecia(sek.id); else pokazToast('Najpierw dodaj sekcję.');
+    case 'zdjecie': {
+      if (!sek) { pokazToast('Najpierw dodaj sekcję.'); break; }
+      // Cel: aktywne ustalenie -> ostatnie ustalenie -> ogólne sekcji
+      let ustId = (aktywneUstId && sek.ustalenia.some((u) => u.id === aktywneUstId)) ? aktywneUstId : null;
+      if (!ustId && sek.ustalenia.length) ustId = sek.ustalenia[sek.ustalenia.length - 1].id;
+      otworzWyborZdjecia(sek.id, ustId);
       break;
-    case 'podpisZdjecia':
-      if (sek && sek.zdjecia.length) {
-        sek.zdjecia[sek.zdjecia.length - 1].opis = arg || '';
-        zapisz(); render();
-      } else pokazToast('Brak zdjęcia do opisania.');
+    }
+    case 'podpisZdjecia': {
+      if (!sek) { pokazToast('Najpierw dodaj sekcję.'); break; }
+      let ustId = (aktywneUstId && sek.ustalenia.some((u) => u.id === aktywneUstId)) ? aktywneUstId : null;
+      if (!ustId && sek.ustalenia.length) ustId = sek.ustalenia[sek.ustalenia.length - 1].id;
+      const arr = tablicaZdjec(sek.id, ustId) || sek.zdjecia;
+      if (arr && arr.length) { arr[arr.length - 1].opis = arg || ''; zapisz(); render(); }
+      else pokazToast('Brak zdjęcia do opisania.');
       break;
+    }
     case 'dyktuj':
       if (!aktywnePole) { pokazToast('Kliknij najpierw pole, do którego dyktować.'); break; }
       voice.ustawDyktowanie(true);
@@ -129,7 +142,10 @@ function dodajSekcje(title) {
 
 function usunSekcje(id) {
   const s = doc.sekcje.find((x) => x.id === id);
-  if (s) for (const z of s.zdjecia) zwolnijUrl(z.id);
+  if (s) {
+    for (const z of (s.zdjecia || [])) zwolnijUrl(z.id);
+    for (const u of (s.ustalenia || [])) for (const z of (u.zdjecia || [])) zwolnijUrl(z.id);
+  }
   doc.sekcje = doc.sekcje.filter((x) => x.id !== id);
   if (aktywnaSekcjaId === id) aktywnaSekcjaId = doc.sekcje.length ? doc.sekcje[doc.sekcje.length - 1].id : null;
   zapiszTeraz(); render();
@@ -148,20 +164,41 @@ function dodajUstalenie(sekId, text) {
 function usunUstalenie(sekId, ustId) {
   const s = doc.sekcje.find((x) => x.id === sekId);
   if (!s) return;
-  s.ustalenia = s.ustalenia.filter((u) => u.id !== ustId);
+  const u = s.ustalenia.find((x) => x.id === ustId);
+  if (u) for (const z of (u.zdjecia || [])) { zwolnijUrl(z.id); usunZdjecie(z.id); }
+  s.ustalenia = s.ustalenia.filter((x) => x.id !== ustId);
   zapiszTeraz(); render();
+  sprzatnijZdjecia(doc);
 }
 
-async function wyborZdjecia(sekId) {
+// Cel ostatnio wybranego wstawiania zdjęcia (sekcja lub ustalenie)
+let celZdjecia = { sekId: null, ustId: null };
+
+// Zwraca tablicę zdjęć dla celu: ustalenie (gdy ustId) lub ogólne sekcji.
+function tablicaZdjec(sekId, ustId) {
+  const s = doc.sekcje.find((x) => x.id === sekId);
+  if (!s) return null;
+  if (ustId) {
+    const u = s.ustalenia.find((x) => x.id === ustId);
+    if (!u) return null;
+    if (!Array.isArray(u.zdjecia)) u.zdjecia = [];
+    return u.zdjecia;
+  }
+  return s.zdjecia;
+}
+
+function otworzWyborZdjecia(sekId, ustId, aparat = false) {
   aktywnaSekcjaId = sekId;
-  const inp = document.getElementById('plik-zdjecie');
+  celZdjecia = { sekId, ustId: ustId || null };
+  const inp = document.getElementById(aparat ? 'plik-aparat' : 'plik-zdjecie');
   inp.value = '';
+  if (aparat) inp.onchange = (ev) => dodajZdjecia(sekId, ustId || null, [...ev.target.files]);
   inp.click();
 }
 
-async function dodajZdjeciaZPlikow(sekId, pliki) {
-  const s = doc.sekcje.find((x) => x.id === sekId);
-  if (!s) { pokazToast('Najpierw dodaj sekcję.'); return; }
+async function dodajZdjecia(sekId, ustId, pliki) {
+  const arr = tablicaZdjec(sekId, ustId);
+  if (!arr) { pokazToast('Najpierw dodaj sekcję / ustalenie.'); return; }
   let dodane = 0;
   for (const f of pliki) {
     if (!f.type || !f.type.startsWith('image/')) continue;
@@ -170,7 +207,7 @@ async function dodajZdjeciaZPlikow(sekId, pliki) {
       const z = noweZdjecie('');
       z.w = width; z.h = height;
       await zapiszZdjecie(z.id, blob);
-      s.zdjecia.push(z);
+      arr.push(z);
       dodane++;
     } catch (e) {
       console.error(e);
@@ -180,10 +217,11 @@ async function dodajZdjeciaZPlikow(sekId, pliki) {
   if (dodane) { zapiszTeraz(); render(); pokazToast(`Dodano zdjęć: ${dodane}`); }
 }
 
-async function usunZdjecieZSekcji(sekId, fotoId) {
-  const s = doc.sekcje.find((x) => x.id === sekId);
-  if (!s) return;
-  s.zdjecia = s.zdjecia.filter((z) => z.id !== fotoId);
+async function usunZdjecieZCelu(sekId, ustId, fotoId) {
+  const arr = tablicaZdjec(sekId, ustId);
+  if (!arr) return;
+  const i = arr.findIndex((z) => z.id === fotoId);
+  if (i !== -1) arr.splice(i, 1);
   zwolnijUrl(fotoId);
   await usunZdjecie(fotoId);
   zapiszTeraz(); render();
@@ -391,30 +429,54 @@ function sekcjaUstalen() {
   </div>`;
 }
 
+// Renderuje miniatury zdjęć dla celu (ustalenie lub sekcja).
+function renderGaleria(sekId, ustId, zdjecia) {
+  const attrUst = ustId ? `data-ust="${ustId}"` : '';
+  return (zdjecia || []).map((z) => `
+    <figure class="foto">
+      <img data-foto-img="${z.id}" src="${urlZdjecia(z) || ''}" alt="zdjęcie" loading="lazy" />
+      <button class="foto-del" data-action="usun-foto" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">✕</button>
+      <textarea class="foto-opis" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" data-field="opis"
+        rows="2" placeholder="Podpis zdjęcia…">${escapeHtml(z.opis)}</textarea>
+    </figure>`).join('');
+}
+
 function kartaSekcji(s) {
   const aktywna = s.id === aktywnaSekcjaId;
   const oceny = STANY_TECHNICZNE.map((o) =>
     `<option value="${o.value}" ${o.value === s.ogolnaOcena ? 'selected' : ''}>${o.value}</option>`).join('');
 
-  const ustalenia = s.ustalenia.map((u, i) => `
-    <div class="ust-row">
-      <span class="ust-lp">${i + 1}</span>
-      <textarea data-sec="${s.id}" data-ust="${u.id}" data-field="text" rows="2"
-        placeholder="Opis stanu / usterki…">${escapeHtml(u.text)}</textarea>
-      <select data-sec="${s.id}" data-ust="${u.id}" data-field="pilnosc" title="Stopień pilności">
-        ${STOPNIE_PILNOSCI.map((sp) =>
+  const ustalenia = s.ustalenia.map((u, i) => {
+    const fot = renderGaleria(s.id, u.id, u.zdjecia);
+    const liczba = (u.zdjecia || []).length;
+    return `
+    <div class="ust-card" data-ust-card="${u.id}">
+      <div class="ust-row">
+        <span class="ust-lp">${i + 1}</span>
+        <textarea data-sec="${s.id}" data-ust="${u.id}" data-field="text" rows="2"
+          placeholder="Opis stanu / usterki…">${escapeHtml(u.text)}</textarea>
+        <select data-sec="${s.id}" data-ust="${u.id}" data-field="pilnosc" title="Stopień pilności">
+          ${STOPNIE_PILNOSCI.map((sp) =>
     `<option value="${sp.value}" ${sp.value === u.pilnosc ? 'selected' : ''}>${sp.label}</option>`).join('')}
-      </select>
-      <button class="btn-mini btn-del" data-action="usun-ust" data-sec="${s.id}" data-ust="${u.id}">✕</button>
-    </div>`).join('');
+        </select>
+        <button class="btn-mini btn-del" data-action="usun-ust" data-sec="${s.id}" data-ust="${u.id}">✕</button>
+      </div>
+      <div class="ust-foto">
+        <div class="ust-foto-akcje">
+          <span class="foto-label">📷 Zdjęcia ustalenia (${liczba})</span>
+          <button class="btn-mini" data-action="aparat" data-sec="${s.id}" data-ust="${u.id}">📸 Aparat</button>
+          <button class="btn-mini" data-action="z-pliku" data-sec="${s.id}" data-ust="${u.id}">🖼️ Zdjęcie</button>
+          <span class="hint">wklej (Ctrl+V) / przeciągnij tutaj</span>
+        </div>
+        <div class="galeria mini" data-drop-sec="${s.id}" data-drop-ust="${u.id}">
+          ${fot || '<span class="pusto-mini">Brak zdjęć dla tego ustalenia.</span>'}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 
-  const zdjecia = s.zdjecia.map((z) => `
-    <figure class="foto">
-      <img data-foto-img="${z.id}" src="${urlZdjecia(z) || ''}" alt="zdjęcie" loading="lazy" />
-      <button class="foto-del" data-action="usun-foto" data-sec="${s.id}" data-foto="${z.id}">✕</button>
-      <textarea class="foto-opis" data-sec="${s.id}" data-foto="${z.id}" data-field="opis"
-        rows="2" placeholder="Podpis zdjęcia…">${escapeHtml(z.opis)}</textarea>
-    </figure>`).join('');
+  const liczbaOgolne = (s.zdjecia || []).length;
+  const zdjeciaOgolne = renderGaleria(s.id, null, s.zdjecia);
 
   return `
   <section class="karta sekcja ${aktywna ? 'aktywna' : ''}" data-sec-card="${s.id}">
@@ -428,22 +490,21 @@ function kartaSekcji(s) {
     </div>
 
     <div class="ustalenia">
-      <div class="ust-naglowek"><span>L.p.</span><span>Ustalenia / opis stanu technicznego</span><span>Pilność</span><span></span></div>
-      ${ustalenia || '<p class="pusto-mini">Brak ustaleń.</p>'}
+      ${ustalenia || '<p class="pusto-mini">Brak ustaleń. Dodaj pierwsze ↓</p>'}
       <button class="btn-mini" data-action="dodaj-ust" data-sec="${s.id}">➕ Dodaj ustalenie</button>
     </div>
 
-    <div class="zdjecia-head">
-      <span>📷 Zdjęcia (${s.zdjecia.length})</span>
-      <span class="zdj-akcje">
+    <details class="ogolne-zdj" ${liczbaOgolne ? 'open' : ''}>
+      <summary>📷 Zdjęcia ogólne sekcji (bez przypisania do ustalenia) — ${liczbaOgolne}</summary>
+      <div class="zdj-akcje">
         <button class="btn-mini" data-action="aparat" data-sec="${s.id}">📸 Aparat</button>
         <button class="btn-mini" data-action="z-pliku" data-sec="${s.id}">🖼️ Z plików</button>
-        <span class="hint">albo wklej (Ctrl+V) / przeciągnij tutaj</span>
-      </span>
-    </div>
-    <div class="galeria" data-drop-sec="${s.id}">
-      ${zdjecia || '<p class="pusto-mini">Brak zdjęć.</p>'}
-    </div>
+        <span class="hint">albo wklej / przeciągnij poniżej</span>
+      </div>
+      <div class="galeria" data-drop-sec="${s.id}">
+        ${zdjeciaOgolne || '<p class="pusto-mini">Brak zdjęć ogólnych.</p>'}
+      </div>
+    </details>
   </section>`;
 }
 
@@ -485,19 +546,21 @@ function podepnijZdarzeniaGlobalne() {
       aktywnePole = el;
       const card = el.closest('[data-sec-card]');
       if (card) aktywnaSekcjaId = card.getAttribute('data-sec-card');
+      const ust = el.closest('[data-ust-card]');
+      aktywneUstId = ust ? ust.getAttribute('data-ust-card') : null;
     }
   });
-  // Wklejanie zdjęć ze schowka
+  // Wklejanie zdjęć ze schowka — do aktywnego ustalenia (lub ogólnych sekcji)
   document.addEventListener('paste', (e) => {
     const obrazy = obrazyZeSchowka(e.clipboardData);
     if (obrazy.length) {
       e.preventDefault();
       const sek = aktualnaSekcja();
-      if (sek) dodajZdjeciaZPlikow(sek.id, obrazy);
+      if (sek) dodajZdjecia(sek.id, aktywneUstId, obrazy);
       else pokazToast('Najpierw dodaj sekcję, aby wkleić zdjęcie.');
     }
   });
-  // Przeciąganie i upuszczanie zdjęć na galerię
+  // Przeciąganie i upuszczanie zdjęć na galerię (ustalenia lub ogólną)
   app.addEventListener('dragover', (e) => {
     if (e.target.closest('[data-drop-sec]')) { e.preventDefault(); }
   });
@@ -506,14 +569,15 @@ function podepnijZdarzeniaGlobalne() {
     if (!strefa) return;
     e.preventDefault();
     const sekId = strefa.getAttribute('data-drop-sec');
+    const ustId = strefa.getAttribute('data-drop-ust') || null;
     const pliki = [...(e.dataTransfer?.files || [])];
-    if (pliki.length) dodajZdjeciaZPlikow(sekId, pliki);
+    if (pliki.length) dodajZdjecia(sekId, ustId, pliki);
   });
 
-  // Inputy plików
+  // Input pliku (z galerii) — używa ostatnio wybranego celu
   document.getElementById('plik-zdjecie').addEventListener('change', (e) => {
-    const sek = aktualnaSekcja();
-    if (sek) dodajZdjeciaZPlikow(sek.id, [...e.target.files]);
+    const { sekId, ustId } = celZdjecia.sekId ? celZdjecia : { sekId: aktywnaSekcjaId, ustId: null };
+    if (sekId) dodajZdjecia(sekId, ustId, [...e.target.files]);
   });
 
   // Zrzut zapisu przy ukryciu/zamknięciu strony — zabezpieczenie przed utratą danych
@@ -547,12 +611,9 @@ function onClick(e) {
     case 'usun-sekcje': if (confirm('Usunąć całą sekcję wraz ze zdjęciami?')) usunSekcje(sec); break;
     case 'dodaj-ust': dodajUstalenie(sec, ''); break;
     case 'usun-ust': usunUstalenie(sec, b.getAttribute('data-ust')); break;
-    case 'aparat':
-      aktywnaSekcjaId = sec;
-      { const inp = document.getElementById('plik-aparat'); inp.value = ''; inp.onchange = (ev) => dodajZdjeciaZPlikow(sec, [...ev.target.files]); inp.click(); }
-      break;
-    case 'z-pliku': wyborZdjecia(sec); break;
-    case 'usun-foto': usunZdjecieZSekcji(sec, b.getAttribute('data-foto')); break;
+    case 'aparat': otworzWyborZdjecia(sec, b.getAttribute('data-ust'), true); break;
+    case 'z-pliku': otworzWyborZdjecia(sec, b.getAttribute('data-ust'), false); break;
+    case 'usun-foto': usunZdjecieZCelu(sec, b.getAttribute('data-ust'), b.getAttribute('data-foto')); break;
     case 'dodaj-insp': dodajInspektora(); break;
     case 'usun-insp': usunInspektora(parseInt(b.getAttribute('data-i'), 10)); break;
     case 'dodaj-zal': dodajZalecenieI(); break;
@@ -589,12 +650,14 @@ function onInput(e) {
     const field = el.getAttribute('data-field');
     const ust = el.getAttribute('data-ust');
     const foto = el.getAttribute('data-foto');
-    if (ust) {
+    if (foto && field === 'opis') {
+      // Podpis zdjęcia — w ustaleniu lub w galerii ogólnej sekcji
+      const arr = tablicaZdjec(sec, ust);
+      const z = arr && arr.find((x) => x.id === foto);
+      if (z) z.opis = el.value;
+    } else if (ust && field === 'text') {
       const u = s.ustalenia.find((x) => x.id === ust);
-      if (u && field === 'text') u.text = el.value;
-    } else if (foto) {
-      const z = s.zdjecia.find((x) => x.id === foto);
-      if (z && field === 'opis') z.opis = el.value;
+      if (u) u.text = el.value;
     } else if (field === 'title') {
       s.title = el.value;
     }

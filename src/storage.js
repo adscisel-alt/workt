@@ -44,7 +44,10 @@ export async function usunZdjecie(id) {
 export async function sprzatnijZdjecia(doc) {
   try {
     const uzywane = new Set();
-    for (const s of doc.sekcje) for (const z of s.zdjecia) uzywane.add(PHOTO_PREFIX + z.id);
+    for (const s of doc.sekcje) {
+      for (const z of (s.zdjecia || [])) uzywane.add(PHOTO_PREFIX + z.id);
+      for (const u of (s.ustalenia || [])) for (const z of (u.zdjecia || [])) uzywane.add(PHOTO_PREFIX + z.id);
+    }
     const wszystkie = await keys();
     for (const k of wszystkie) {
       if (typeof k === 'string' && k.startsWith(PHOTO_PREFIX) && !uzywane.has(k)) {

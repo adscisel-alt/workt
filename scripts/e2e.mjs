@@ -64,12 +64,13 @@ try {
   await pilnoscEl.selectOption('2');
   sprawdz((await pilnoscEl.inputValue()) === '2', 'Ustawiono stopień pilności');
 
-  // Dodaj zdjęcie przez ukryty input
+  // Dodaj zdjęcie DO USTALENIA (klik „Zdjęcie” w karcie ustalenia ustawia cel)
+  await page.click(`.ust-card [data-action="z-pliku"][data-ust]`);
   await page.setInputFiles('#plik-zdjecie', '/tmp/test-foto.png');
-  await page.waitForSelector('.foto img', { timeout: 5000 });
-  const liczbaZdjec = await page.locator('.foto').count();
-  sprawdz(liczbaZdjec >= 1, 'Dodano zdjęcie');
-  await page.fill('.foto-opis', 'Uszkodzenie ściany przy śmietniku.');
+  await page.waitForSelector('.ust-card .foto img', { timeout: 5000 });
+  const liczbaZdjec = await page.locator('.ust-card .foto').count();
+  sprawdz(liczbaZdjec >= 1, 'Dodano zdjęcie do ustalenia');
+  await page.fill('.ust-card .foto-opis', 'Uszkodzenie ściany przy śmietniku.');
 
   // Dane budynku — checkboxy (rodzaj konstrukcji + wyposażenie)
   await page.check('input[data-chk="rodzaj"][data-val="żelbetowa"]');
@@ -104,6 +105,7 @@ try {
   sprawdz(docXml.includes('śmietnika'), 'Dokument zawiera treść ustalenia');
   sprawdz(docXml.includes('Elewacje'), 'Dokument zawiera nazwę sekcji');
   sprawdz(docXml.includes('ROZDZIAŁ I'), 'Dokument zawiera Rozdział I');
+  sprawdz(docXml.includes('Fotografia'), 'Tabela Rozdziału II ma kolumnę „Fotografia”');
   sprawdz(docXml.includes('☑'), 'Dokument zawiera zaznaczone pola wyboru (dane budynku)');
   // Stopka z numeracją stron (pole PAGE) w osobnym pliku footer
   const listaFull = execSync(`unzip -l ${sciezka}`).toString();
