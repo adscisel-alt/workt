@@ -1,0 +1,67 @@
+name: Deploy to GitHub Pages
+
+# Wdraża aplikację na GitHub Pages po każdym pushu na poniższe gałęzie.
+# Można też uruchomić ręcznie (Actions -> Deploy to GitHub Pages -> Run workflow).
+on:
+  push:
+    branches:
+      - main
+      - master
+      - claude/protocol-app-images-voice-liqxx7
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Tylko jedno wdrożenie na raz
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  # Aplikacja jest serwowana z podkatalogu /workt/ (https://<user>.github.io/workt/)
+  VITE_BASE: /workt/
+  # Nie pobieraj przeglądarek Playwright podczas instalacji (CI tylko buduje)
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Setup Pages (auto-enable)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
