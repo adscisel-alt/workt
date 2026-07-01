@@ -49,19 +49,8 @@ export const DOMYSLNE_SEKCJE = [
   'Teren zewnętrzny',
 ];
 
-// Typowe sekcje (obszary kontroli) — podpowiedzi w polu dodawania
-export const SZABLONY_SEKCJI = [
-  'Elewacje i teren zewnętrzny',
-  'Dach i obróbki blacharskie',
-  'Klatki schodowe i korytarze',
-  'Hala garażowa — konstrukcja (ściany, słupy, stropy)',
-  'Posadzka hali garażowej',
-  'Wjazd / zjazd do hali garażowej',
-  'Odwodnienie liniowe',
-  'Instalacje podstropowe w garażu',
-  'Pomieszczenia techniczne',
-  'Inne elementy',
-];
+// Podpowiedzi w polu dodawania sekcji = ten sam zestaw co domyślny.
+export const SZABLONY_SEKCJI = DOMYSLNE_SEKCJE;
 
 // Domyślny, pusty stan dokumentu
 export function pustyDokument() {
