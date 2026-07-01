@@ -38,7 +38,18 @@ export const OSOBY_PRZEGLAD = [
   },
 ];
 
-// Typowe sekcje (obszary kontroli) — punkt wyjścia, użytkownik może dodawać własne
+// Domyślny zestaw sekcji (obszarów kontroli) wstawiany do nowego protokołu.
+// Nazwy można edytować, a każdą sekcję usunąć.
+export const DOMYSLNE_SEKCJE = [
+  'Zewnętrzne elementy budynku',
+  'Wewnętrzne elementy budynku – części wspólne podziemne i garaż',
+  'Wewnętrzne elementy budynku – części wspólne nadziemne',
+  'Dach i jego elementy',
+  'Pomieszczenia techniczne wraz z instalacjami i urządzeniami służącymi ochronie środowiska',
+  'Teren zewnętrzny',
+];
+
+// Typowe sekcje (obszary kontroli) — podpowiedzi w polu dodawania
 export const SZABLONY_SEKCJI = [
   'Elewacje i teren zewnętrzny',
   'Dach i obróbki blacharskie',

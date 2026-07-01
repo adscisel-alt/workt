@@ -48,14 +48,18 @@ try {
   await page.fill('[data-meta="protokolNr"]', '16/2026');
   await page.fill('[data-meta="adres"]', '03-286 Warszawa, ul. Żeromskiego 17');
 
+  // Nowy protokół ma domyślny zestaw sekcji
+  const domyslne = await page.locator('[data-sec-card]').count();
+  sprawdz(domyslne === 6, 'Nowy protokół ma 6 domyślnych sekcji (' + domyslne + ')');
+
   // Dodaj sekcję
   await page.fill('#nowa-sekcja-nazwa', 'Elewacje i teren zewnętrzny');
   await page.click('[data-action="dodaj-sekcje"]');
   await page.waitForSelector('.sekcja-title');
   const liczbaSekcji = await page.locator('[data-sec-card]').count();
-  sprawdz(liczbaSekcji === 1, 'Dodano sekcję');
+  sprawdz(liczbaSekcji === 7, 'Dodano kolejną sekcję (' + liczbaSekcji + ')');
 
-  const secId = await page.getAttribute('[data-sec-card]', 'data-sec-card');
+  const secId = await page.locator('[data-sec-card]').last().getAttribute('data-sec-card');
 
   // Ustaw ocenę
   await page.selectOption(`[data-sec="${secId}"][data-field="ogolnaOcena"]`, 'Zły');

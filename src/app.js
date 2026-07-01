@@ -1,7 +1,7 @@
 import './styles.css';
 import {
   pustyDokument, nowaSekcja, noweUstalenie, noweZdjecie, noweZalecenieI,
-  STANY_TECHNICZNE, STOPNIE_PILNOSCI, SZABLONY_SEKCJI,
+  STANY_TECHNICZNE, STOPNIE_PILNOSCI, SZABLONY_SEKCJI, DOMYSLNE_SEKCJE,
   RODZAJE_KONSTRUKCJI, WYPOSAZENIE, STATUSY_WYKONANIA, OSOBY_PRZEGLAD,
 } from './constants.js';
 import {
@@ -87,10 +87,24 @@ async function otworzProjekt(id) {
 
 function nowyProjekt() {
   doc = pustyDokument();
-  aktywnaSekcjaId = null; aktywneUstId = null;
+  // Wstaw domyślny zestaw sekcji (obszarów kontroli) — edytowalny i usuwalny
+  for (const nazwa of DOMYSLNE_SEKCJE) doc.sekcje.push(nowaSekcja(nazwa));
+  aktywnaSekcjaId = doc.sekcje.length ? doc.sekcje[0].id : null;
+  aktywneUstId = null;
   zapiszTeraz();
   render();
   ustawFokus('[data-meta="protokolNr"]');
+}
+
+// Dodaje brakujące sekcje ze standardowego zestawu (bez duplikatów).
+function wstawStandardoweSekcje() {
+  const istniejace = new Set(doc.sekcje.map((s) => (s.title || '').trim().toLowerCase()));
+  let dodane = 0;
+  for (const nazwa of DOMYSLNE_SEKCJE) {
+    if (!istniejace.has(nazwa.trim().toLowerCase())) { doc.sekcje.push(nowaSekcja(nazwa)); dodane++; }
+  }
+  if (dodane) { aktywnaSekcjaId = doc.sekcje[doc.sekcje.length - 1].id; zapiszTeraz(); render(); pokazToast(`Dodano sekcji: ${dodane}`); }
+  else pokazToast('Wszystkie standardowe sekcje już są.');
 }
 
 async function usunProjektZListy(id) {
@@ -525,6 +539,7 @@ function sekcjaUstalen() {
     <input id="nowa-sekcja-nazwa" list="szablony-sekcji" placeholder="Nazwa obszaru (np. Elewacje i teren zewnętrzny)" />
     <datalist id="szablony-sekcji">${opcjeSzablon}</datalist>
     <button class="btn btn-primary" data-action="dodaj-sekcje">➕ Dodaj sekcję</button>
+    <button class="btn" data-action="wstaw-standardowe">📋 Wstaw standardowe sekcje</button>
   </div>`;
 }
 
@@ -718,6 +733,7 @@ function onClick(e) {
       dodajSekcje(inp.value.trim());
       break;
     }
+    case 'wstaw-standardowe': wstawStandardoweSekcje(); break;
     case 'usun-sekcje': if (confirm('Usunąć całą sekcję wraz ze zdjęciami?')) usunSekcje(sec); break;
     case 'dodaj-ust': dodajUstalenie(sec, ''); break;
     case 'usun-ust': usunUstalenie(sec, b.getAttribute('data-ust')); break;
