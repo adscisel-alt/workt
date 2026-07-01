@@ -204,19 +204,19 @@ function akapitUstalenie(u) {
 // Tabela ustaleń w układzie wzoru: 4 kolumny z kolumną „Fotografia”.
 async function tabelaUstalen(ustalenia) {
   const header = new TableRow({ tableHeader: true, children: [
-    komorka('Element, urządzenie, instalacje podlegające kontroli', { width: 34, bold: true, shade: 'D9D9D9' }),
+    komorka('Element, urządzenie, instalacje podlegające kontroli', { width: 24, bold: true, shade: 'D9D9D9' }),
     komorka('Ocena stanu technicznego', { width: 12, bold: true, shade: 'D9D9D9' }),
     komorka('Stopień pilności', { width: 10, bold: true, shade: 'D9D9D9' }),
-    komorka('Opis', { width: 16, bold: true, shade: 'D9D9D9' }),
+    komorka('Opis i zalecenia', { width: 26, bold: true, shade: 'D9D9D9' }),
     komorka('Fotografia', { width: 28, bold: true, shade: 'D9D9D9' }),
   ] });
   const rows = [];
   for (const u of ustalenia) {
     rows.push(new TableRow({ children: [
-      komorka([akapitUstalenie(u)], { width: 34, valign: VerticalAlign.TOP }),
+      komorka([akapitUstalenie(u)], { width: 24, valign: VerticalAlign.TOP }),
       komorka(u.ocena || '', { width: 12, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
       komorka(etykietaPilnosci(u.pilnosc), { width: 10, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
-      komorka(komorkaOpis(u.zdjecia), { width: 16, valign: VerticalAlign.TOP }),
+      komorka(komorkaOpis(u.zdjecia), { width: 26, valign: VerticalAlign.TOP }),
       komorka(await komorkaFoto(u.zdjecia), { width: 28, valign: VerticalAlign.TOP }),
     ] }));
   }
