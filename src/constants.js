@@ -36,6 +36,8 @@ export const SZABLONY_SEKCJI = [
 // Domyślny, pusty stan dokumentu
 export function pustyDokument() {
   return {
+    id: uid(),
+    nazwa: '',
     meta: {
       protokolNr: '',
       dataKontroli: '',

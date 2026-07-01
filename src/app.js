@@ -5,14 +5,17 @@ import {
   RODZAJE_KONSTRUKCJI, WYPOSAZENIE, STATUSY_WYKONANIA,
 } from './constants.js';
 import {
-  wczytajDokument, zapiszDokument, zapiszZdjecie, wczytajZdjecie, usunZdjecie, sprzatnijZdjecia,
+  listaProjektow, wczytajProjekt, zapiszProjekt, usunProjekt, migrujStaryDokument,
+  zapiszZdjecie, wczytajZdjecie, usunZdjecie, sprzatnijZdjecia,
 } from './storage.js';
+import { uid } from './constants.js';
 import { przetworzObraz, obrazyZeSchowka } from './photos.js';
 import { generujDocx, nazwaPliku } from './docx-export.js';
 import { VoiceController, obslugiwane as glosWspierany } from './voice.js';
+import * as cloud from './cloud.js';
 
 // ---------- Stan globalny ----------
-let doc = pustyDokument();
+let doc = null;                   // aktywny projekt (null = ekran wyboru)
 let aktywnaSekcjaId = null;       // sekcja docelowa dla komend głosowych
 let aktywneUstId = null;          // ustalenie docelowe (do wstawiania zdjęć)
 let aktywnePole = null;           // ostatnio aktywne pole tekstowe (do dyktowania)
@@ -22,30 +25,104 @@ const app = document.getElementById('app');
 
 // ---------- Inicjalizacja ----------
 async function init() {
-  const zapisany = await wczytajDokument();
-  if (zapisany) {
-    const baza = pustyDokument();
-    doc = { ...baza, ...zapisany, meta: { ...baza.meta, ...(zapisany.meta || {}) } };
-    // Uzupełnij brakujące pola (zgodność ze starszymi zapisami)
-    if (!Array.isArray(doc.rozdzialI)) doc.rozdzialI = [];
-    if (!Array.isArray(doc.meta.rodzajKonstrukcji)) doc.meta.rodzajKonstrukcji = [];
-    if (!Array.isArray(doc.meta.wyposazenie)) doc.meta.wyposazenie = [];
-    for (const s of (doc.sekcje || [])) {
-      if (!Array.isArray(s.zdjecia)) s.zdjecia = [];
-      for (const u of (s.ustalenia || [])) if (!Array.isArray(u.zdjecia)) u.zdjecia = [];
-    }
-  }
-  if (doc.sekcje.length) aktywnaSekcjaId = doc.sekcje[doc.sekcje.length - 1].id;
-  render();
   podepnijZdarzeniaGlobalne();
+  await migrujStaryDokument(uid, nazwaProjektu);
+  await pokazWybor();
+}
+
+// Uzupełnia brakujące pola (zgodność ze starszymi zapisami / z chmury).
+function normalizuj(zap) {
+  const baza = pustyDokument();
+  const d = { ...baza, ...zap, meta: { ...baza.meta, ...(zap.meta || {}) } };
+  if (!d.id) d.id = uid();
+  if (!Array.isArray(d.rozdzialI)) d.rozdzialI = [];
+  if (!Array.isArray(d.meta.rodzajKonstrukcji)) d.meta.rodzajKonstrukcji = [];
+  if (!Array.isArray(d.meta.wyposazenie)) d.meta.wyposazenie = [];
+  for (const s of (d.sekcje || [])) {
+    if (!Array.isArray(s.zdjecia)) s.zdjecia = [];
+    for (const u of (s.ustalenia || [])) if (!Array.isArray(u.zdjecia)) u.zdjecia = [];
+  }
+  return d;
+}
+
+// Ekran wyboru projektu (pokazywany po każdym wejściu do aplikacji).
+async function pokazWybor() {
+  doc = null; aktywnaSekcjaId = null; aktywneUstId = null;
+  const projekty = await listaProjektow();
+  app.innerHTML = ekranWyboruHTML(projekty);
+}
+
+function ekranWyboruHTML(projekty) {
+  const lista = projekty.map((p) => `
+    <div class="proj-row">
+      <button class="proj-open" data-action="otworz-projekt" data-id="${esc(p.id)}">
+        <span class="proj-nazwa">🏢 ${esc(p.nazwa || 'Bez nazwy')}</span>
+        <span class="proj-meta">${esc(p.protokolNr ? 'Protokół ' + p.protokolNr + ' · ' : '')}${p.zmodyfikowano ? new Date(p.zmodyfikowano).toLocaleString('pl-PL') : ''}</span>
+      </button>
+      <button class="btn-mini btn-del" data-action="usun-projekt" data-id="${esc(p.id)}" title="Usuń projekt">🗑️</button>
+    </div>`).join('');
+  return `
+  <header class="topbar">
+    <div class="topbar-title">📋 Protokoły kontroli</div>
+    <div class="topbar-actions">
+      <button data-action="chmura" class="btn">${cloud.status().zalogowany ? '☁️ Chmura ✓' : '☁️ Chmura'}</button>
+    </div>
+  </header>
+  <main class="kontener wybor">
+    <div class="wybor-hero">
+      <h2>Wybierz, na czym chcesz pracować</h2>
+      <button class="btn btn-primary btn-duzy" data-action="nowy-projekt">➕ Nowy protokół</button>
+    </div>
+    <div class="podtytul">Zapisane protokoły (${projekty.length})</div>
+    ${lista || '<p class="pusto">Brak zapisanych protokołów. Utwórz pierwszy przyciskiem „Nowy protokół”.</p>'}
+    <p class="hint" style="margin-top:16px;">💡 Masz kopię w chmurze na innym urządzeniu? Kliknij „☁️ Chmura” → „Przywróć z chmury”.</p>
+  </main>`;
+}
+
+async function otworzProjekt(id) {
+  const zap = await wczytajProjekt(id);
+  if (!zap) { pokazToast('Nie znaleziono projektu.'); return; }
+  doc = normalizuj(zap);
+  aktywnaSekcjaId = doc.sekcje.length ? doc.sekcje[doc.sekcje.length - 1].id : null;
+  aktywneUstId = null;
+  render();
+}
+
+function nowyProjekt() {
+  doc = pustyDokument();
+  aktywnaSekcjaId = null; aktywneUstId = null;
+  zapiszTeraz();
+  render();
+  ustawFokus('[data-meta="protokolNr"]');
+}
+
+async function usunProjektZListy(id) {
+  if (!confirm('Usunąć ten protokół wraz ze zdjęciami? Tej operacji nie można cofnąć.')) return;
+  await usunProjekt(id);
+  await pokazWybor();
+  pokazToast('Protokół usunięty.');
 }
 
 // ---------- Zapis ----------
 function zapisz(natychmiast = false) {
-  zapiszDokument(doc, { natychmiast });
+  if (!doc || !doc.id) return;
+  doc.nazwa = nazwaProjektu(doc);
+  zapiszProjekt(doc, { natychmiast });
+  zaplanujBackupChmura();
 }
 // Operacje strukturalne (dodaj/usuń) zapisujemy natychmiast — mniejsze ryzyko utraty danych.
-function zapiszTeraz() { zapiszDokument(doc, { natychmiast: true }); }
+function zapiszTeraz() { zapisz(true); }
+
+// Nazwa projektu wyprowadzona z adresu (ulicy) — do listy wyboru.
+function nazwaProjektu(d) {
+  const a = (d.meta?.adres || '').trim();
+  if (a) {
+    const m = a.match(/(ul\.|al\.|pl\.|os\.)\s*[^,\n]+/i);
+    if (m) return m[0].trim();
+    return (a.split(',').pop() || a).trim();
+  }
+  return d.meta?.protokolNr ? ('Protokół ' + d.meta.protokolNr) : 'Nowy protokół';
+}
 
 // ---------- Głos ----------
 const voice = new VoiceController({
@@ -149,7 +226,7 @@ function usunSekcje(id) {
   doc.sekcje = doc.sekcje.filter((x) => x.id !== id);
   if (aktywnaSekcjaId === id) aktywnaSekcjaId = doc.sekcje.length ? doc.sekcje[doc.sekcje.length - 1].id : null;
   zapiszTeraz(); render();
-  sprzatnijZdjecia(doc);
+  sprzatnijZdjecia();
 }
 
 function dodajUstalenie(sekId, text) {
@@ -168,7 +245,7 @@ function usunUstalenie(sekId, ustId) {
   if (u) for (const z of (u.zdjecia || [])) { zwolnijUrl(z.id); usunZdjecie(z.id); }
   s.ustalenia = s.ustalenia.filter((x) => x.id !== ustId);
   zapiszTeraz(); render();
-  sprzatnijZdjecia(doc);
+  sprzatnijZdjecia();
 }
 
 // Cel ostatnio wybranego wstawiania zdjęcia (sekcja lub ustalenie)
@@ -316,7 +393,8 @@ function pasekGorny() {
     <div class="topbar-actions">
       <button data-action="zapisz" class="btn">💾 Zapisz</button>
       <button data-action="eksport" class="btn btn-primary">📄 Eksport Word</button>
-      <button data-action="nowy" class="btn btn-ghost">🗑️ Nowy</button>
+      <button data-action="chmura" class="btn">${cloud.status().zalogowany ? '☁️ Chmura ✓' : '☁️ Chmura'}</button>
+      <button data-action="projekty" class="btn btn-ghost">📂 Projekty</button>
     </div>
   </header>`;
 }
@@ -591,6 +669,13 @@ function podepnijZdarzeniaGlobalne() {
     if (e.target.closest('#btn-mic')) voice.przelacz();
     else if (e.target.closest('#btn-dyktuj')) voice.ustawDyktowanie(!voice.stan().dyktowanie);
     else if (e.target.closest('#btn-pomoc-glos')) pokazPomocGlos();
+    const cl = e.target.closest('[data-cloud]');
+    if (cl) obsluzChmura(cl.getAttribute('data-cloud'), cl);
+  });
+  // Przełącznik automatycznej kopii (checkbox w panelu chmury)
+  document.body.addEventListener('change', (e) => {
+    const cl = e.target.closest('[data-cloud="auto"]');
+    if (cl) obsluzChmura('auto', cl);
   });
 }
 
@@ -602,7 +687,11 @@ function onClick(e) {
   switch (action) {
     case 'zapisz': zapisz(true); pokazToast('Zapisano.'); break;
     case 'eksport': eksportujDocx(); break;
-    case 'nowy': nowyDokument(); break;
+    case 'chmura': otworzChmure(); break;
+    case 'projekty': if (doc) zapisz(true); pokazWybor(); break;
+    case 'nowy-projekt': nowyProjekt(); break;
+    case 'otworz-projekt': otworzProjekt(b.getAttribute('data-id')); break;
+    case 'usun-projekt': usunProjektZListy(b.getAttribute('data-id')); break;
     case 'dodaj-sekcje': {
       const inp = document.getElementById('nowa-sekcja-nazwa');
       dodajSekcje(inp.value.trim());
@@ -701,16 +790,6 @@ function onChange(e) {
   zapisz();
 }
 
-function nowyDokument() {
-  if (!confirm('Rozpocząć nowy protokół? Bieżące dane zostaną usunięte.')) return;
-  for (const s of doc.sekcje) for (const z of s.zdjecia) zwolnijUrl(z.id);
-  doc = pustyDokument();
-  aktywnaSekcjaId = null;
-  zapisz(true);
-  sprzatnijZdjecia(doc);
-  render();
-}
-
 // ---------- Pomocnicze UI ----------
 let toastTimer = null;
 function pokazToast(msg) {
@@ -758,6 +837,171 @@ function pokazPomocGlos() {
     '',
     'Wskazówka: najlepiej działa w przeglądarce Chrome.',
   ].join('\n'));
+}
+
+// ---------- Chmura (Google Drive) ----------
+let backupTimer = null;
+let backupWToku = false;
+
+function zaplanujBackupChmura() {
+  const st = cloud.status();
+  if (!st.zalogowany || !st.autoBackup) return;
+  if (backupTimer) clearTimeout(backupTimer);
+  backupTimer = setTimeout(() => wykonajBackupChmura(false), 8000);
+}
+
+async function wykonajBackupChmura(reczny) {
+  if (backupWToku) return;
+  if (!cloud.status().zalogowany) { if (reczny) pokazToast('Najpierw zaloguj się do chmury.'); return; }
+  backupWToku = true;
+  if (reczny) pokazToast('Wysyłanie kopii do chmury…');
+  try {
+    const wynik = await cloud.backup(doc, { onPostep: (t) => { if (reczny) pokazToast(t); } });
+    zapiszTeraz(); // zapisz doc z nadanym cloudId
+    pokazToast('Kopia w chmurze zapisana ✓');
+    odswiezPrzyciskChmura();
+    odswiezPanelChmura();
+  } catch (e) {
+    console.error(e);
+    pokazToast('Błąd kopii w chmurze: ' + e.message);
+  } finally {
+    backupWToku = false;
+  }
+}
+
+function odswiezPrzyciskChmura() {
+  const b = app.querySelector('[data-action="chmura"]');
+  if (b) b.textContent = cloud.status().zalogowany ? '☁️ Chmura ✓' : '☁️ Chmura';
+}
+
+function otworzChmure() {
+  let modal = document.getElementById('chmura-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'chmura-modal';
+    modal.className = 'modal-tlo';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) zamknijChmure(); });
+  }
+  modal.innerHTML = panelChmuraHTML();
+  modal.style.display = 'flex';
+}
+function zamknijChmure() {
+  const m = document.getElementById('chmura-modal');
+  if (m) m.style.display = 'none';
+}
+function odswiezPanelChmura() {
+  const m = document.getElementById('chmura-modal');
+  if (m && m.style.display !== 'none') m.innerHTML = panelChmuraHTML();
+}
+
+function panelChmuraHTML() {
+  const st = cloud.status();
+  let tresc;
+  if (!st.skonfigurowany) {
+    tresc = `
+      <p>Aby włączyć kopię w chmurze (Twój Dysk Google), wklej <b>Identyfikator Google (Client ID)</b>.
+      Instrukcję, jak go zdobyć za darmo, znajdziesz w README aplikacji.</p>
+      <label class="pole"><span>Google Client ID</span>
+        <input id="cl-client-id" placeholder="np. 1234-abcd.apps.googleusercontent.com" value="${esc(cloud.pobierzClientId())}" /></label>
+      <div class="modal-akcje">
+        <button class="btn btn-primary" data-cloud="zapisz-id">Zapisz</button>
+        <button class="btn btn-ghost" data-cloud="zamknij">Zamknij</button>
+      </div>`;
+  } else if (!st.zalogowany) {
+    tresc = `
+      <p>Zaloguj się swoim kontem Google, aby zapisywać kopie protokołów na Dysku Google.</p>
+      <div class="modal-akcje">
+        <button class="btn btn-primary" data-cloud="zaloguj">🔐 Zaloguj przez Google</button>
+        <button class="btn" data-cloud="zmien-id">Zmień Client ID</button>
+        <button class="btn btn-ghost" data-cloud="zamknij">Zamknij</button>
+      </div>`;
+  } else {
+    const kiedy = st.ostatniBackup ? new Date(st.ostatniBackup).toLocaleString('pl-PL') : 'jeszcze nie';
+    tresc = `
+      <p>Połączono z Google Drive${st.email ? ` jako <b>${esc(st.email)}</b>` : ''}.</p>
+      <p class="hint">Ostatnia kopia: ${kiedy}</p>
+      <label class="chip ${st.autoBackup ? 'on' : ''}" style="margin:6px 0;">
+        <input type="checkbox" data-cloud="auto" ${st.autoBackup ? 'checked' : ''} /> <span>Automatyczna kopia po zmianach</span>
+      </label>
+      <div class="modal-akcje">
+        <button class="btn btn-primary" data-cloud="backup">☁️ Zrób kopię teraz</button>
+        <button class="btn" data-cloud="przywroc">⬇️ Przywróć z chmury</button>
+      </div>
+      <div id="cl-lista"></div>
+      <div class="modal-akcje">
+        <button class="btn btn-ghost" data-cloud="wyloguj">Wyloguj</button>
+        <button class="btn btn-ghost" data-cloud="zamknij">Zamknij</button>
+      </div>`;
+  }
+  return `<div class="modal-okno">
+    <div class="modal-tytul">☁️ Kopia w chmurze (Google Drive)</div>
+    ${tresc}
+  </div>`;
+}
+
+async function pokazListeKopii() {
+  const box = document.getElementById('cl-lista');
+  if (!box) return;
+  box.innerHTML = '<p class="hint">Wczytywanie listy kopii…</p>';
+  try {
+    const lista = await cloud.listaKopii();
+    if (!lista.length) { box.innerHTML = '<p class="hint">Brak kopii w chmurze.</p>'; return; }
+    box.innerHTML = '<div class="kopie-lista">' + lista.map((k) => `
+      <div class="kopia-row">
+        <span>${esc(k.nazwa)}<br><small class="hint">${new Date(k.zmodyfikowano).toLocaleString('pl-PL')}</small></span>
+        <button class="btn-mini" data-cloud="przywroc-plik" data-file="${k.id}">Przywróć</button>
+      </div>`).join('') + '</div>';
+  } catch (e) {
+    box.innerHTML = `<p class="hint">Błąd listy: ${esc(e.message)}</p>`;
+  }
+}
+
+async function przywrocZChmury(fileId) {
+  if (!confirm('Przywrócić ten protokół z chmury? Bieżące dane w aplikacji zostaną zastąpione.')) return;
+  pokazToast('Przywracanie z chmury…');
+  try {
+    const pobrany = await cloud.przywroc(fileId, { onPostep: (t) => pokazToast(t) });
+    for (const s of doc.sekcje || []) {
+      for (const z of s.zdjecia || []) zwolnijUrl(z.id);
+      for (const u of s.ustalenia || []) for (const z of u.zdjecia || []) zwolnijUrl(z.id);
+    }
+    doc = normalizuj(pobrany);
+    aktywnaSekcjaId = doc.sekcje.length ? doc.sekcje[doc.sekcje.length - 1].id : null;
+    aktywneUstId = null;
+    zapiszTeraz(); // zapisz jako projekt lokalny
+    render();
+    zamknijChmure();
+    pokazToast('Przywrócono protokół z chmury ✓');
+  } catch (e) {
+    console.error(e);
+    pokazToast('Błąd przywracania: ' + e.message);
+  }
+}
+
+async function obsluzChmura(akcja, el) {
+  switch (akcja) {
+    case 'zapisz-id': case 'zmien-id': {
+      if (akcja === 'zmien-id') { cloud.ustawClientId(''); odswiezPanelChmura(); break; }
+      const v = document.getElementById('cl-client-id')?.value || '';
+      if (!v.trim()) { pokazToast('Wklej Client ID.'); break; }
+      cloud.ustawClientId(v);
+      pokazToast('Zapisano Client ID.');
+      odswiezPanelChmura();
+      break;
+    }
+    case 'zaloguj':
+      try { await cloud.zaloguj(); odswiezPanelChmura(); odswiezPrzyciskChmura(); pokazToast('Zalogowano do Google Drive ✓'); }
+      catch (e) { pokazToast('Logowanie nieudane: ' + e.message); }
+      break;
+    case 'wyloguj': cloud.wyloguj(); odswiezPanelChmura(); odswiezPrzyciskChmura(); break;
+    case 'auto': cloud.ustawAuto(el.checked); break;
+    case 'backup': await wykonajBackupChmura(true); break;
+    case 'przywroc': pokazListeKopii(); break;
+    case 'przywroc-plik': await przywrocZChmury(el.getAttribute('data-file')); break;
+    case 'zamknij': zamknijChmure(); break;
+    default: break;
+  }
 }
 
 // ---------- Util ----------

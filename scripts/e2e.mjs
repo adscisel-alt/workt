@@ -38,6 +38,12 @@ try {
   await page.waitForSelector('#app .topbar', { timeout: 10000 });
   sprawdz(true, 'Aplikacja załadowana');
 
+  // Ekran wyboru -> nowy protokół
+  await page.waitForSelector('[data-action="nowy-projekt"]');
+  await page.click('[data-action="nowy-projekt"]');
+  await page.waitForSelector('[data-meta="protokolNr"]', { timeout: 5000 });
+  sprawdz(true, 'Utworzono nowy projekt z ekranu wyboru');
+
   // Dane protokołu
   await page.fill('[data-meta="protokolNr"]', '16/2026');
   await page.fill('[data-meta="adres"]', '03-286 Warszawa, ul. Żeromskiego 17');
@@ -111,13 +117,17 @@ try {
   const listaFull = execSync(`unzip -l ${sciezka}`).toString();
   sprawdz(/footer\d*\.xml/.test(listaFull), 'Dokument zawiera stopkę (numeracja stron)');
 
-  // Test trwałości: po przeładowaniu dane są wczytane z IndexedDB
+  // Test trwałości + wyboru projektu: po przeładowaniu wybieramy zapisany projekt
   await page.click('[data-action="zapisz"]');
   await page.waitForTimeout(400);
   await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForSelector('.sekcja-title');
+  await page.waitForSelector('.proj-open', { timeout: 5000 });
+  const nazwaProj = (await page.textContent('.proj-nazwa')) || '';
+  sprawdz(/Żeromskiego/.test(nazwaProj), 'Projekt na liście nazwany ulicą (' + nazwaProj.trim() + ')');
+  await page.click('.proj-open');
+  await page.waitForSelector('.sekcja-title', { timeout: 5000 });
   const adrPo = await page.inputValue('[data-meta="protokolNr"]');
-  sprawdz(adrPo === '16/2026', 'Dane zachowane po przeładowaniu (IndexedDB)');
+  sprawdz(adrPo === '16/2026', 'Dane zachowane i wczytane z wybranego projektu');
 
 } catch (e) {
   console.error('BŁĄD TESTU:', e.message);

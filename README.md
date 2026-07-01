@@ -26,6 +26,45 @@ Cała praca odbywa się w przeglądarce — dane i zdjęcia zapisują się lokal
 - **Eksport `.docx` wierny wzorowi** — czcionka Calibri, tabele jak w oryginale,
   **stopka z numeracją stron** i identyfikacją protokołu.
 
+## Wiele protokołów (wybór projektu przy wejściu)
+
+Po otwarciu aplikacji pojawia się **ekran wyboru**:
+- **➕ Nowy protokół** — zaczyna nowy przegląd,
+- lista **zapisanych protokołów nazwanych ulicami** (z numerem protokołu i datą) —
+  kliknij, aby kontynuować pracę.
+
+W trakcie pracy przyciskiem **📂 Projekty** wrócisz do listy i przełączysz się na inny
+protokół (bieżący zapisuje się automatycznie). Każdy protokół to osobny projekt w pamięci
+urządzenia; nazwa jest tworzona automatycznie z adresu (ulicy).
+
+## Kopia w chmurze (Google Drive)
+
+Aplikacja może automatycznie zapisywać kopie protokołów **na Twoim Dysku Google**
+(logowanie kontem Google). Dane trafiają wyłącznie na Twój Dysk — nie na żaden inny serwer.
+Działa nadal bez własnego backendu (wszystko po stronie przeglądarki).
+
+### Jednorazowa konfiguracja (darmowa) — identyfikator Google (Client ID)
+1. Wejdź na **https://console.cloud.google.com/** i zaloguj się.
+2. Utwórz projekt (np. „Protokoły”).
+3. **APIs & Services → Library** → wyszukaj **Google Drive API** → **Enable**.
+4. **APIs & Services → OAuth consent screen**: User Type = **External**, podaj nazwę
+   aplikacji i swój e-mail; w sekcji **Test users** dodaj swój adres Gmail. Zapisz
+   (można zostać w trybie „Testing”).
+5. **APIs & Services → Credentials → Create credentials → OAuth client ID**:
+   - Application type: **Web application**
+   - **Authorized JavaScript origins**: `https://adscisel-alt.github.io`
+     (dla testów lokalnych dodaj też `http://localhost:5173`)
+6. Skopiuj **Client ID** (kończy się na `.apps.googleusercontent.com`).
+7. W aplikacji: **☁️ Chmura → wklej Client ID → Zapisz → 🔐 Zaloguj przez Google**.
+
+> Przy pierwszym logowaniu Google pokaże ostrzeżenie „aplikacja niezweryfikowana”
+> (bo to Twój prywatny projekt) — wybierz **Zaawansowane → Przejdź**. Dostęp mają tylko
+> dodani przez Ciebie „Test users”. Zakres uprawnień to `drive.file` — aplikacja widzi
+> **tylko własne pliki** utworzone na Twoim Dysku, nic więcej.
+
+Po zalogowaniu: **automatyczna kopia** po zmianach (można wyłączyć), przycisk
+**„Zrób kopię teraz”** oraz **„Przywróć z chmury”** (np. na drugim urządzeniu).
+
 ## Dyktowanie przez Wispr Flow (i inne)
 
 Aplikacja współpracuje z **Wispr Flow** oraz dowolnym systemowym dyktowaniem
