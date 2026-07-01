@@ -568,7 +568,7 @@ function renderGaleria(sekId, ustId, zdjecia) {
       <img data-foto-img="${z.id}" src="${urlZdjecia(z) || ''}" alt="zdjęcie" loading="lazy" />
       <button class="foto-del" data-action="usun-foto" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">✕</button>
       <textarea class="foto-opis" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" data-field="opis"
-        rows="2" placeholder="Podpis zdjęcia…">${escapeHtml(z.opis)}</textarea>
+        rows="2" placeholder="Opis (np. elewacja czysta) — kolumna „Opis”">${escapeHtml(z.opis)}</textarea>
     </figure>`).join('');
 }
 

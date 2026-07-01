@@ -167,15 +167,25 @@ function tabelaRozdzialI(zalecenia) {
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] });
 }
 
-// Zawartość komórki „Fotografia": zdjęcia z podpisami (jeden pod drugim).
+// Zawartość komórki „Fotografia": same zdjęcia (bez podpisu — podpis idzie do kolumny „Opis”).
 async function komorkaFoto(zdjecia) {
   const dzieci = [];
   for (const z of (zdjecia || [])) {
     const run = await obrazRun(z, 190);
-    if (run) dzieci.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 20 }, children: [run] }));
-    if (z.opis) dzieci.push(p(z.opis, { align: AlignmentType.CENTER, size: 16, italics: true }));
+    if (run) dzieci.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 }, children: [run] }));
   }
   if (!dzieci.length) dzieci.push(p('—', { align: AlignmentType.CENTER, color: '999999' }));
+  return dzieci;
+}
+
+// Zawartość komórki „Opis": podpisy zdjęć (np. „elewacja czysta”), jeden pod drugim.
+function komorkaOpis(zdjecia) {
+  const dzieci = [];
+  for (const z of (zdjecia || [])) {
+    const o = (z.opis || '').trim();
+    if (o) dzieci.push(p(o, { size: 20 }));
+  }
+  if (!dzieci.length) dzieci.push(p('', { size: 20 }));
   return dzieci;
 }
 
@@ -195,10 +205,11 @@ function akapitUstalenie(u) {
 async function tabelaUstalen(ustalenia) {
   const header = new TableRow({ tableHeader: true, children: [
     komorka('L.p.', { width: 5, bold: true, shade: 'D9D9D9' }),
-    komorka('Ustalenia / opis stanu technicznego', { width: 37, bold: true, shade: 'D9D9D9' }),
-    komorka('Ocena stanu technicznego', { width: 14, bold: true, shade: 'D9D9D9' }),
-    komorka('Stopień pilności', { width: 11, bold: true, shade: 'D9D9D9' }),
-    komorka('Fotografia', { width: 33, bold: true, shade: 'D9D9D9' }),
+    komorka('Ustalenia / opis stanu technicznego', { width: 31, bold: true, shade: 'D9D9D9' }),
+    komorka('Ocena stanu technicznego', { width: 12, bold: true, shade: 'D9D9D9' }),
+    komorka('Stopień pilności', { width: 10, bold: true, shade: 'D9D9D9' }),
+    komorka('Opis', { width: 15, bold: true, shade: 'D9D9D9' }),
+    komorka('Fotografia', { width: 27, bold: true, shade: 'D9D9D9' }),
   ] });
   const rows = [];
   let i = 0;
@@ -206,10 +217,11 @@ async function tabelaUstalen(ustalenia) {
     i += 1;
     rows.push(new TableRow({ children: [
       komorka(String(i), { width: 5, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
-      komorka([akapitUstalenie(u)], { width: 37, valign: VerticalAlign.TOP }),
-      komorka(u.ocena || '', { width: 14, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
-      komorka(etykietaPilnosci(u.pilnosc), { width: 11, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
-      komorka(await komorkaFoto(u.zdjecia), { width: 33, valign: VerticalAlign.TOP }),
+      komorka([akapitUstalenie(u)], { width: 31, valign: VerticalAlign.TOP }),
+      komorka(u.ocena || '', { width: 12, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
+      komorka(etykietaPilnosci(u.pilnosc), { width: 10, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
+      komorka(komorkaOpis(u.zdjecia), { width: 15, valign: VerticalAlign.TOP }),
+      komorka(await komorkaFoto(u.zdjecia), { width: 27, valign: VerticalAlign.TOP }),
     ] }));
   }
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] });
