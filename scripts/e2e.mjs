@@ -154,6 +154,7 @@ try {
   sprawdz(docXml.includes('Przyjęte kryteria oceny stanu technicznego elementów budynku'), 'Word: tytuł kryteriów 1:1');
   sprawdz(docXml.includes('nie zagrażające bezpieczeństwu publicznemu'), 'Word: pełny opis kryteriów 1:1');
   sprawdz(docXml.includes('podlega weryfikacji i przekwalifikowaniu'), 'Word: akapit o weryfikacji stopnia pilności');
+  sprawdz(docXml.includes('ZAKRES KONTROLI OBEJMUJE'), 'Word: stały blok „ZAKRES KONTROLI OBEJMUJE”');
   sprawdz(docXml.includes('☑'), 'Dokument zawiera zaznaczone pola wyboru (dane budynku)');
   // Stopka z numeracją stron (pole PAGE) w osobnym pliku footer
   const listaFull = execSync(`unzip -l ${sciezka}`).toString();

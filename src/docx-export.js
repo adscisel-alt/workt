@@ -118,6 +118,26 @@ function tabelaKryteriow() {
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] });
 }
 
+// Stały blok „ZAKRES KONTROLI OBEJMUJE:” (tekst 1:1, zawsze taki sam).
+function blokZakresKontroli() {
+  const pkt = (nr, tekst, bold = false) => new Paragraph({
+    spacing: { after: 80 }, indent: { left: 480, hanging: 260 },
+    children: [new TextRun({ text: `${nr})\t${tekst}`, size: 22, font: FONT, bold })],
+  });
+  const naglowekRow = new TableRow({ children: [
+    komorka('ZAKRES KONTROLI OBEJMUJE:', { width: 100, bold: true, shade: 'D9D9D9' }),
+  ] });
+  const trescRow = new TableRow({ children: [
+    komorka([
+      pkt('1', 'Sprawdzenie wykonania zaleceń z poprzedniej kontroli,'),
+      pkt('2', 'Przegląd elementów budynku, budowli i instalacji narażonych na szkodliwe wpływy atmosferyczne i niszczące działania czynników występujących podczas użytkowania budynku, których uszkodzenia mogą powodować zagrożenie dla bezpieczeństwa osób, środowiska oraz konstrukcji budynku, instalacji i urządzeń służących ochronie środowiska,'),
+      pkt('3', 'Oględziny elementów budynku', true),
+      pkt('4', 'Przegląd stanu technicznego elementów budynku i budowli i instalacji narażonych na szkodliwe wpływy atmosferyczne i niszczące działania czynników występujących podczas użytkowania'),
+    ], { width: 100, valign: VerticalAlign.TOP }),
+  ] });
+  return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [naglowekRow, trescRow] });
+}
+
 // Punkt listy a)–d): „stopień pilności (N)” pogrubiony + reszta.
 function pktPilnosci(litera, numer, tekst) {
   return new Paragraph({
@@ -280,6 +300,10 @@ export async function generujDocx(doc) {
   dzieci.push(p('Stopień pilności ( ) podlega weryfikacji i przekwalifikowaniu w trakcie kolejnych kontroli rocznych.'));
   dzieci.push(p('Jednocześnie w celu przyjęcia jednolitych zasad konstruowania sumarycznej oceny stanu technicznego obiektu budowlanego poddanego okresowemu przeglądowi, zastosowano „Ogólne kryteria oceny i klasyfikacji technicznej stanu elementów budynku”, które zamieszczono w tabeli poniżej.'));
   dzieci.push(tabelaKryteriow());
+
+  // Stały blok zakresu kontroli (zaraz po kryteriach)
+  dzieci.push(new Paragraph({ spacing: { before: 160 }, children: [] }));
+  dzieci.push(blokZakresKontroli());
 
   // --- ROZDZIAŁ I ---
   dzieci.push(naglowek('ROZDZIAŁ I: Sprawdzenie wykonania zaleceń z poprzedniej kontroli', HeadingLevel.HEADING_1));
