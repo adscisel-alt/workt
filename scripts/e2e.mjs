@@ -59,6 +59,15 @@ try {
   const liczbaSekcji = await page.locator('[data-sec-card]').count();
   sprawdz(liczbaSekcji === 7, 'Dodano kolejną sekcję (' + liczbaSekcji + ')');
 
+  // Podpowiedzi elementów w domyślnej sekcji (pierwsza = „Zewnętrzne elementy budynku")
+  const pierwszaSek = await page.locator('[data-sec-card]').first().getAttribute('data-sec-card');
+  const maElem = await page.locator(`[data-elem-select][data-sec="${pierwszaSek}"]`).count();
+  sprawdz(maElem === 1, 'Sekcja domyślna ma listę gotowych elementów');
+  await page.selectOption(`[data-elem-select][data-sec="${pierwszaSek}"]`, 'Obróbki blacharskie');
+  await page.waitForTimeout(200);
+  const elemText = await page.locator(`[data-sec="${pierwszaSek}"][data-field="text"]`).last().inputValue();
+  sprawdz(elemText === 'Obróbki blacharskie', 'Wstawiono gotowy element jako ustalenie');
+
   const secId = await page.locator('[data-sec-card]').last().getAttribute('data-sec-card');
 
   // Ustaw ocenę

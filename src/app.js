@@ -1,7 +1,7 @@
 import './styles.css';
 import {
   pustyDokument, nowaSekcja, noweUstalenie, noweZdjecie, noweZalecenieI,
-  STANY_TECHNICZNE, STOPNIE_PILNOSCI, SZABLONY_SEKCJI, DOMYSLNE_SEKCJE,
+  STANY_TECHNICZNE, STOPNIE_PILNOSCI, SZABLONY_SEKCJI, DOMYSLNE_SEKCJE, PODPOWIEDZI_SEKCJI,
   RODZAJE_KONSTRUKCJI, WYPOSAZENIE, STATUSY_WYKONANIA, OSOBY_PRZEGLAD,
 } from './constants.js';
 import {
@@ -88,7 +88,7 @@ async function otworzProjekt(id) {
 function nowyProjekt() {
   doc = pustyDokument();
   // Wstaw domyślny zestaw sekcji (obszarów kontroli) — edytowalny i usuwalny
-  for (const nazwa of DOMYSLNE_SEKCJE) doc.sekcje.push(nowaSekcja(nazwa));
+  for (const nazwa of DOMYSLNE_SEKCJE) doc.sekcje.push(nowaSekcja(nazwa, nazwa));
   aktywnaSekcjaId = doc.sekcje.length ? doc.sekcje[0].id : null;
   aktywneUstId = null;
   zapiszTeraz();
@@ -101,7 +101,7 @@ function wstawStandardoweSekcje() {
   const istniejace = new Set(doc.sekcje.map((s) => (s.title || '').trim().toLowerCase()));
   let dodane = 0;
   for (const nazwa of DOMYSLNE_SEKCJE) {
-    if (!istniejace.has(nazwa.trim().toLowerCase())) { doc.sekcje.push(nowaSekcja(nazwa)); dodane++; }
+    if (!istniejace.has(nazwa.trim().toLowerCase())) { doc.sekcje.push(nowaSekcja(nazwa, nazwa)); dodane++; }
   }
   if (dodane) { aktywnaSekcjaId = doc.sekcje[doc.sekcje.length - 1].id; zapiszTeraz(); render(); pokazToast(`Dodano sekcji: ${dodane}`); }
   else pokazToast('Wszystkie standardowe sekcje już są.');
@@ -555,6 +555,11 @@ function renderGaleria(sekId, ustId, zdjecia) {
     </figure>`).join('');
 }
 
+// Lista gotowych elementów (podpowiedzi ustaleń) dla sekcji — po kluczu lub tytule.
+function podpowiedziSekcji(s) {
+  return PODPOWIEDZI_SEKCJI[s.klucz] || PODPOWIEDZI_SEKCJI[(s.title || '').trim()] || null;
+}
+
 function kartaSekcji(s) {
   const aktywna = s.id === aktywnaSekcjaId;
   const oceny = STANY_TECHNICZNE.map((o) =>
@@ -605,7 +610,14 @@ function kartaSekcji(s) {
 
     <div class="ustalenia">
       ${ustalenia || '<p class="pusto-mini">Brak ustaleń. Dodaj pierwsze ↓</p>'}
-      <button class="btn-mini" data-action="dodaj-ust" data-sec="${s.id}">➕ Dodaj ustalenie</button>
+      <div class="ust-dodaj">
+        <button class="btn-mini" data-action="dodaj-ust" data-sec="${s.id}">➕ Dodaj ustalenie</button>
+        ${podpowiedziSekcji(s) ? `
+        <select data-elem-select data-sec="${s.id}" title="Wstaw gotowy element">
+          <option value="">➕ Dodaj element z listy…</option>
+          ${podpowiedziSekcji(s).map((el) => `<option value="${esc(el)}">${esc(el)}</option>`).join('')}
+        </select>` : ''}
+      </div>
     </div>
 
     <details class="ogolne-zdj" ${liczbaOgolne ? 'open' : ''}>
@@ -801,6 +813,12 @@ function onChange(e) {
   // Wybór osoby z zapisanej listy
   if (el.hasAttribute && el.hasAttribute('data-osoba-select')) {
     if (el.value !== '') dodajInspektoraZListy(parseInt(el.value, 10));
+    return;
+  }
+  // Wstawienie gotowego elementu jako ustalenia
+  if (el.hasAttribute && el.hasAttribute('data-elem-select')) {
+    const sec = el.getAttribute('data-sec');
+    if (sec && el.value !== '') dodajUstalenie(sec, el.value);
     return;
   }
   // Checkboxy: rodzaj konstrukcji / wyposażenie

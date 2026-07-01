@@ -52,6 +52,70 @@ export const DOMYSLNE_SEKCJE = [
 // Podpowiedzi w polu dodawania sekcji = ten sam zestaw co domyślny.
 export const SZABLONY_SEKCJI = DOMYSLNE_SEKCJE;
 
+// Gotowe elementy (podpowiedzi ustaleń) dla każdej standardowej sekcji.
+// Klucz = kanoniczna nazwa sekcji (z DOMYSLNE_SEKCJE).
+export const PODPOWIEDZI_SEKCJI = {
+  'Zewnętrzne elementy budynku': [
+    'Ściany zewnętrzne, gzymsy, tynki i okładziny, elewacja',
+    'Balkony / loggie / tarasy / wykusze',
+    'Okna i drzwi zewnętrzne',
+    'Obróbki blacharskie',
+    'Lokale usługowe – nośniki reklamowe na elewacji i zewnętrzne elementy usług',
+    'Inne elementy',
+  ],
+  'Wewnętrzne elementy budynku – części wspólne podziemne i garaż': [
+    'Ściany, słupy, belki i stropy kondygnacji podziemnej hali garażowej',
+    'Posadzka hali garażowej',
+    'Wjazd do hali garażowej',
+    'Odwodnienie liniowe hali garażowej i wjazdu do garażu',
+    'Instalacje podstropowe prowadzone w hali garażowej',
+    'Inne elementy hali garażowej',
+  ],
+  'Wewnętrzne elementy budynku – części wspólne nadziemne': [
+    'Ściany nośne i działowe, stropy, belki, sufity, tynki, okładziny i powłoki malarskie ścian korytarzy i klatek schodowych',
+    'Posadzka',
+    'Schody komunikacyjne, barierki i pochwyty',
+    'Inne elementy',
+  ],
+  'Dach i jego elementy': [
+    'Konstrukcja dachu',
+    'Pokrycie dachu',
+    'Obróbki blacharskie',
+    'Wyłazy, drabiny',
+    'Instalacja odgromowa',
+    'Kanały wentylacyjne na dachu',
+    'Kominy ponad dachem',
+    'Odwodnienie dachu i daszków',
+    'Inne elementy dachu',
+  ],
+  'Pomieszczenia techniczne wraz z instalacjami i urządzeniami służącymi ochronie środowiska': [
+    'Śmietnik',
+    'Szachty instalacyjne',
+    'Hydranty',
+    'Pomieszczenie węzła cieplnego',
+    'Pomieszczenie przyłącza wody',
+    'Pomieszczenie rozdzielni nn',
+    'Pomieszczenie elektryczne',
+    'Pomieszczenie separatora substancji ropopochodnych',
+    'Pomieszczenie kotłowni gazowej',
+    'Instalacja wody',
+    'Instalacja centralnego ogrzewania',
+    'Instalacja kanalizacji sanitarnej',
+    'Instalacja kanalizacji deszczowej',
+    'Instalacje teletechniki',
+    'Inne pomieszczenia',
+  ],
+  'Teren zewnętrzny': [
+    'Chodniki, drogi dojazdowe, parkingi',
+    'Ogrodzenie obiektu',
+    'Teren zielony',
+    'Plac zabaw',
+    'Elementy małej architektury',
+    'Oświetlenie uliczne',
+    'Inne elementy zagospodarowania terenu',
+  ],
+};
+
 // Domyślny, pusty stan dokumentu
 export function pustyDokument() {
   return {
@@ -112,10 +176,11 @@ export function noweZalecenieI(text = '') {
   return { id: uid(), text, pilnosc: 0, status: 'Nie wykonano' };
 }
 
-export function nowaSekcja(title = '') {
+export function nowaSekcja(title = '', klucz = '') {
   return {
     id: uid(),
     title,
+    klucz,            // kanoniczna nazwa (do dopasowania podpowiedzi mimo zmiany tytułu)
     ogolnaOcena: 'Dobry',
     ustalenia: [],
     zdjecia: [],
