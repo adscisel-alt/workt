@@ -103,6 +103,8 @@ input:focus, textarea:focus, select:focus {
 }
 .insp-row { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr auto; gap: 6px; margin-bottom: 6px; }
 @media (max-width: 640px) { .insp-row { grid-template-columns: 1fr 1fr; } }
+.insp-dodaj { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+.insp-dodaj select { width: auto; flex: 1 1 240px; }
 
 /* ---------- Rozdziały / sekcje ---------- */
 .naglowek-rozdzialu {

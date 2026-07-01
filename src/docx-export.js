@@ -205,7 +205,7 @@ export async function generujDocx(doc) {
   dzieci.push(p('Rodzaj konstrukcji:', { bold: true, spacing: { before: 60, after: 40 } }));
   dzieci.push(listaWyboru(RODZAJE_KONSTRUKCJI, m.rodzajKonstrukcji));
   dzieci.push(p('Wyposażenie budynku:', { bold: true, spacing: { before: 60, after: 40 } }));
-  dzieci.push(listaWyboru(WYPOSAZENIE, m.wyposazenie));
+  dzieci.push(listaWyboru(WYPOSAZENIE.concat(m.wyposazenieDodatkowe || []), m.wyposazenie));
   dzieci.push(tabelaDanych([
     ['Liczba kondygnacji nadziemnych', m.liczbaKondygnacjiNad],
     ['Liczba kondygnacji podziemnych', m.liczbaKondygnacjiPod],

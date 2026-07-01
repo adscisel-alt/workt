@@ -78,9 +78,22 @@ try {
   sprawdz(liczbaZdjec >= 1, 'Dodano zdjęcie do ustalenia');
   await page.fill('.ust-card .foto-opis', 'Uszkodzenie ściany przy śmietniku.');
 
+  // Osoby wykonujące przegląd — dodanie z zapisanej listy
+  await page.selectOption('[data-osoba-select]', '1'); // Zbigniew Łukaszewski
+  await page.waitForTimeout(200);
+  const inspImie = await page.locator('[data-insp][data-field="imie"]').last().inputValue();
+  sprawdz(inspImie === 'Zbigniew Łukaszewski', 'Dodano osobę z listy (' + inspImie + ')');
+
   // Dane budynku — checkboxy (rodzaj konstrukcji + wyposażenie)
   await page.check('input[data-chk="rodzaj"][data-val="żelbetowa"]');
   await page.check('input[data-chk="wyposazenie"][data-val="instalacje elektryczne"]');
+
+  // Własna pozycja wyposażenia
+  await page.fill('#wyp-nowa', 'instalacja SSP (sygnalizacja pożaru)');
+  await page.click('[data-action="dodaj-wyp"]');
+  await page.waitForTimeout(200);
+  const wypCustom = await page.locator('input[data-chk="wyposazenie"][data-val="instalacja SSP (sygnalizacja pożaru)"]').count();
+  sprawdz(wypCustom === 1, 'Dodano własną pozycję wyposażenia');
 
   // Rozdział I — zalecenie z poprzedniej kontroli (rozwiń sekcję)
   await page.evaluate(() => document.querySelectorAll('details.karta').forEach((d) => { d.open = true; }));

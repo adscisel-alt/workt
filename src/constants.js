@@ -19,6 +19,25 @@ export const STOPNIE_PILNOSCI = [
   { value: 4, label: '4', opis: 'Wykonanie w latach następnych — ująć w planie rzeczowo-finansowym.' },
 ];
 
+// Osoby wykonujące przegląd — lista do szybkiego wyboru (można też wpisać ręcznie).
+export const OSOBY_PRZEGLAD = [
+  {
+    imie: 'Andrzej Machnikowski',
+    specjalnosc: 'Instalacje sanitarne',
+    uprawnienia: 'BP-4224/70/85, Mazowiecka Okręgowa Izba Inżynierów Budownictwa',
+  },
+  {
+    imie: 'Zbigniew Łukaszewski',
+    specjalnosc: 'Konstrukcyjno-budowlana',
+    uprawnienia: '7342/Cie-43/93, Mazowiecka Okręgowa Izba Inżynierów Budownictwa',
+  },
+  {
+    imie: 'Zdzisław Kiryłów',
+    specjalnosc: 'Architektoniczna i konstrukcyjno-inżynieryjna',
+    uprawnienia: '697/KW/73, Małopolska Izba Inżynierów Budownictwa',
+  },
+];
+
 // Typowe sekcje (obszary kontroli) — punkt wyjścia, użytkownik może dodawać własne
 export const SZABLONY_SEKCJI = [
   'Elewacje i teren zewnętrzny',
@@ -61,6 +80,7 @@ export function pustyDokument() {
       // Podstawowe dane obiektu (zaznaczane)
       rodzajKonstrukcji: [],      // np. ['murowana', 'żelbetowa']
       wyposazenie: [],            // np. ['instalacja kanalizacji', ...]
+      wyposazenieDodatkowe: [],   // własne pozycje dopisane przez użytkownika
       poprzedniaKontrola: '',     // opis/data poprzedniej kontroli (Rozdział I)
     },
     rozdzialI: [],                // wykonanie zaleceń z poprzedniej kontroli

@@ -2,7 +2,7 @@ import './styles.css';
 import {
   pustyDokument, nowaSekcja, noweUstalenie, noweZdjecie, noweZalecenieI,
   STANY_TECHNICZNE, STOPNIE_PILNOSCI, SZABLONY_SEKCJI,
-  RODZAJE_KONSTRUKCJI, WYPOSAZENIE, STATUSY_WYKONANIA,
+  RODZAJE_KONSTRUKCJI, WYPOSAZENIE, STATUSY_WYKONANIA, OSOBY_PRZEGLAD,
 } from './constants.js';
 import {
   listaProjektow, wczytajProjekt, zapiszProjekt, usunProjekt, migrujStaryDokument,
@@ -38,6 +38,7 @@ function normalizuj(zap) {
   if (!Array.isArray(d.rozdzialI)) d.rozdzialI = [];
   if (!Array.isArray(d.meta.rodzajKonstrukcji)) d.meta.rodzajKonstrukcji = [];
   if (!Array.isArray(d.meta.wyposazenie)) d.meta.wyposazenie = [];
+  if (!Array.isArray(d.meta.wyposazenieDodatkowe)) d.meta.wyposazenieDodatkowe = [];
   for (const s of (d.sekcje || [])) {
     if (!Array.isArray(s.zdjecia)) s.zdjecia = [];
     for (const u of (s.ustalenia || [])) if (!Array.isArray(u.zdjecia)) u.zdjecia = [];
@@ -310,6 +311,15 @@ function usunZalecenieI(id) {
   doc.rozdzialI = doc.rozdzialI.filter((z) => z.id !== id);
   zapiszTeraz(); render();
 }
+function dodajWyposazenieOpcja(tekst) {
+  const v = (tekst || '').trim();
+  if (!v) { pokazToast('Wpisz nazwę pozycji.'); return; }
+  if (!Array.isArray(doc.meta.wyposazenieDodatkowe)) doc.meta.wyposazenieDodatkowe = [];
+  const juzJest = WYPOSAZENIE.includes(v) || doc.meta.wyposazenieDodatkowe.includes(v);
+  if (!juzJest) doc.meta.wyposazenieDodatkowe.push(v);
+  if (!doc.meta.wyposazenie.includes(v)) doc.meta.wyposazenie.push(v); // od razu zaznacz
+  zapiszTeraz(); render();
+}
 function przelaczWybor(grupa, wartosc, zazn) {
   const pole = grupa === 'rodzaj' ? 'rodzajKonstrukcji' : 'wyposazenie';
   const arr = doc.meta[pole] || (doc.meta[pole] = []);
@@ -321,6 +331,12 @@ function przelaczWybor(grupa, wartosc, zazn) {
 
 function dodajInspektora() {
   doc.meta.inspektorzy.push({ imie: '', specjalnosc: '', uprawnienia: '' });
+  zapiszTeraz(); render();
+}
+function dodajInspektoraZListy(i) {
+  const o = OSOBY_PRZEGLAD[i];
+  if (!o) return;
+  doc.meta.inspektorzy.push({ imie: o.imie, specjalnosc: o.specjalnosc, uprawnienia: o.uprawnienia });
   zapiszTeraz(); render();
 }
 function usunInspektora(i) {
@@ -442,10 +458,20 @@ function sekcjaMeta() {
     <div class="podtytul">Rodzaj konstrukcji</div>
     ${grupaWyboru(RODZAJE_KONSTRUKCJI, m.rodzajKonstrukcji, 'rodzaj')}
     <div class="podtytul">Wyposażenie budynku</div>
-    ${grupaWyboru(WYPOSAZENIE, m.wyposazenie, 'wyposazenie')}
+    ${grupaWyboru(WYPOSAZENIE.concat(m.wyposazenieDodatkowe || []), m.wyposazenie, 'wyposazenie')}
+    <div class="insp-dodaj">
+      <input id="wyp-nowa" placeholder="Wpisz własną pozycję wyposażenia…" />
+      <button class="btn-mini" data-action="dodaj-wyp">➕ Dodaj pozycję</button>
+    </div>
     <div class="podtytul">Osoby wykonujące przegląd</div>
     ${inspektorzy}
-    <button class="btn-mini" data-action="dodaj-insp">➕ Dodaj osobę</button>
+    <div class="insp-dodaj">
+      <select data-osoba-select title="Dodaj osobę z zapisanej listy">
+        <option value="">➕ Dodaj z listy…</option>
+        ${OSOBY_PRZEGLAD.map((o, i) => `<option value="${i}">${esc(o.imie)} — ${esc(o.specjalnosc)}</option>`).join('')}
+      </select>
+      <button class="btn-mini" data-action="dodaj-insp">➕ Pusty wiersz</button>
+    </div>
   </details>`;
 }
 
@@ -699,6 +725,11 @@ function onClick(e) {
     case 'z-pliku': otworzWyborZdjecia(sec, b.getAttribute('data-ust'), false); break;
     case 'usun-foto': usunZdjecieZCelu(sec, b.getAttribute('data-ust'), b.getAttribute('data-foto')); break;
     case 'dodaj-insp': dodajInspektora(); break;
+    case 'dodaj-wyp': {
+      const inp = document.getElementById('wyp-nowa');
+      dodajWyposazenieOpcja(inp ? inp.value : '');
+      break;
+    }
     case 'usun-insp': usunInspektora(parseInt(b.getAttribute('data-i'), 10)); break;
     case 'dodaj-zal': dodajZalecenieI(); break;
     case 'usun-zal': usunZalecenieI(b.getAttribute('data-zal')); break;
@@ -751,6 +782,11 @@ function onInput(e) {
 
 function onChange(e) {
   const el = e.target;
+  // Wybór osoby z zapisanej listy
+  if (el.hasAttribute && el.hasAttribute('data-osoba-select')) {
+    if (el.value !== '') dodajInspektoraZListy(parseInt(el.value, 10));
+    return;
+  }
   // Checkboxy: rodzaj konstrukcji / wyposażenie
   const chk = el.getAttribute('data-chk');
   if (chk) {
