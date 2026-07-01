@@ -156,6 +156,10 @@ try {
   sprawdz(docXml.includes('podlega weryfikacji i przekwalifikowaniu'), 'Word: akapit o weryfikacji stopnia pilności');
   sprawdz(docXml.includes('ZAKRES KONTROLI OBEJMUJE'), 'Word: stały blok „ZAKRES KONTROLI OBEJMUJE”');
   sprawdz(docXml.includes('Uszkodzenie ściany przy śmietniku'), 'Word: podpis zdjęcia trafia do kolumny „Opis”');
+  sprawdz(docXml.includes('Metody i środki użytkowania elementów'), 'Word: końcowy blok metod użytkowania');
+  sprawdz(docXml.includes('WNIOSKI'), 'Word: sekcja WNIOSKI na końcu');
+  sprawdz(docXml.includes('Element, urządzenie, instalacje podlegające kontroli'), 'Word: nowa nazwa kolumny Rozdziału II');
+  sprawdz(!docXml.includes('Ustalenia / opis stanu technicznego'), 'Word: usunięto starą nazwę/kolumnę L.p.');
   sprawdz(docXml.includes('☑'), 'Dokument zawiera zaznaczone pola wyboru (dane budynku)');
   // Stopka z numeracją stron (pole PAGE) w osobnym pliku footer
   const listaFull = execSync(`unzip -l ${sciezka}`).toString();

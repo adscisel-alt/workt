@@ -245,6 +245,46 @@ function tabelaZalecen(doc) {
     tabela: new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] }) };
 }
 
+// Stały blok końcowy: metody i środki użytkowania + WNIOSKI (tekst 1:1).
+const METODY_UZYTKOWANIA = [
+  '1. Dachy i obróbki blacharskie – Regularnie kontrolować stan pokrycia dachowego, rynien, rur spustowych i obróbek blacharskich – co najmniej raz w roku oraz po wystąpieniu silnych wiatrów lub intensywnych opadów. Oczyszczać rynny i wpusty z liści, gałęzi i innych zanieczyszczeń, aby zapobiegać zastoju wody. Powierzchnie metalowe zabezpieczać powłokami antykorozyjnymi, a miejsca ognisk korozji niezwłocznie usuwać i odnawiać zabezpieczenie.',
+  '2. Elewacje i ocieplenia – Prowadzić okresowe przeglądy stanu tynków, okładzin elewacyjnych i połączeń systemów ociepleniowych. Uszkodzenia powierzchniowe (np. pęknięcia, ubytki, odspojenia) naprawiać niezwłocznie, aby ograniczyć wnikanie wody i degradację materiałów. Zaleca się wykonywanie zabiegów mycia i konserwacji elewacji co 3–5 lat, z użyciem środków dopuszczonych do stosowania na danego typu powierzchni.',
+  '3. Stolarka okienna i drzwiowa – Okresowo sprawdzać stan powłok malarskich, uszczelek i okuć. W razie potrzeby odnawiać powłoki ochronne, a elementy z drewna impregnować i malować co 3–5 lat. Dbać o drożność otworów odwadniających i właściwą wentylację pomieszczeń w celu ograniczenia kondensacji pary wodnej.',
+  '4. Balkony, tarasy, balustrady – Sprawdzać stan hydroizolacji, spadków oraz odwodnienia – w razie uszkodzeń niezwłocznie wykonywać naprawy. Elementy metalowe balustrad malować farbami antykorozyjnymi, a elementy betonowe lub kamienne zabezpieczać impregnatami hydrofobowymi. Nie dopuszczać do gromadzenia się śniegu i lodu w sposób zagrażający nośności lub bezpieczeństwu użytkowników.',
+  '5. Pozostałe elementy zewnętrzne – Regularnie kontrolować stan kominów, cokołów, daszków, zadaszeń, reklam i elementów zamocowanych do elewacji. W przypadku występowania spękań lub zawilgoceń – podjąć działania naprawcze i uszczelniające. Stosować materiały i środki posiadające odpowiednie atesty oraz dopuszczenia do stosowania w budownictwie.',
+];
+const WNIOSKI_TXT = [
+  '1. Oceny stanu technicznego dokonano jako oględziny wizualne bez wykonywania odkrywek. Ocena jest ważna na dzień jej opracowania. Autor opracowania nie bierze odpowiedzialności za ewentualne wady ukryte lub błędy w przedstawionej dokumentacji czy uzyskanej informacji.',
+  '3. Należy rozpoznać przyczyny i przystąpić do usuwania nieprawidłowości zakwalifikowanych i oznaczonych stopniem pilności „2” ze względu na zagrożenie, jakie stwarzają w dłuższej perspektywie czasowej, dla stanu technicznego konstrukcji budynku i bezpieczeństwa użytkowania.',
+  '4. Należy obserwować nieprawidłowości oznaczone stopniem „2/3”. W przypadku stwierdzenia, że stwierdzony proces trwa i pogłębiają się uszkodzenia – przystąpić do procedury przewidzianej dla stopnia pilności „2”.',
+  '5. Zagadnienia zakwalifikowane i oznaczone stopniem pilności „3” należy uwzględnić i wykonać w przeciągu roku od daty sporządzenia protokołu.',
+  '6. Zagadnienia zakwalifikowane i oznaczone stopniem pilności „4” należy uwzględnić w planach rzeczowo-finansowych dotyczących utrzymania obiektu w perspektywie nie dłuższej niż 5 lat od daty sporządzenia protokołu.',
+  '7. Należy wykonać również zalecenia niewykonane z protokołu z roku poprzedniego, które ujęto w tabeli Rozdziału I.',
+];
+
+function blokMetodyIWnioski() {
+  const out = [];
+  const npar = (txt) => new Paragraph({ spacing: { after: 100 }, indent: { left: 360, hanging: 280 },
+    children: [new TextRun({ text: txt, size: 22, font: FONT })] });
+
+  out.push(naglowek('Metody i środki użytkowania elementów obiektów budowlanych narażonych na szkodliwe działanie wpływów atmosferycznych i niszczące działanie innych czynników.'));
+  for (const t of METODY_UZYTKOWANIA) out.push(npar(t));
+
+  // WNIOSKI — pogrubione, jako osobny, wyraźny akapit
+  out.push(new Paragraph({ spacing: { before: 240, after: 120 },
+    children: [new TextRun({ text: 'WNIOSKI', bold: true, size: 26, font: FONT })] }));
+
+  out.push(npar(WNIOSKI_TXT[0]));
+  // Punkt 2 — pierwsze zdanie pogrubione
+  out.push(new Paragraph({ spacing: { after: 100 }, indent: { left: 360, hanging: 280 }, children: [
+    new TextRun({ text: '2. ', size: 22, font: FONT }),
+    new TextRun({ text: 'Budynek jest w stanie technicznym ogólnym dobrym, zezwalającym na dalsze jego bezpieczne użytkowanie zgodnie z przeznaczeniem. ', bold: true, size: 22, font: FONT }),
+    new TextRun({ text: 'Stan konstrukcji podczas kontroli nie zagraża bezpieczeństwu użytkowania.', size: 22, font: FONT }),
+  ] }));
+  for (const t of WNIOSKI_TXT.slice(1)) out.push(npar(t));
+  return out;
+}
+
 export async function generujDocx(doc) {
   const m = doc.meta;
   const dzieci = [];
@@ -347,6 +387,7 @@ export async function generujDocx(doc) {
     dzieci.push(p('Podsumowanie i wnioski:', { bold: true, spacing: { before: 160, after: 60 } }));
     for (const a of akapityPods) dzieci.push(p(a));
   }
+  for (const el of blokMetodyIWnioski()) dzieci.push(el);
   dzieci.push(new Paragraph({ spacing: { before: 600 }, alignment: AlignmentType.CENTER,
     children: [new TextRun({ text: 'Podpisy osób wykonujących przegląd:', italics: true, font: FONT })] }));
   for (const ins of (m.inspektorzy || [])) {
