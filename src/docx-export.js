@@ -285,6 +285,62 @@ function blokMetodyIWnioski() {
   return out;
 }
 
+// Linia roli zależna od specjalności osoby.
+function rolaLinia(specjalnosc) {
+  const s = (specjalnosc || '').toLowerCase();
+  if (/sanit|środowisk|srodowisk|instalac/.test(s)) {
+    return 'dokonujący kontroli okresowej stanu technicznego instalacji i urządzeń służących ochronie środowiska';
+  }
+  return 'dokonujący kontroli okresowej stanu technicznego elementów obiektu budowlanego / budowlanego';
+}
+
+// Bloki podpisów + załączniki dla każdej osoby wykonującej przegląd.
+function blokPodpisow(inspektorzy) {
+  const elementy = [];
+  const osoby = (inspektorzy || []).filter((i) => (i.imie || i.uprawnienia || i.specjalnosc));
+  let att = 0;
+  for (const ins of osoby) {
+    const oswiad = new TableRow({ children: [
+      komorka([p('Oświadczam, iż ustalenia zawarte w protokole są zgodne ze stanem faktycznym.',
+        { align: AlignmentType.CENTER, bold: true, italics: true })], { span: 2, width: 100 }),
+    ] });
+    const rola = new TableRow({ children: [
+      komorka([p(rolaLinia(ins.specjalnosc), { align: AlignmentType.CENTER, bold: true, italics: true, size: 20 })],
+        { span: 2, width: 100 }),
+    ] });
+    const lewa = komorka([
+      p(ins.imie || '', { align: AlignmentType.CENTER, bold: true, spacing: { before: 160 } }),
+      p(ins.uprawnienia || '', { align: AlignmentType.CENTER, size: 20 }),
+      ins.specjalnosc ? p('Specjalność ' + ins.specjalnosc, { align: AlignmentType.CENTER, size: 20 }) : p(''),
+      p('imię i nazwisko oraz nr uprawnień, specjalność',
+        { align: AlignmentType.CENTER, size: 16, italics: true, spacing: { before: 160 } }),
+    ], { width: 55, valign: VerticalAlign.TOP });
+    const prawa = komorka([
+      new Paragraph({ spacing: { before: 700 }, children: [] }),
+      p('...........................................................', { align: AlignmentType.CENTER }),
+      p('(podpis)', { align: AlignmentType.CENTER, italics: true, size: 18 }),
+    ], { width: 45, valign: VerticalAlign.BOTTOM });
+    elementy.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS,
+      rows: [oswiad, rola, new TableRow({ children: [lewa, prawa] })] }));
+
+    const nag = new TableRow({ children: [
+      komorka([p('Załączniki do protokołu', { align: AlignmentType.CENTER, bold: true })], { span: 2, width: 100 }),
+    ] });
+    const z1 = new TableRow({ children: [
+      komorka(String(++att), { width: 12, align: AlignmentType.CENTER }),
+      komorka('Uprawnienia budowlane', { width: 88 }),
+    ] });
+    const z2 = new TableRow({ children: [
+      komorka(String(++att), { width: 12, align: AlignmentType.CENTER }),
+      komorka('Zaświadczenie z Izby Inżynierów budownictwa', { width: 88 }),
+    ] });
+    elementy.push(new Paragraph({ spacing: { before: 120 }, children: [] }));
+    elementy.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [nag, z1, z2] }));
+    elementy.push(new Paragraph({ spacing: { before: 240 }, children: [] }));
+  }
+  return elementy;
+}
+
 export async function generujDocx(doc) {
   const m = doc.meta;
   const dzieci = [];
@@ -388,12 +444,10 @@ export async function generujDocx(doc) {
     for (const a of akapityPods) dzieci.push(p(a));
   }
   for (const el of blokMetodyIWnioski()) dzieci.push(el);
-  dzieci.push(new Paragraph({ spacing: { before: 600 }, alignment: AlignmentType.CENTER,
-    children: [new TextRun({ text: 'Podpisy osób wykonujących przegląd:', italics: true, font: FONT })] }));
-  for (const ins of (m.inspektorzy || [])) {
-    if (ins.imie) dzieci.push(p(`.................................   ${ins.imie} (${ins.specjalnosc})`,
-      { align: AlignmentType.CENTER, spacing: { before: 240 } }));
-  }
+
+  // Bloki oświadczeń/podpisów + załączniki (dane z „Osoby wykonujące przegląd”)
+  dzieci.push(new Paragraph({ spacing: { before: 300 }, children: [] }));
+  for (const el of blokPodpisow(m.inspektorzy)) dzieci.push(el);
 
   // Stopka z numeracją stron + identyfikacją protokołu
   const stopka = new Footer({
