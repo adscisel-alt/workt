@@ -8,6 +8,7 @@ import {
 import { wczytajZdjecie } from './storage.js';
 import {
   STANY_TECHNICZNE, STOPNIE_PILNOSCI, RODZAJE_KONSTRUKCJI, WYPOSAZENIE,
+  wchodziDoZalecen, etykietaPilnosci,
 } from './constants.js';
 
 const FONT = 'Calibri';
@@ -120,7 +121,7 @@ function tabelaRozdzialI(zalecenia) {
   const rows = zalecenia.map((z, i) => new TableRow({ children: [
     komorka(String(i + 1), { width: 6, align: AlignmentType.CENTER }),
     komorka(z.text || '', { width: 56, valign: VerticalAlign.TOP }),
-    komorka(z.pilnosc ? String(z.pilnosc) : '—', { width: 13, align: AlignmentType.CENTER }),
+    komorka(etykietaPilnosci(z.pilnosc), { width: 13, align: AlignmentType.CENTER }),
     komorka(z.status || '', { width: 25 }),
   ] }));
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] });
@@ -165,7 +166,7 @@ async function tabelaUstalen(ustalenia) {
     rows.push(new TableRow({ children: [
       komorka(String(i), { width: 5, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
       komorka([akapitUstalenie(u)], { width: 50, valign: VerticalAlign.TOP }),
-      komorka(u.pilnosc ? String(u.pilnosc) : '—', { width: 11, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
+      komorka(etykietaPilnosci(u.pilnosc), { width: 11, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
       komorka(await komorkaFoto(u.zdjecia), { width: 34, valign: VerticalAlign.TOP }),
     ] }));
   }
@@ -177,7 +178,7 @@ function tabelaZalecen(doc) {
   const zal = [];
   for (const s of doc.sekcje || []) {
     for (const u of s.ustalenia || []) {
-      if (u.pilnosc >= 1 && u.pilnosc <= 4) zal.push(u);
+      if (wchodziDoZalecen(u.pilnosc)) zal.push(u);
     }
   }
   const header = new TableRow({ tableHeader: true, children: [
@@ -188,7 +189,7 @@ function tabelaZalecen(doc) {
   const rows = zal.map((u, i) => new TableRow({ children: [
     komorka(String(i + 1), { width: 6, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
     komorka([akapitUstalenie(u)], { width: 79, valign: VerticalAlign.TOP }),
-    komorka(String(u.pilnosc), { width: 15, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
+    komorka(etykietaPilnosci(u.pilnosc), { width: 15, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
   ] }));
   return { liczba: zal.length,
     tabela: new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] }) };
@@ -251,8 +252,8 @@ export async function generujDocx(doc) {
   dzieci.push(naglowek('PRZYJĘTE KRYTERIA OCENY STANU TECHNICZNEGO'));
   dzieci.push(tabelaKryteriow());
   dzieci.push(p('Stopnie pilności napraw:', { bold: true, spacing: { before: 120, after: 40 } }));
-  for (const sp of STOPNIE_PILNOSCI.filter((s) => s.value > 0)) {
-    dzieci.push(p(`stopień (${sp.value}) — ${sp.opis}`, { size: 20 }));
+  for (const sp of STOPNIE_PILNOSCI.filter((s) => s.value !== '0')) {
+    dzieci.push(p(`${sp.label} — ${sp.opis}`, { size: 20 }));
   }
 
   // --- ROZDZIAŁ I ---

@@ -87,6 +87,11 @@ try {
   // Rozdział III — automatyczny podgląd zaleceń
   const wierszeZal = await page.locator('.zal-tabela tbody tr').count();
   sprawdz(wierszeZal >= 1, 'Rozdział III: zalecenie pojawiło się automatycznie w tabeli');
+  // „dobry z uwagą” też trafia do zaleceń; „brak” nie
+  await page.selectOption(`[data-sec="${secId}"][data-field="pilnosc"]`, 'U');
+  await page.waitForTimeout(200);
+  const maUwaga = await page.locator('.zal-tabela tbody tr td.z-pil', { hasText: 'dobry z uwagą' }).count();
+  sprawdz(maUwaga >= 1, 'Rozdział III: „dobry z uwagą” trafia do zaleceń');
 
   // Dodaj zdjęcie DO USTALENIA (klik „Zdjęcie” w karcie ustalenia ustawia cel)
   await page.click(`.ust-card [data-action="z-pliku"][data-ust]`);

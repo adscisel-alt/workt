@@ -10,14 +10,26 @@ export const STANY_TECHNICZNE = [
   { value: 'Awaryjny', zuzycie: '>73', opis: 'Uszkodzenia wpływają na bezpieczeństwo konstrukcji/użytkowania. Wymagane natychmiastowe działania.' },
 ];
 
-// 4-stopniowy termin pilności wykonania naprawy
+// Stopnie pilności (jako tekst). 'brak' nie trafia do Rozdziału III,
+// 'dobry z uwagą' oraz 1–4 trafiają do zestawienia zaleceń.
 export const STOPNIE_PILNOSCI = [
-  { value: 0, label: '—', opis: 'Nie określono / brak zaleceń' },
-  { value: 1, label: '1', opis: 'Roboty awaryjne — natychmiastowe wykonanie.' },
-  { value: 2, label: '2', opis: 'Wykonanie w okresie 3 miesięcy od daty kontroli.' },
-  { value: 3, label: '3', opis: 'Wykonanie w przeciągu roku (do następnego przeglądu).' },
-  { value: 4, label: '4', opis: 'Wykonanie w latach następnych — ująć w planie rzeczowo-finansowym.' },
+  { value: '0', label: 'brak', opis: 'Nie określono / bez zaleceń (nie trafia do Rozdziału III).' },
+  { value: '1', label: '1', opis: 'Roboty awaryjne — natychmiastowe wykonanie.' },
+  { value: '2', label: '2', opis: 'Wykonanie w okresie 3 miesięcy od daty kontroli.' },
+  { value: '3', label: '3', opis: 'Wykonanie w przeciągu roku (do następnego przeglądu).' },
+  { value: '4', label: '4', opis: 'Wykonanie w latach następnych — ująć w planie rzeczowo-finansowym.' },
+  { value: 'U', label: 'dobry z uwagą', opis: 'Stan dobry z uwagą — ujęte w zaleceniach (do obserwacji).' },
 ];
+
+// Które wartości trafiają do Rozdziału III (zestawienie zaleceń)
+export function wchodziDoZalecen(v) {
+  return ['1', '2', '3', '4', 'U'].includes(String(v));
+}
+// Etykieta stopnia pilności do wyświetlenia w tabelach
+export function etykietaPilnosci(v) {
+  const s = STOPNIE_PILNOSCI.find((x) => x.value === String(v));
+  return s ? s.label : 'brak';
+}
 
 // Osoby wykonujące przegląd — lista do szybkiego wyboru (można też wpisać ręcznie).
 export const OSOBY_PRZEGLAD = [
@@ -173,7 +185,7 @@ export const STATUSY_WYKONANIA = [
 ];
 
 export function noweZalecenieI(text = '') {
-  return { id: uid(), text, pilnosc: 0, status: 'Nie wykonano' };
+  return { id: uid(), text, pilnosc: '0', status: 'Nie wykonano' };
 }
 
 export function nowaSekcja(title = '', klucz = '') {
@@ -188,7 +200,7 @@ export function nowaSekcja(title = '', klucz = '') {
 }
 
 export function noweUstalenie(text = '', element = '') {
-  return { id: uid(), element, text, pilnosc: 0, zdjecia: [] };
+  return { id: uid(), element, text, pilnosc: '0', zdjecia: [] };
 }
 
 export function noweZdjecie(opis = '') {

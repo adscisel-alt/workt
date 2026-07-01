@@ -3,6 +3,7 @@ import {
   pustyDokument, nowaSekcja, noweUstalenie, noweZdjecie, noweZalecenieI,
   STANY_TECHNICZNE, STOPNIE_PILNOSCI, SZABLONY_SEKCJI, DOMYSLNE_SEKCJE, PODPOWIEDZI_SEKCJI,
   RODZAJE_KONSTRUKCJI, WYPOSAZENIE, STATUSY_WYKONANIA, OSOBY_PRZEGLAD,
+  wchodziDoZalecen, etykietaPilnosci,
 } from './constants.js';
 import {
   listaProjektow, wczytajProjekt, zapiszProjekt, usunProjekt, migrujStaryDokument,
@@ -44,8 +45,10 @@ function normalizuj(zap) {
     for (const u of (s.ustalenia || [])) {
       if (!Array.isArray(u.zdjecia)) u.zdjecia = [];
       if (typeof u.element !== 'string') u.element = '';
+      u.pilnosc = String(u.pilnosc ?? '0');   // dawniej liczba
     }
   }
+  for (const z of (d.rozdzialI || [])) z.pilnosc = String(z.pilnosc ?? '0');
   return d;
 }
 
@@ -157,7 +160,7 @@ function obsluzKomende(cmd, arg) {
       break;
     case 'pilnosc':
       if (sek && sek.ustalenia.length && arg) {
-        sek.ustalenia[sek.ustalenia.length - 1].pilnosc = arg;
+        sek.ustalenia[sek.ustalenia.length - 1].pilnosc = String(arg);
         zapisz(); render();
       } else pokazToast('Brak ustalenia do oznaczenia stopniem pilności.');
       break;
@@ -647,11 +650,11 @@ function zebraneZalecenia() {
   const out = [];
   for (const s of doc.sekcje) {
     for (const u of s.ustalenia) {
-      if (u.pilnosc >= 1 && u.pilnosc <= 4) {
+      if (wchodziDoZalecen(u.pilnosc)) {
         const el = (u.element || '').trim();
         const tx = (u.text || '').trim();
         const tresc = el ? (tx ? `${el} – ${tx}` : el) : tx;
-        out.push({ element: el, text: tx, tresc, pilnosc: u.pilnosc });
+        out.push({ element: el, text: tx, tresc, pilnosc: u.pilnosc, etykieta: etykietaPilnosci(u.pilnosc) });
       }
     }
   }
@@ -664,7 +667,7 @@ function sekcjaPodsumowania() {
     <tr>
       <td class="z-lp">${i + 1}</td>
       <td>${z.element ? `<strong>${escapeHtml(z.element)}</strong>${z.text ? ' – ' : ''}` : ''}${escapeHtml(z.text)}</td>
-      <td class="z-pil">${z.pilnosc}</td>
+      <td class="z-pil">${escapeHtml(z.etykieta)}</td>
     </tr>`).join('');
   const tabela = zal.length ? `
     <table class="zal-tabela">
@@ -874,7 +877,7 @@ function onChange(e) {
     const z = doc.rozdzialI.find((x) => x.id === zal);
     if (z) {
       const f = el.getAttribute('data-field');
-      if (f === 'pilnosc') z.pilnosc = parseInt(el.value, 10);
+      if (f === 'pilnosc') z.pilnosc = el.value;
       else if (f === 'status') z.status = el.value;
     }
     zapisz(); return;
@@ -888,7 +891,7 @@ function onChange(e) {
   const ust = el.getAttribute('data-ust');
   if (ust && field === 'pilnosc') {
     const u = s.ustalenia.find((x) => x.id === ust);
-    if (u) u.pilnosc = parseInt(el.value, 10);
+    if (u) u.pilnosc = el.value;
     zapisz(); render(); // odśwież podgląd zaleceń w Rozdziale III
     return;
   } else if (field === 'ogolnaOcena') {
