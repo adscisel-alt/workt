@@ -14,6 +14,7 @@ import { przetworzObraz, obrazyZeSchowka } from './photos.js';
 import { generujDocx, nazwaPliku } from './docx-export.js';
 import { VoiceController, obslugiwane as glosWspierany } from './voice.js';
 import * as cloud from './cloud.js';
+import * as supa from './supa.js';
 
 // ---------- Stan globalny ----------
 let doc = null;                   // aktywny projekt (null = ekran wyboru)
@@ -28,6 +29,8 @@ const app = document.getElementById('app');
 async function init() {
   podepnijZdarzeniaGlobalne();
   await migrujStaryDokument(uid, nazwaProjektu);
+  await supa.init();
+  supa.onZmiana(() => { odswiezPrzyciskChmura(); });
   await pokazWybor();
 }
 
@@ -56,15 +59,28 @@ function normalizuj(zap) {
 // Ekran wyboru projektu (pokazywany po każdym wejściu do aplikacji).
 async function pokazWybor() {
   doc = null; aktywnaSekcjaId = null; aktywneUstId = null;
-  const projekty = await listaProjektow();
-  app.innerHTML = ekranWyboruHTML(projekty);
+  const lokalne = await listaProjektow();
+  const mapa = new Map();
+  for (const p of lokalne) mapa.set(p.id, { ...p, zChmury: false });
+  if (supa.zalogowany()) {
+    try {
+      const chmura = await supa.listaProjektow();
+      for (const p of chmura) {
+        const ist = mapa.get(p.id);
+        mapa.set(p.id, { ...p, zChmury: true, lokalnie: !!ist });
+      }
+    } catch (e) { pokazToast('Nie udało się pobrać listy z chmury: ' + e.message); }
+  }
+  const scalone = [...mapa.values()].sort((a, b) =>
+    (new Date(b.zmodyfikowano || 0)) - (new Date(a.zmodyfikowano || 0)));
+  app.innerHTML = ekranWyboruHTML(scalone);
 }
 
 function ekranWyboruHTML(projekty) {
   const lista = projekty.map((p) => `
     <div class="proj-row">
       <button class="proj-open" data-action="otworz-projekt" data-id="${esc(p.id)}">
-        <span class="proj-nazwa">🏢 ${esc(p.nazwa || 'Bez nazwy')}</span>
+        <span class="proj-nazwa">🏢 ${esc(p.nazwa || 'Bez nazwy')} ${p.zChmury ? '<span class="proj-chmura">☁️</span>' : ''}</span>
         <span class="proj-meta">${esc(p.protokolNr ? 'Protokół ' + p.protokolNr + ' · ' : '')}${p.zmodyfikowano ? new Date(p.zmodyfikowano).toLocaleString('pl-PL') : ''}</span>
       </button>
       <button class="btn-mini btn-del" data-action="usun-projekt" data-id="${esc(p.id)}" title="Usuń projekt">🗑️</button>
@@ -72,6 +88,9 @@ function ekranWyboruHTML(projekty) {
   return `
   <header class="topbar">
     <div class="topbar-title">📋 Protokoły kontroli</div>
+    <div class="topbar-actions">
+      <button data-action="chmura" class="btn">${supa.status().zalogowany ? '☁️ Chmura ✓' : '☁️ Chmura'}</button>
+    </div>
   </header>
   <main class="kontener wybor">
     <div class="wybor-hero">
@@ -84,7 +103,14 @@ function ekranWyboruHTML(projekty) {
 }
 
 async function otworzProjekt(id) {
-  const zap = await wczytajProjekt(id);
+  let zap = await wczytajProjekt(id);
+  if (!zap && supa.zalogowany()) {
+    pokazToast('Pobieranie projektu z chmury…');
+    try {
+      zap = await supa.wczytajProjekt(id, { onPostep: (t) => pokazToast(t) });
+      if (zap) await zapiszProjekt(normalizuj(zap), { natychmiast: true }); // zapisz lokalnie jako kopię
+    } catch (e) { pokazToast('Błąd pobierania z chmury: ' + e.message); }
+  }
   if (!zap) { pokazToast('Nie znaleziono projektu.'); return; }
   doc = normalizuj(zap);
   aktywnaSekcjaId = doc.sekcje.length ? doc.sekcje[doc.sekcje.length - 1].id : null;
@@ -117,6 +143,7 @@ function wstawStandardoweSekcje() {
 async function usunProjektZListy(id) {
   if (!confirm('Usunąć ten protokół wraz ze zdjęciami? Tej operacji nie można cofnąć.')) return;
   await usunProjekt(id);
+  if (supa.zalogowany()) { try { await supa.usunProjekt(id); } catch (e) {} }
   await pokazWybor();
   pokazToast('Protokół usunięty.');
 }
@@ -126,7 +153,18 @@ function zapisz(natychmiast = false) {
   if (!doc || !doc.id) return;
   doc.nazwa = nazwaProjektu(doc);
   zapiszProjekt(doc, { natychmiast });
-  zaplanujBackupChmura();
+  zaplanujSupa();
+}
+
+let supaTimer = null;
+function zaplanujSupa() {
+  if (!supa.zalogowany() || !doc) return;
+  if (supaTimer) clearTimeout(supaTimer);
+  const snapshot = doc;
+  supaTimer = setTimeout(() => {
+    supa.zapiszProjekt(snapshot).then(() => odswiezPrzyciskChmura())
+      .catch((e) => console.warn('Sync Supabase:', e));
+  }, 3000);
 }
 // Operacje strukturalne (dodaj/usuń) zapisujemy natychmiast — mniejsze ryzyko utraty danych.
 function zapiszTeraz() { zapisz(true); }
@@ -431,6 +469,7 @@ function pasekGorny() {
     <div class="topbar-actions">
       <button data-action="zapisz" class="btn">💾 Zapisz</button>
       <button data-action="eksport" class="btn btn-primary">📄 Eksport Word</button>
+      <button data-action="chmura" class="btn">${supa.status().zalogowany ? '☁️ Chmura ✓' : '☁️ Chmura'}</button>
       <button data-action="projekty" class="btn btn-ghost">📂 Projekty</button>
     </div>
   </header>`;
@@ -773,6 +812,8 @@ function podepnijZdarzeniaGlobalne() {
     else if (e.target.closest('#btn-pomoc-glos')) pokazPomocGlos();
     const cl = e.target.closest('[data-cloud]');
     if (cl) obsluzChmura(cl.getAttribute('data-cloud'), cl);
+    const sp = e.target.closest('[data-supa]');
+    if (sp) obsluzSupa(sp.getAttribute('data-supa'));
   });
   // Przełącznik automatycznej kopii (checkbox w panelu chmury)
   document.body.addEventListener('change', (e) => {
@@ -789,7 +830,7 @@ function onClick(e) {
   switch (action) {
     case 'zapisz': zapisz(true); pokazToast('Zapisano.'); break;
     case 'eksport': eksportujDocx(); break;
-    case 'chmura': otworzChmure(); break;
+    case 'chmura': otworzSupa(); break;
     case 'projekty': if (doc) zapisz(true); pokazWybor(); break;
     case 'nowy-projekt': nowyProjekt(); break;
     case 'otworz-projekt': otworzProjekt(b.getAttribute('data-id')); break;
@@ -998,7 +1039,7 @@ async function wykonajBackupChmura(reczny) {
 
 function odswiezPrzyciskChmura() {
   const b = app.querySelector('[data-action="chmura"]');
-  if (b) b.textContent = cloud.status().zalogowany ? '☁️ Chmura ✓' : '☁️ Chmura';
+  if (b) b.textContent = supa.status().zalogowany ? '☁️ Chmura ✓' : '☁️ Chmura';
 }
 
 function otworzChmure() {
@@ -1127,6 +1168,101 @@ async function obsluzChmura(akcja, el) {
     case 'przywroc': pokazListeKopii(); break;
     case 'przywroc-plik': await przywrocZChmury(el.getAttribute('data-file')); break;
     case 'zamknij': zamknijChmure(); break;
+    default: break;
+  }
+}
+
+// ---------- Panel chmury (Supabase) ----------
+function otworzSupa() {
+  let modal = document.getElementById('supa-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'supa-modal';
+    modal.className = 'modal-tlo';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) zamknijSupa(); });
+  }
+  modal.innerHTML = panelSupaHTML();
+  modal.style.display = 'flex';
+}
+function zamknijSupa() { const m = document.getElementById('supa-modal'); if (m) m.style.display = 'none'; }
+function odswiezPanelSupa() {
+  const m = document.getElementById('supa-modal');
+  if (m && m.style.display !== 'none') m.innerHTML = panelSupaHTML();
+}
+
+function panelSupaHTML() {
+  const st = supa.status();
+  let tresc;
+  if (!st.skonfigurowany) {
+    tresc = `
+      <p>Aby mieć te same protokoły na telefonie i komputerze, połącz aplikację ze swoim
+      darmowym projektem <b>Supabase</b>. Instrukcja krok po kroku jest w README.</p>
+      <label class="pole"><span>Adres projektu (Project URL)</span>
+        <input id="supa-url" placeholder="https://xxxx.supabase.co" value="${esc(supa.pobierzUrl())}" /></label>
+      <label class="pole"><span>Klucz publiczny (anon public key)</span>
+        <input id="supa-key" placeholder="eyJhbGciOi..." value="${esc(supa.pobierzKey())}" /></label>
+      <div class="modal-akcje">
+        <button class="btn btn-primary" data-supa="zapisz-konfig">Zapisz</button>
+        <button class="btn btn-ghost" data-supa="zamknij">Zamknij</button>
+      </div>`;
+  } else if (!st.zalogowany) {
+    tresc = `
+      <p>Zaloguj się (ten sam e-mail i hasło na telefonie i komputerze).</p>
+      <label class="pole"><span>E-mail</span><input id="supa-email" type="email" placeholder="ty@example.com" /></label>
+      <label class="pole"><span>Hasło</span><input id="supa-haslo" type="password" placeholder="hasło (min. 6 znaków)" /></label>
+      <div class="modal-akcje">
+        <button class="btn btn-primary" data-supa="zaloguj">🔐 Zaloguj</button>
+        <button class="btn" data-supa="zarejestruj">Utwórz konto</button>
+      </div>
+      <div class="modal-akcje">
+        <button class="btn btn-ghost" data-supa="zmien-konfig">Zmień dane Supabase</button>
+        <button class="btn btn-ghost" data-supa="zamknij">Zamknij</button>
+      </div>`;
+  } else {
+    tresc = `
+      <p>Połączono z chmurą jako <b>${esc(st.email || '')}</b>.</p>
+      <p class="hint">Projekty synchronizują się automatycznie. Na drugim urządzeniu zaloguj się tym samym kontem — zobaczysz tu tę samą listę.</p>
+      <div class="modal-akcje">
+        <button class="btn btn-primary" data-supa="sync">☁️ Synchronizuj teraz</button>
+        <button class="btn btn-ghost" data-supa="wyloguj">Wyloguj</button>
+        <button class="btn btn-ghost" data-supa="zamknij">Zamknij</button>
+      </div>`;
+  }
+  return `<div class="modal-okno"><div class="modal-tytul">☁️ Chmura — synchronizacja (Supabase)</div>${tresc}</div>`;
+}
+
+async function obsluzSupa(akcja) {
+  switch (akcja) {
+    case 'zapisz-konfig': {
+      const u = document.getElementById('supa-url')?.value || '';
+      const k = document.getElementById('supa-key')?.value || '';
+      if (!u.trim() || !k.trim()) { pokazToast('Wklej adres projektu i klucz.'); break; }
+      await supa.ustawKonfig(u, k);
+      pokazToast('Zapisano dane Supabase.');
+      odswiezPanelSupa();
+      break;
+    }
+    case 'zmien-konfig': supa.ustawKonfig('', ''); odswiezPanelSupa(); break;
+    case 'zaloguj': case 'zarejestruj': {
+      const mail = document.getElementById('supa-email')?.value || '';
+      const haslo = document.getElementById('supa-haslo')?.value || '';
+      if (!mail.trim() || !haslo.trim()) { pokazToast('Podaj e-mail i hasło.'); break; }
+      try {
+        if (akcja === 'zarejestruj') { await supa.zarejestruj(mail, haslo); pokazToast('Konto utworzone — zalogowano.'); }
+        else { await supa.zaloguj(mail, haslo); pokazToast('Zalogowano ✓'); }
+        odswiezPrzyciskChmura();
+        zamknijSupa();
+        await pokazWybor(); // pokaż projekty z chmury
+      } catch (e) { pokazToast('Błąd: ' + (e.message || e)); }
+      break;
+    }
+    case 'sync':
+      if (doc) { try { await supa.zapiszProjekt(doc); pokazToast('Zsynchronizowano ✓'); } catch (e) { pokazToast('Błąd sync: ' + e.message); } }
+      else { pokazToast('Otwórz projekt, aby go zsynchronizować.'); }
+      break;
+    case 'wyloguj': await supa.wyloguj(); odswiezPrzyciskChmura(); odswiezPanelSupa(); await pokazWybor(); break;
+    case 'zamknij': zamknijSupa(); break;
     default: break;
   }
 }

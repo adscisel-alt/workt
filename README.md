@@ -65,6 +65,52 @@ Działa nadal bez własnego backendu (wszystko po stronie przeglądarki).
 Po zalogowaniu: **automatyczna kopia** po zmianach (można wyłączyć), przycisk
 **„Zrób kopię teraz”** oraz **„Przywróć z chmury”** (np. na drugim urządzeniu).
 
+## Synchronizacja między urządzeniami (Supabase)
+
+Aby te same protokoły były widoczne **na telefonie i komputerze**, aplikacja może
+synchronizować dane przez darmowy projekt **Supabase**. Jednorazowa konfiguracja:
+
+1. Załóż konto na **https://supabase.com** (e-mail lub GitHub) i kliknij **New project**
+   (podaj nazwę, hasło do bazy, region np. **Central EU (Frankfurt)**). Poczekaj ~2 min.
+2. **Project Settings → API** (lub „Data API”): skopiuj **Project URL** oraz klucz
+   **anon public**.
+3. **Authentication → Sign In / Providers → Email**: wyłącz **„Confirm email”** i zapisz
+   (dzięki temu logowanie działa od razu, bez potwierdzania e-mailem).
+4. **SQL Editor → New query** → wklej i uruchom (**Run**):
+
+   ```sql
+   create table if not exists public.protokoly (
+     id text primary key,
+     user_id uuid not null default auth.uid(),
+     nazwa text, adres text, protokol_nr text,
+     dane jsonb not null,
+     updated_at timestamptz not null default now()
+   );
+   alter table public.protokoly enable row level security;
+   create policy "wlasne_protokoly" on public.protokoly for all to authenticated
+     using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+   insert into storage.buckets (id, name, public) values ('zdjecia','zdjecia', false)
+     on conflict (id) do nothing;
+   create policy "zdj_select" on storage.objects for select to authenticated
+     using (bucket_id = 'zdjecia' and owner = auth.uid());
+   create policy "zdj_insert" on storage.objects for insert to authenticated
+     with check (bucket_id = 'zdjecia' and owner = auth.uid());
+   create policy "zdj_update" on storage.objects for update to authenticated
+     using (bucket_id = 'zdjecia' and owner = auth.uid());
+   create policy "zdj_delete" on storage.objects for delete to authenticated
+     using (bucket_id = 'zdjecia' and owner = auth.uid());
+   ```
+5. W aplikacji: **☁️ Chmura** → wklej **Project URL** i **anon key** → **Zapisz** →
+   **Utwórz konto** (e-mail + hasło).
+6. Na drugim urządzeniu: **☁️ Chmura** → wklej te same URL + klucz (raz) → **Zaloguj**
+   tym samym e-mailem i hasłem. Zobaczysz **tę samą listę protokołów** (☁️ przy nazwie).
+
+> Projekty i zdjęcia zapisują się automatycznie w chmurze po zalogowaniu. Dane są
+> prywatne — chroni je mechanizm RLS Supabase (dostęp tylko dla Twojego konta).
+> Można też wpisać URL/klucz na stałe w kodzie (`src/supa.js`), aby na telefonie
+> wystarczało samo logowanie.
+
 ## Dyktowanie przez Wispr Flow (i inne)
 
 Aplikacja współpracuje z **Wispr Flow** oraz dowolnym systemowym dyktowaniem
