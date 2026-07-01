@@ -7,8 +7,7 @@ import {
 } from 'docx';
 import { wczytajZdjecie } from './storage.js';
 import {
-  STANY_TECHNICZNE, STOPNIE_PILNOSCI, RODZAJE_KONSTRUKCJI, WYPOSAZENIE,
-  wchodziDoZalecen, etykietaPilnosci,
+  RODZAJE_KONSTRUKCJI, WYPOSAZENIE, wchodziDoZalecen, etykietaPilnosci,
 } from './constants.js';
 
 const FONT = 'Calibri';
@@ -94,20 +93,41 @@ async function tabelaZdjec(zdjecia) {
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: wiersze });
 }
 
+// Kryteria oceny stanu technicznego — tekst 1:1 z wzoru (nie zmieniać).
+const KRYTERIA = [
+  ['1', 'Dobry', '0-15', 'Element budynku (lub rodzaj konstrukcji, wykończenia, wyposażenia) – jest dobrze utrzymany, konserwowany, nie wykazuje zużycia i uszkodzeń. Cechy i właściwości wbudowanych materiałów odpowiadają wymogom normy.'],
+  ['2', 'zadowalający', '16-30', 'Element budynku utrzymany jest należycie. Celowy jest remont bieżący polegający na drobnych naprawach, uzupełnieniach, konserwacji, impregnacji.'],
+  ['3', 'dostateczny', '31-50', 'W elementach budynku występują niewielkie uszkodzenia i ubytki nie zagrażające bezpieczeństwu publicznemu. Celowy jest częściowy remont kapitalny.'],
+  ['4', 'Zły', '51-73', 'W elementach budynku występują znaczne uszkodzenia, ubytki. Cechy i właściwości wbudowanych materiałów mają obniżoną klasę. Wymagany kompleksowy remont kapitalny.'],
+  ['5', 'Awaryjny', '>73', 'W elementach budynku występują znaczne uszkodzenia i ubytki. Rodzaj i zakres uszkodzeń ma bezpośredni wpływ na bezpieczeństwo konstrukcji lub  użytkowania. Wymagane jest podjęcie natychmiastowych działań interwencyjnych.'],
+];
+
 function tabelaKryteriow() {
   const header = new TableRow({ tableHeader: true, children: [
-    komorka('L.p.', { width: 7, bold: true, shade: 'D9D9D9' }),
-    komorka('Klasyfikacja stanu', { width: 23, bold: true, shade: 'D9D9D9' }),
-    komorka('Zużycie (%)', { width: 15, bold: true, shade: 'D9D9D9' }),
-    komorka('Kryterium oceny', { width: 55, bold: true, shade: 'D9D9D9' }),
+    komorka('L.p.', { width: 6, bold: true, shade: 'D9D9D9' }),
+    komorka('Klasyfikacja stanu technicznego elementu', { width: 27, bold: true, shade: 'D9D9D9' }),
+    komorka('Procentowe zużycie elementu (%)', { width: 17, bold: true, shade: 'D9D9D9' }),
+    komorka('Kryterium oceny', { width: 50, bold: true, shade: 'D9D9D9' }),
   ] });
-  const rows = STANY_TECHNICZNE.map((s, i) => new TableRow({ children: [
-    komorka(String(i + 1), { width: 7, align: AlignmentType.CENTER }),
-    komorka(s.value, { width: 23 }),
-    komorka(s.zuzycie, { width: 15, align: AlignmentType.CENTER }),
-    komorka(s.opis, { width: 55, valign: VerticalAlign.TOP }),
+  const rows = KRYTERIA.map(([lp, stan, zuz, opis]) => new TableRow({ children: [
+    komorka(lp, { width: 6, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
+    komorka(stan, { width: 27, valign: VerticalAlign.TOP }),
+    komorka(zuz, { width: 17, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
+    komorka(opis, { width: 50, valign: VerticalAlign.TOP }),
   ] }));
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] });
+}
+
+// Punkt listy a)–d): „stopień pilności (N)” pogrubiony + reszta.
+function pktPilnosci(litera, numer, tekst) {
+  return new Paragraph({
+    spacing: { after: 60 }, indent: { left: 360 },
+    children: [
+      new TextRun({ text: `${litera}) `, size: 22, font: FONT }),
+      new TextRun({ text: `stopień pilności (${numer}) `, bold: true, size: 22, font: FONT }),
+      new TextRun({ text: `– ${tekst}`, size: 22, font: FONT }),
+    ],
+  });
 }
 
 // Rozdział I — sprawdzenie wykonania zaleceń z poprzedniej kontroli
@@ -251,12 +271,15 @@ export async function generujDocx(doc) {
     ['Kubatura', m.kubatura],
   ]));
 
-  dzieci.push(naglowek('PRZYJĘTE KRYTERIA OCENY STANU TECHNICZNEGO'));
+  dzieci.push(naglowek('Przyjęte kryteria oceny stanu technicznego elementów budynku'));
+  dzieci.push(p('Dla napraw bieżących określa się czterostopniowy termin pilności wykonania naprawy. Stopień pilności wykonania naprawy głównej określa się w latach, w której planuje się realizację tej naprawy.'));
+  dzieci.push(pktPilnosci('a', '1', 'oznacza roboty awaryjne, wymagające natychmiastowego wykonania.'));
+  dzieci.push(pktPilnosci('b', '2', 'oznacza roboty wymagające wykonania w okresie 3 miesięcy od daty kontroli okresowej.'));
+  dzieci.push(pktPilnosci('c', '3', 'oznacza roboty do wykonania w przeciągu roku od daty kontroli tj. do następnego przeglądu okresowego.'));
+  dzieci.push(pktPilnosci('d', '4', 'oznacza roboty do wykonania w latach następnych, które powinny być uwzględnione w planie rzeczowo-finansowym zarządcy obiektu.'));
+  dzieci.push(p('Stopień pilności ( ) podlega weryfikacji i przekwalifikowaniu w trakcie kolejnych kontroli rocznych.'));
+  dzieci.push(p('Jednocześnie w celu przyjęcia jednolitych zasad konstruowania sumarycznej oceny stanu technicznego obiektu budowlanego poddanego okresowemu przeglądowi, zastosowano „Ogólne kryteria oceny i klasyfikacji technicznej stanu elementów budynku”, które zamieszczono w tabeli poniżej.'));
   dzieci.push(tabelaKryteriow());
-  dzieci.push(p('Stopnie pilności napraw:', { bold: true, spacing: { before: 120, after: 40 } }));
-  for (const sp of STOPNIE_PILNOSCI.filter((s) => s.value !== '0')) {
-    dzieci.push(p(`${sp.label} — ${sp.opis}`, { size: 20 }));
-  }
 
   // --- ROZDZIAŁ I ---
   dzieci.push(naglowek('ROZDZIAŁ I: Sprawdzenie wykonania zaleceń z poprzedniej kontroli', HeadingLevel.HEADING_1));

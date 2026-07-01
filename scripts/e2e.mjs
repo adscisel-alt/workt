@@ -151,6 +151,9 @@ try {
   sprawdz(docXml.includes('Fotografia'), 'Tabela Rozdziału II ma kolumnę „Fotografia”');
   sprawdz(docXml.includes('Zestawienie zaleceń'), 'Rozdział III zawiera automatyczne zestawienie zaleceń');
   sprawdz(docXml.includes('OKRESOWA ROCZNA'), 'Word zawiera wybrany rodzaj kontroli (roczna)');
+  sprawdz(docXml.includes('Przyjęte kryteria oceny stanu technicznego elementów budynku'), 'Word: tytuł kryteriów 1:1');
+  sprawdz(docXml.includes('nie zagrażające bezpieczeństwu publicznemu'), 'Word: pełny opis kryteriów 1:1');
+  sprawdz(docXml.includes('podlega weryfikacji i przekwalifikowaniu'), 'Word: akapit o weryfikacji stopnia pilności');
   sprawdz(docXml.includes('☑'), 'Dokument zawiera zaznaczone pola wyboru (dane budynku)');
   // Stopka z numeracją stron (pole PAGE) w osobnym pliku footer
   const listaFull = execSync(`unzip -l ${sciezka}`).toString();
