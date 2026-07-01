@@ -64,9 +64,6 @@ function ekranWyboruHTML(projekty) {
   return `
   <header class="topbar">
     <div class="topbar-title">📋 Protokoły kontroli</div>
-    <div class="topbar-actions">
-      <button data-action="chmura" class="btn">${cloud.status().zalogowany ? '☁️ Chmura ✓' : '☁️ Chmura'}</button>
-    </div>
   </header>
   <main class="kontener wybor">
     <div class="wybor-hero">
@@ -75,7 +72,6 @@ function ekranWyboruHTML(projekty) {
     </div>
     <div class="podtytul">Zapisane protokoły (${projekty.length})</div>
     ${lista || '<p class="pusto">Brak zapisanych protokołów. Utwórz pierwszy przyciskiem „Nowy protokół”.</p>'}
-    <p class="hint" style="margin-top:16px;">💡 Masz kopię w chmurze na innym urządzeniu? Kliknij „☁️ Chmura” → „Przywróć z chmury”.</p>
   </main>`;
 }
 
@@ -393,7 +389,6 @@ function pasekGorny() {
     <div class="topbar-actions">
       <button data-action="zapisz" class="btn">💾 Zapisz</button>
       <button data-action="eksport" class="btn btn-primary">📄 Eksport Word</button>
-      <button data-action="chmura" class="btn">${cloud.status().zalogowany ? '☁️ Chmura ✓' : '☁️ Chmura'}</button>
       <button data-action="projekty" class="btn btn-ghost">📂 Projekty</button>
     </div>
   </header>`;
