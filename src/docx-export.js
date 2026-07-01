@@ -155,9 +155,10 @@ function akapitUstalenie(u) {
 async function tabelaUstalen(ustalenia) {
   const header = new TableRow({ tableHeader: true, children: [
     komorka('L.p.', { width: 5, bold: true, shade: 'D9D9D9' }),
-    komorka('Ustalenia / opis stanu technicznego', { width: 50, bold: true, shade: 'D9D9D9' }),
+    komorka('Ustalenia / opis stanu technicznego', { width: 37, bold: true, shade: 'D9D9D9' }),
+    komorka('Ocena stanu technicznego', { width: 14, bold: true, shade: 'D9D9D9' }),
     komorka('Stopień pilności', { width: 11, bold: true, shade: 'D9D9D9' }),
-    komorka('Fotografia', { width: 34, bold: true, shade: 'D9D9D9' }),
+    komorka('Fotografia', { width: 33, bold: true, shade: 'D9D9D9' }),
   ] });
   const rows = [];
   let i = 0;
@@ -165,9 +166,10 @@ async function tabelaUstalen(ustalenia) {
     i += 1;
     rows.push(new TableRow({ children: [
       komorka(String(i), { width: 5, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
-      komorka([akapitUstalenie(u)], { width: 50, valign: VerticalAlign.TOP }),
+      komorka([akapitUstalenie(u)], { width: 37, valign: VerticalAlign.TOP }),
+      komorka(u.ocena || '', { width: 14, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
       komorka(etykietaPilnosci(u.pilnosc), { width: 11, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
-      komorka(await komorkaFoto(u.zdjecia), { width: 34, valign: VerticalAlign.TOP }),
+      komorka(await komorkaFoto(u.zdjecia), { width: 33, valign: VerticalAlign.TOP }),
     ] }));
   }
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] });
@@ -269,7 +271,6 @@ export async function generujDocx(doc) {
   dzieci.push(naglowek('ROZDZIAŁ II: Ustalenia oraz ocena stanu technicznego', HeadingLevel.HEADING_1));
   for (const s of doc.sekcje) {
     dzieci.push(naglowek(s.title || '(bez nazwy)'));
-    dzieci.push(p(`Ogólna ocena stanu technicznego: ${s.ogolnaOcena || '—'}`, { bold: true }));
     if (s.ustalenia && s.ustalenia.length) dzieci.push(await tabelaUstalen(s.ustalenia));
     if (s.zdjecia && s.zdjecia.length) {
       dzieci.push(p('Dokumentacja fotograficzna (zdjęcia ogólne):', { bold: true, spacing: { before: 120, after: 60 } }));

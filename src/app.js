@@ -45,6 +45,7 @@ function normalizuj(zap) {
     for (const u of (s.ustalenia || [])) {
       if (!Array.isArray(u.zdjecia)) u.zdjecia = [];
       if (typeof u.element !== 'string') u.element = '';
+      if (typeof u.ocena !== 'string') u.ocena = s.ogolnaOcena || 'Dobry'; // przejmij dawną ocenę sekcji
       u.pilnosc = String(u.pilnosc ?? '0');   // dawniej liczba
     }
   }
@@ -165,7 +166,11 @@ function obsluzKomende(cmd, arg) {
       } else pokazToast('Brak ustalenia do oznaczenia stopniem pilności.');
       break;
     case 'ocena':
-      if (sek && arg) { sek.ogolnaOcena = arg; zapisz(); render(); pokazToast('Ocena: ' + arg); }
+      if (sek && arg && sek.ustalenia.length) {
+        let uid2 = (aktywneUstId && sek.ustalenia.some((u) => u.id === aktywneUstId)) ? aktywneUstId : sek.ustalenia[sek.ustalenia.length - 1].id;
+        const u = sek.ustalenia.find((x) => x.id === uid2);
+        if (u) { u.ocena = arg; zapisz(); render(); pokazToast('Ocena: ' + arg); }
+      } else pokazToast('Najpierw dodaj ustalenie, aby nadać ocenę.');
       break;
     case 'zdjecie': {
       if (!sek) { pokazToast('Najpierw dodaj sekcję.'); break; }
@@ -569,8 +574,6 @@ function podpowiedziSekcji(s) {
 
 function kartaSekcji(s) {
   const aktywna = s.id === aktywnaSekcjaId;
-  const oceny = STANY_TECHNICZNE.map((o) =>
-    `<option value="${o.value}" ${o.value === s.ogolnaOcena ? 'selected' : ''}>${o.value}</option>`).join('');
 
   const ustalenia = s.ustalenia.map((u, i) => {
     const fot = renderGaleria(s.id, u.id, u.zdjecia);
@@ -584,6 +587,12 @@ function kartaSekcji(s) {
             placeholder="Element (np. Obróbki blacharskie)" value="${esc(u.element)}" />
           <textarea data-sec="${s.id}" data-ust="${u.id}" data-field="text" rows="2"
             placeholder="Opis stanu / usterki…">${escapeHtml(u.text)}</textarea>
+          <label class="ust-ocena">Ocena stanu:
+            <select data-sec="${s.id}" data-ust="${u.id}" data-field="ocena">
+              ${STANY_TECHNICZNE.map((o) =>
+    `<option value="${o.value}" ${o.value === u.ocena ? 'selected' : ''}>${o.value}</option>`).join('')}
+            </select>
+          </label>
         </div>
         <select data-sec="${s.id}" data-ust="${u.id}" data-field="pilnosc" title="Stopień pilności">
           ${STOPNIE_PILNOSCI.map((sp) =>
@@ -613,9 +622,6 @@ function kartaSekcji(s) {
     <div class="sekcja-head">
       <input class="sekcja-title" data-sec="${s.id}" data-field="title"
         placeholder="Nazwa obszaru kontroli" value="${esc(s.title)}" />
-      <label class="ocena-label">Ocena:
-        <select data-sec="${s.id}" data-field="ogolnaOcena">${oceny}</select>
-      </label>
       <button class="btn-mini btn-del" data-action="usun-sekcje" data-sec="${s.id}">🗑️</button>
     </div>
 
@@ -894,6 +900,9 @@ function onChange(e) {
     if (u) u.pilnosc = el.value;
     zapisz(); render(); // odśwież podgląd zaleceń w Rozdziale III
     return;
+  } else if (ust && field === 'ocena') {
+    const u = s.ustalenia.find((x) => x.id === ust);
+    if (u) u.ocena = el.value;
   } else if (field === 'ogolnaOcena') {
     s.ogolnaOcena = el.value;
   }

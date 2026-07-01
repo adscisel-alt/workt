@@ -200,7 +200,7 @@ export function nowaSekcja(title = '', klucz = '') {
 }
 
 export function noweUstalenie(text = '', element = '') {
-  return { id: uid(), element, text, pilnosc: '0', zdjecia: [] };
+  return { id: uid(), element, text, ocena: 'Dobry', pilnosc: '0', zdjecia: [] };
 }
 
 export function noweZdjecie(opis = '') {

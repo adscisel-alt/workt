@@ -70,16 +70,16 @@ try {
 
   const secId = await page.locator('[data-sec-card]').last().getAttribute('data-sec-card');
 
-  // Ustaw ocenę
-  await page.selectOption(`[data-sec="${secId}"][data-field="ogolnaOcena"]`, 'Zły');
-
   // Dodaj ustalenie
   await page.click(`[data-action="dodaj-ust"][data-sec="${secId}"]`);
   await page.waitForSelector(`[data-sec="${secId}"][data-field="text"]`);
   await page.fill(`[data-sec="${secId}"][data-field="element"]`, 'Ściany zewnętrzne');
   await page.fill(`[data-sec="${secId}"][data-field="text"]`, 'Mechaniczne uszkodzenia ścian przy wejściu do śmietnika.');
+  // Ocena stanu technicznego przy tej pozycji
+  await page.selectOption(`[data-sec="${secId}"][data-field="ocena"]`, 'Zły');
+  const ocenaVal = await page.locator(`[data-sec="${secId}"][data-field="ocena"]`).first().inputValue();
+  sprawdz(ocenaVal === 'Zły', 'Ocena przypisana do pozycji (nie do sekcji)');
   // Stopień pilności
-  await page.selectOption(`[data-sec="${secId}"][data-ust]`, '2').catch(() => {});
   const pilnoscEl = page.locator(`[data-sec="${secId}"][data-field="pilnosc"]`).first();
   await pilnoscEl.selectOption('2');
   await page.waitForTimeout(200);
