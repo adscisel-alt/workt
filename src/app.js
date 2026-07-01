@@ -2,7 +2,7 @@ import './styles.css';
 import {
   pustyDokument, nowaSekcja, noweUstalenie, noweZdjecie, noweZalecenieI,
   STANY_TECHNICZNE, STOPNIE_PILNOSCI, SZABLONY_SEKCJI, DOMYSLNE_SEKCJE, PODPOWIEDZI_SEKCJI,
-  RODZAJE_KONSTRUKCJI, WYPOSAZENIE, STATUSY_WYKONANIA, OSOBY_PRZEGLAD,
+  RODZAJE_KONSTRUKCJI, WYPOSAZENIE, STATUSY_WYKONANIA, OSOBY_PRZEGLAD, RODZAJE_KONTROLI,
   wchodziDoZalecen, etykietaPilnosci,
 } from './constants.js';
 import {
@@ -463,7 +463,12 @@ function sekcjaMeta() {
     <div class="grid2">
       ${pole('Numer protokołu', { meta: 'protokolNr' }, m.protokolNr)}
       ${pole('Branża', { meta: 'branza' }, m.branza)}
-      ${pole('Rodzaj kontroli', { meta: 'rodzajKontroli' }, m.rodzajKontroli)}
+      <label class="pole"><span>Rodzaj kontroli (częstotliwość)</span>
+        <select data-meta-select="rodzajKontroli">
+          ${RODZAJE_KONTROLI.concat(RODZAJE_KONTROLI.includes(m.rodzajKontroli) ? [] : [m.rodzajKontroli].filter(Boolean))
+    .map((o) => `<option value="${esc(o)}" ${o === m.rodzajKontroli ? 'selected' : ''}>${esc(o)}</option>`).join('')}
+        </select>
+      </label>
       ${pole('Data kontroli', { meta: 'dataKontroli' }, m.dataKontroli)}
       ${pole('Data następnej kontroli', { meta: 'dataNastepnej' }, m.dataNastepnej)}
       ${pole('Nr ewidencyjny obiektu', { meta: 'nrEwidencyjny' }, m.nrEwidencyjny)}
@@ -859,6 +864,9 @@ function onInput(e) {
 
 function onChange(e) {
   const el = e.target;
+  // Pole meta wybierane z listy (np. rodzaj kontroli)
+  const metaSel = el.getAttribute && el.getAttribute('data-meta-select');
+  if (metaSel) { doc.meta[metaSel] = el.value; zapisz(); return; }
   // Wybór osoby z zapisanej listy
   if (el.hasAttribute && el.hasAttribute('data-osoba-select')) {
     if (el.value !== '') dodajInspektoraZListy(parseInt(el.value, 10));

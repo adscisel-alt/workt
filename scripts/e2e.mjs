@@ -46,6 +46,7 @@ try {
 
   // Dane protokołu
   await page.fill('[data-meta="protokolNr"]', '16/2026');
+  await page.selectOption('[data-meta-select="rodzajKontroli"]', 'OKRESOWA ROCZNA (RAZ W ROKU)');
   await page.fill('[data-meta="adres"]', '03-286 Warszawa, ul. Żeromskiego 17');
 
   // Nowy protokół ma domyślny zestaw sekcji
@@ -149,6 +150,7 @@ try {
   sprawdz(docXml.includes('ROZDZIAŁ I'), 'Dokument zawiera Rozdział I');
   sprawdz(docXml.includes('Fotografia'), 'Tabela Rozdziału II ma kolumnę „Fotografia”');
   sprawdz(docXml.includes('Zestawienie zaleceń'), 'Rozdział III zawiera automatyczne zestawienie zaleceń');
+  sprawdz(docXml.includes('OKRESOWA ROCZNA'), 'Word zawiera wybrany rodzaj kontroli (roczna)');
   sprawdz(docXml.includes('☑'), 'Dokument zawiera zaznaczone pola wyboru (dane budynku)');
   // Stopka z numeracją stron (pole PAGE) w osobnym pliku footer
   const listaFull = execSync(`unzip -l ${sciezka}`).toString();

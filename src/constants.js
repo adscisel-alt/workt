@@ -165,6 +165,13 @@ export function pustyDokument() {
   };
 }
 
+// Rodzaj (częstotliwość) kontroli okresowej — do wyboru na górze protokołu
+export const RODZAJE_KONTROLI = [
+  'OKRESOWA PÓŁROCZNA (DWA RAZY W ROKU)',
+  'OKRESOWA ROCZNA (RAZ W ROKU)',
+  'OKRESOWA PIĘCIOLETNIA (RAZ NA 5 LAT)',
+];
+
 // Rodzaje konstrukcji (do zaznaczenia)
 export const RODZAJE_KONSTRUKCJI = [
   'stalowa', 'murowana', 'drewniana', 'żelbetowa', 'mieszana', 'inna',
