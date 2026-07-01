@@ -187,8 +187,8 @@ export function nowaSekcja(title = '', klucz = '') {
   };
 }
 
-export function noweUstalenie(text = '') {
-  return { id: uid(), text, pilnosc: 0, zdjecia: [] };
+export function noweUstalenie(text = '', element = '') {
+  return { id: uid(), element, text, pilnosc: 0, zdjecia: [] };
 }
 
 export function noweZdjecie(opis = '') {

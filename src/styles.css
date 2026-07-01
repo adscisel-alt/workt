@@ -126,6 +126,15 @@ input:focus, textarea:focus, select:focus {
 .ust-row { margin-bottom: 6px; }
 .ust-lp { text-align: center; padding-top: 9px; color: var(--szary); font-weight: 700; }
 .ust-row select { width: 64px; padding: 9px 4px; }
+.ust-tresc { display: flex; flex-direction: column; gap: 6px; }
+.ust-element { font-weight: 600; }
+
+/* Podgląd tabeli zaleceń (Rozdział III) */
+.zal-tabela { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 14px; }
+.zal-tabela th, .zal-tabela td { border: 1px solid var(--linia); padding: 7px 9px; vertical-align: top; text-align: left; }
+.zal-tabela thead th { background: #eef2f6; }
+.zal-tabela .z-lp, .zal-tabela .z-pil { text-align: center; width: 40px; white-space: nowrap; }
+.zal-tabela .z-pil { width: 70px; font-weight: 700; }
 
 /* ---------- Zdjęcia ---------- */
 /* Karta pojedynczego ustalenia z paskiem zdjęć */

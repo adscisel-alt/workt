@@ -41,7 +41,10 @@ function normalizuj(zap) {
   if (!Array.isArray(d.meta.wyposazenieDodatkowe)) d.meta.wyposazenieDodatkowe = [];
   for (const s of (d.sekcje || [])) {
     if (!Array.isArray(s.zdjecia)) s.zdjecia = [];
-    for (const u of (s.ustalenia || [])) if (!Array.isArray(u.zdjecia)) u.zdjecia = [];
+    for (const u of (s.ustalenia || [])) {
+      if (!Array.isArray(u.zdjecia)) u.zdjecia = [];
+      if (typeof u.element !== 'string') u.element = '';
+    }
   }
   return d;
 }
@@ -240,13 +243,14 @@ function usunSekcje(id) {
   sprzatnijZdjecia();
 }
 
-function dodajUstalenie(sekId, text) {
+function dodajUstalenie(sekId, text, element = '') {
   const s = doc.sekcje.find((x) => x.id === sekId);
   if (!s) return;
-  const u = noweUstalenie(text);
+  const u = noweUstalenie(text, element);
   s.ustalenia.push(u);
   zapiszTeraz(); render();
-  ustawFokus(`[data-sec="${sekId}"][data-ust="${u.id}"][data-field="text"]`);
+  // Ustaw kursor: gdy dodano z listy (jest element) — w opisie; inaczej w elemencie
+  ustawFokus(`[data-sec="${sekId}"][data-ust="${u.id}"][data-field="${element ? 'text' : 'element'}"]`);
 }
 
 function usunUstalenie(sekId, ustId) {
@@ -572,8 +576,12 @@ function kartaSekcji(s) {
     <div class="ust-card" data-ust-card="${u.id}">
       <div class="ust-row">
         <span class="ust-lp">${i + 1}</span>
-        <textarea data-sec="${s.id}" data-ust="${u.id}" data-field="text" rows="2"
-          placeholder="Opis stanu / usterki…">${escapeHtml(u.text)}</textarea>
+        <div class="ust-tresc">
+          <input class="ust-element" data-sec="${s.id}" data-ust="${u.id}" data-field="element"
+            placeholder="Element (np. Obróbki blacharskie)" value="${esc(u.element)}" />
+          <textarea data-sec="${s.id}" data-ust="${u.id}" data-field="text" rows="2"
+            placeholder="Opis stanu / usterki…">${escapeHtml(u.text)}</textarea>
+        </div>
         <select data-sec="${s.id}" data-ust="${u.id}" data-field="pilnosc" title="Stopień pilności">
           ${STOPNIE_PILNOSCI.map((sp) =>
     `<option value="${sp.value}" ${sp.value === u.pilnosc ? 'selected' : ''}>${sp.label}</option>`).join('')}
@@ -634,12 +642,44 @@ function kartaSekcji(s) {
   </section>`;
 }
 
+// Zbiera zalecenia z Rozdziału II (ustalenia z nadanym stopniem pilności 1–4).
+function zebraneZalecenia() {
+  const out = [];
+  for (const s of doc.sekcje) {
+    for (const u of s.ustalenia) {
+      if (u.pilnosc >= 1 && u.pilnosc <= 4) {
+        const el = (u.element || '').trim();
+        const tx = (u.text || '').trim();
+        const tresc = el ? (tx ? `${el} – ${tx}` : el) : tx;
+        out.push({ element: el, text: tx, tresc, pilnosc: u.pilnosc });
+      }
+    }
+  }
+  return out;
+}
+
 function sekcjaPodsumowania() {
+  const zal = zebraneZalecenia();
+  const wiersze = zal.map((z, i) => `
+    <tr>
+      <td class="z-lp">${i + 1}</td>
+      <td>${z.element ? `<strong>${escapeHtml(z.element)}</strong>${z.text ? ' – ' : ''}` : ''}${escapeHtml(z.text)}</td>
+      <td class="z-pil">${z.pilnosc}</td>
+    </tr>`).join('');
+  const tabela = zal.length ? `
+    <table class="zal-tabela">
+      <thead><tr><th>L.p.</th><th>Zalecenia</th><th>Stopień pilności</th></tr></thead>
+      <tbody>${wiersze}</tbody>
+    </table>` : '<p class="pusto-mini">Brak zaleceń — nadaj ustaleniom w Rozdziale II stopień pilności 1–4, a pojawią się tu automatycznie.</p>';
+
   return `
   <div class="naglowek-rozdzialu">📝 ROZDZIAŁ III — Zalecenia, podsumowanie i wnioski</div>
   <div class="karta">
-    ${pole('Podsumowanie i wnioski (każdy akapit w nowej linii)', { meta: 'podsumowanie-pole', field: 'podsumowanie' },
-    doc.podsumowanie, { textarea: true, rows: 8 })}
+    <div class="podtytul">Zalecenia (generowane automatycznie z Rozdziału II) — ${zal.length}</div>
+    ${tabela}
+    <div class="podtytul" style="margin-top:14px;">Dodatkowe podsumowanie i wnioski (opcjonalnie)</div>
+    ${pole('Każdy akapit w nowej linii', { meta: 'podsumowanie-pole', field: 'podsumowanie' },
+    doc.podsumowanie, { textarea: true, rows: 5 })}
   </div>`;
 }
 
@@ -798,9 +838,9 @@ function onInput(e) {
       const arr = tablicaZdjec(sec, ust);
       const z = arr && arr.find((x) => x.id === foto);
       if (z) z.opis = el.value;
-    } else if (ust && field === 'text') {
+    } else if (ust && (field === 'text' || field === 'element')) {
       const u = s.ustalenia.find((x) => x.id === ust);
-      if (u) u.text = el.value;
+      if (u) u[field] = el.value;
     } else if (field === 'title') {
       s.title = el.value;
     }
@@ -815,10 +855,10 @@ function onChange(e) {
     if (el.value !== '') dodajInspektoraZListy(parseInt(el.value, 10));
     return;
   }
-  // Wstawienie gotowego elementu jako ustalenia
+  // Wstawienie gotowego elementu jako ustalenia (element pogrubiony + pusty opis)
   if (el.hasAttribute && el.hasAttribute('data-elem-select')) {
     const sec = el.getAttribute('data-sec');
-    if (sec && el.value !== '') dodajUstalenie(sec, el.value);
+    if (sec && el.value !== '') dodajUstalenie(sec, '', el.value);
     return;
   }
   // Checkboxy: rodzaj konstrukcji / wyposażenie
@@ -849,6 +889,8 @@ function onChange(e) {
   if (ust && field === 'pilnosc') {
     const u = s.ustalenia.find((x) => x.id === ust);
     if (u) u.pilnosc = parseInt(el.value, 10);
+    zapisz(); render(); // odśwież podgląd zaleceń w Rozdziale III
+    return;
   } else if (field === 'ogolnaOcena') {
     s.ogolnaOcena = el.value;
   }

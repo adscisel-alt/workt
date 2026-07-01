@@ -138,6 +138,18 @@ async function komorkaFoto(zdjecia) {
   return dzieci;
 }
 
+// Akapit treści ustalenia: pogrubiony element + opis.
+function akapitUstalenie(u) {
+  const el = (u.element || '').trim();
+  const tx = (u.text || '').trim();
+  const runs = [];
+  if (el) runs.push(new TextRun({ text: el, bold: true, size: 22, font: FONT }));
+  if (el && tx) runs.push(new TextRun({ text: ' – ', size: 22, font: FONT }));
+  if (tx) runs.push(new TextRun({ text: tx, size: 22, font: FONT }));
+  if (!runs.length) runs.push(new TextRun({ text: '', size: 22, font: FONT }));
+  return new Paragraph({ spacing: { after: 40 }, children: runs });
+}
+
 // Tabela ustaleń w układzie wzoru: 4 kolumny z kolumną „Fotografia”.
 async function tabelaUstalen(ustalenia) {
   const header = new TableRow({ tableHeader: true, children: [
@@ -152,12 +164,34 @@ async function tabelaUstalen(ustalenia) {
     i += 1;
     rows.push(new TableRow({ children: [
       komorka(String(i), { width: 5, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
-      komorka(u.text || '', { width: 50, valign: VerticalAlign.TOP }),
+      komorka([akapitUstalenie(u)], { width: 50, valign: VerticalAlign.TOP }),
       komorka(u.pilnosc ? String(u.pilnosc) : '—', { width: 11, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
       komorka(await komorkaFoto(u.zdjecia), { width: 34, valign: VerticalAlign.TOP }),
     ] }));
   }
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] });
+}
+
+// Automatyczna tabela zaleceń (Rozdział III) — z ustaleń Rozdziału II z pilnością 1–4.
+function tabelaZalecen(doc) {
+  const zal = [];
+  for (const s of doc.sekcje || []) {
+    for (const u of s.ustalenia || []) {
+      if (u.pilnosc >= 1 && u.pilnosc <= 4) zal.push(u);
+    }
+  }
+  const header = new TableRow({ tableHeader: true, children: [
+    komorka('L.p.', { width: 6, bold: true, shade: 'D9D9D9' }),
+    komorka('Zalecenia', { width: 79, bold: true, shade: 'D9D9D9' }),
+    komorka('Stopień pilności', { width: 15, bold: true, shade: 'D9D9D9' }),
+  ] });
+  const rows = zal.map((u, i) => new TableRow({ children: [
+    komorka(String(i + 1), { width: 6, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
+    komorka([akapitUstalenie(u)], { width: 79, valign: VerticalAlign.TOP }),
+    komorka(String(u.pilnosc), { width: 15, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
+  ] }));
+  return { liczba: zal.length,
+    tabela: new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] }) };
 }
 
 export async function generujDocx(doc) {
@@ -244,9 +278,18 @@ export async function generujDocx(doc) {
 
   // --- ROZDZIAŁ III ---
   dzieci.push(naglowek('ROZDZIAŁ III: Zalecenia, podsumowanie i wnioski', HeadingLevel.HEADING_1));
+  const { liczba, tabela } = tabelaZalecen(doc);
+  if (liczba) {
+    dzieci.push(p('Zestawienie zaleceń (wg stopnia pilności):', { bold: true, spacing: { after: 60 } }));
+    dzieci.push(tabela);
+  } else {
+    dzieci.push(p('Brak zaleceń wymagających określenia stopnia pilności.', { italics: true }));
+  }
   const akapityPods = (doc.podsumowanie || '').split('\n').filter((l) => l.trim());
-  if (akapityPods.length) for (const a of akapityPods) dzieci.push(p(a));
-  else dzieci.push(p('—'));
+  if (akapityPods.length) {
+    dzieci.push(p('Podsumowanie i wnioski:', { bold: true, spacing: { before: 160, after: 60 } }));
+    for (const a of akapityPods) dzieci.push(p(a));
+  }
   dzieci.push(new Paragraph({ spacing: { before: 600 }, alignment: AlignmentType.CENTER,
     children: [new TextRun({ text: 'Podpisy osób wykonujących przegląd:', italics: true, font: FONT })] }));
   for (const ins of (m.inspektorzy || [])) {

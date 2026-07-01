@@ -65,8 +65,8 @@ try {
   sprawdz(maElem === 1, 'Sekcja domyślna ma listę gotowych elementów');
   await page.selectOption(`[data-elem-select][data-sec="${pierwszaSek}"]`, 'Obróbki blacharskie');
   await page.waitForTimeout(200);
-  const elemText = await page.locator(`[data-sec="${pierwszaSek}"][data-field="text"]`).last().inputValue();
-  sprawdz(elemText === 'Obróbki blacharskie', 'Wstawiono gotowy element jako ustalenie');
+  const elemText = await page.locator(`[data-sec="${pierwszaSek}"][data-field="element"]`).last().inputValue();
+  sprawdz(elemText === 'Obróbki blacharskie', 'Wstawiono gotowy element (pole Element)');
 
   const secId = await page.locator('[data-sec-card]').last().getAttribute('data-sec-card');
 
@@ -76,12 +76,17 @@ try {
   // Dodaj ustalenie
   await page.click(`[data-action="dodaj-ust"][data-sec="${secId}"]`);
   await page.waitForSelector(`[data-sec="${secId}"][data-field="text"]`);
+  await page.fill(`[data-sec="${secId}"][data-field="element"]`, 'Ściany zewnętrzne');
   await page.fill(`[data-sec="${secId}"][data-field="text"]`, 'Mechaniczne uszkodzenia ścian przy wejściu do śmietnika.');
   // Stopień pilności
   await page.selectOption(`[data-sec="${secId}"][data-ust]`, '2').catch(() => {});
   const pilnoscEl = page.locator(`[data-sec="${secId}"][data-field="pilnosc"]`).first();
   await pilnoscEl.selectOption('2');
+  await page.waitForTimeout(200);
   sprawdz((await pilnoscEl.inputValue()) === '2', 'Ustawiono stopień pilności');
+  // Rozdział III — automatyczny podgląd zaleceń
+  const wierszeZal = await page.locator('.zal-tabela tbody tr').count();
+  sprawdz(wierszeZal >= 1, 'Rozdział III: zalecenie pojawiło się automatycznie w tabeli');
 
   // Dodaj zdjęcie DO USTALENIA (klik „Zdjęcie” w karcie ustalenia ustawia cel)
   await page.click(`.ust-card [data-action="z-pliku"][data-ust]`);
@@ -138,6 +143,7 @@ try {
   sprawdz(docXml.includes('Elewacje'), 'Dokument zawiera nazwę sekcji');
   sprawdz(docXml.includes('ROZDZIAŁ I'), 'Dokument zawiera Rozdział I');
   sprawdz(docXml.includes('Fotografia'), 'Tabela Rozdziału II ma kolumnę „Fotografia”');
+  sprawdz(docXml.includes('Zestawienie zaleceń'), 'Rozdział III zawiera automatyczne zestawienie zaleceń');
   sprawdz(docXml.includes('☑'), 'Dokument zawiera zaznaczone pola wyboru (dane budynku)');
   // Stopka z numeracją stron (pole PAGE) w osobnym pliku footer
   const listaFull = execSync(`unzip -l ${sciezka}`).toString();
