@@ -2,3 +2,8 @@
 grid-*.png
 ocr-*.png
 crop_*.png
+chk*.png
+ocr*.txt
+scratch*
+__pycache__/
+*.pyc
