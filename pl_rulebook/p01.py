@@ -5,14 +5,14 @@ SNOW = (228, 233, 237)
 STORY = (40, 44, 50)
 
 def build():
-    p = new(1)
+    p = Page(1)
 
     # sample the actual foreground colour near the text columns
     global SNOW
-    SNOW = p.sample(760, 1150, 6)
+    SNOW = (242, 243, 244)
 
     # LEFT story column
-    p.erase((120, 1110, 862, 1640), SNOW, padx=6, pady=4)
+    p.cover((104, 1122, 866, 1648), SNOW)
     p.paragraphs((132, 1120, 852, 1636), [
         [it("Światło świtu przeciskało się między bogato zdobionymi kolumnami "
             "portyku otaczającego sadzawkę. Pośrodku sadzawki znajdowała się "
@@ -40,7 +40,7 @@ def build():
     ], size=20, para_gap=0.4, color=STORY, justify=True)
 
     # RIGHT story column
-    p.erase((884, 1110, 1622, 1640), SNOW, padx=6, pady=4)
+    p.cover((882, 1122, 1628, 1648), SNOW)
     p.paragraphs((896, 1120, 1614, 1636), [
         [it("środka gwiazdy i ukląkł, zginając swe długie, muskularne nogi. "
             "Natychmiast, w niezmiennym rytmie litanii, postacie owinięte w biel "
