@@ -9,8 +9,8 @@ const LS_UP = 'supa_wyslane'; // lista id zdjęć już wysłanych
 
 // Można wpisać na stałe (wtedy na każdym urządzeniu wystarczy samo logowanie).
 // Klucz „anon public” jest przeznaczony do umieszczania w aplikacji (dane chroni RLS).
-const DOMYSLNY_URL = '';
-const DOMYSLNY_KEY = '';
+const DOMYSLNY_URL = 'https://wksfihvyccvvfdgicvji.supabase.co';
+const DOMYSLNY_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indrc2ZpaHZ5Y2N2dmZkZ2ljdmppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNjM2NTAsImV4cCI6MjA5ODgzOTY1MH0.EQd3epfubYJOOgOB6l4lqb1SZejMTbgJ00VxmuS8K0o';
 
 let url = localStorage.getItem(LS_URL) || DOMYSLNY_URL;
 let key = localStorage.getItem(LS_KEY) || DOMYSLNY_KEY;
