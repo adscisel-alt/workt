@@ -78,7 +78,7 @@
   .overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
     padding:18px;background:rgba(6,12,22,.86);backdrop-filter:blur(3px);border-radius:3px;z-index:5}
   .overlay.on{display:flex}
-  .card{max-width:560px;width:100%;max-height:100%;overflow:auto;
+  .card{max-width:560px;width:100%;max-height:100%;overflow:auto;line-height:1.5;
     background:linear-gradient(#f4eeddee,#e5dcc4ee);color:var(--ink);
     border:3px solid var(--gold);border-radius:10px;padding:22px 22px 20px;
     box-shadow:0 18px 50px rgba(0,0,0,.6)}
@@ -101,6 +101,29 @@
   .muteBtn{position:absolute;top:8px;right:8px;z-index:6;background:rgba(10,22,38,.7);
     border:1px solid rgba(217,164,65,.5);color:var(--gold2);border-radius:6px;
     width:34px;height:34px;font-size:16px;cursor:pointer;line-height:1}
+
+  /* High scores */
+  .scoresWrap{margin:4px 0 2px}
+  table.scores{width:100%;border-collapse:collapse;font-size:14px}
+  table.scores th,table.scores td{padding:3px 8px;text-align:left;border-bottom:1px solid rgba(138,90,30,.22)}
+  table.scores th{color:#8a5a25;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  table.scores td:nth-child(3){font-weight:700;color:#6b3410}
+  table.scores tr.hl td{background:#f5d98a}
+  .scoresTitle{color:#6b3410;font-size:16px;margin:12px 0 2px}
+  .entry{margin:10px 0;text-align:center}
+  .entry label{font-size:14px;color:#6b3410}
+  .initials{font-family:monospace;font-size:18px;text-transform:uppercase;width:78px;text-align:center;
+    letter-spacing:5px;padding:5px;margin:0 8px;border:2px solid var(--gold);border-radius:5px;background:#fff;color:#1b1206}
+  /* Monument preview inside info card (animated Ken Burns) */
+  #iPhoto{display:block;width:100%;max-width:480px;height:auto;margin:0 auto 4px;border-radius:8px;
+    border:2px solid var(--gold);box-shadow:0 6px 18px rgba(0,0,0,.35);
+    animation:kenburns 20s ease-in-out infinite alternate}
+  @keyframes kenburns{from{transform:scale(1) translateX(0)}to{transform:scale(1.07) translateX(-1%)}}
+  .attr{font-size:11px;color:#7a5a2a;text-align:center;margin:0 0 8px}
+  .attr a{color:#8a5a25}
+  .photoTag{position:absolute;left:8px;top:8px;z-index:6;font-size:11px;letter-spacing:.05em;
+    background:rgba(10,22,38,.72);border:1px solid rgba(217,164,65,.5);color:var(--gold2);
+    padding:3px 8px;border-radius:6px;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
@@ -123,6 +146,7 @@
     <div class="meander-top" id="mTop"></div>
     <div class="stage">
       <button class="muteBtn" id="muteBtn" title="Dźwięk">🔊</button>
+      <div class="photoTag" id="photoTag" style="display:none"></div>
       <canvas id="game" width="800" height="600"></canvas>
 
       <!-- MENU -->
@@ -143,6 +167,8 @@
           <div class="actions">
             <button class="btn" id="btnStart">▶ Rozpocznij grę</button>
           </div>
+          <h3 class="scoresTitle">🏆 Najlepsze wyniki</h3>
+          <div class="scoresWrap" id="menuScores"></div>
         </div>
       </div>
 
@@ -152,6 +178,8 @@
           <div id="infoBadge" class="badge center" style="display:none">Zabytek odkryty!</div>
           <h2 id="iName">—</h2>
           <div class="greek" id="iGreek">—</div>
+          <canvas id="iPhoto" width="480" height="360"></canvas>
+          <div class="attr" id="iAttr"></div>
           <dl class="meta" id="iMeta"></dl>
           <p class="desc" id="iDesc">—</p>
           <div class="actions" id="iActions"></div>
@@ -163,6 +191,13 @@
         <div class="card center">
           <h2 style="color:#7a1f10">Koniec gry</h2>
           <p class="desc center" id="overTxt">Zabrakło żyć.</p>
+          <div class="entry" id="overEntry" style="display:none">
+            <label>Twoje inicjały:
+              <input id="overName" class="initials" maxlength="3" placeholder="ABC" autocomplete="off"></label>
+            <button class="btn small" id="overSave">Zapisz</button>
+          </div>
+          <h3 class="scoresTitle">🏆 Najlepsze wyniki</h3>
+          <div class="scoresWrap" id="overScores"></div>
           <div class="actions"><button class="btn" id="btnRetry">↻ Zagraj ponownie</button></div>
         </div>
       </div>
@@ -175,6 +210,13 @@
           <p class="desc center" id="winTxt">Odkryłeś skarby starożytnej Grecji!</p>
           <div class="gallery" id="winGallery"></div>
           <p class="center" style="font-size:13px;color:#6b4a12">Kliknij zabytek, aby przypomnieć sobie jego historię.</p>
+          <div class="entry" id="winEntry" style="display:none">
+            <label>Twoje inicjały:
+              <input id="winName" class="initials" maxlength="3" placeholder="ABC" autocomplete="off"></label>
+            <button class="btn small" id="winSave">Zapisz</button>
+          </div>
+          <h3 class="scoresTitle">🏆 Najlepsze wyniki</h3>
+          <div class="scoresWrap" id="winScores"></div>
           <div class="actions"><button class="btn" id="btnAgain">↻ Zagraj od nowa</button></div>
         </div>
       </div>
@@ -199,7 +241,7 @@
   </p>
 
   <a class="foot" href="https://code.claude.com/docs" target="_blank" rel="noopener">
-    Gra utworzona w Claude Code · grafiki wektorowe</a>
+    Gra utworzona w Claude Code · zdjęcia z Wikimedia Commons, w trybie offline rysunek wektorowy</a>
 </div>
 
 <script>
@@ -219,11 +261,17 @@ const TARGET = 75;                          // % of interior to complete a level
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 
-// offscreen artwork (2x) + reveal layer (1x)
+// offscreen artwork (2x)
 const bg = document.createElement('canvas'); bg.width = W*SS; bg.height = H*SS;
 const bgc = bg.getContext('2d');
-const rv = document.createElement('canvas'); rv.width = W; rv.height = H;
-const rvc = rv.getContext('2d');
+// background scene at board size (vector art OR real photo), a claim-mask, and a compositing buffer
+function mkC(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+const srcC = mkC(W,H), maskC = mkC(W,H), sceneC = mkC(W,H);
+const srcCtx = srcC.getContext('2d'), maskCtx = maskC.getContext('2d'), sceneCtx = sceneC.getContext('2d');
+let animT = 0;          // ken-burns clock (seconds)
+let kbPhase = 0;        // per-level phase, varies the pan
+let photoInfo = null;   // {artist,license,title,sourceUrl} when a real photo is shown
+let bgLoadToken = 0;    // guards async photo loads against level switches
 
 // veil pattern (Greek meander over dark stone)
 const veil = makeVeilPattern();
@@ -543,18 +591,22 @@ function makeVeilPattern(){
 // ============================================================
 function loadLevel(i){
   const m = MONUMENTS[i];
-  // paint artwork
+  // paint vector artwork as the baseline background (instant, works offline)
   bgc.clearRect(0,0,bg.width,bg.height);
   m.paint(bgc);
+  srcCtx.clearRect(0,0,W,H); srcCtx.drawImage(bg,0,0,W,H);
+  photoInfo=null; kbPhase=i*1.7; setPhotoTag();
   // reset grid
   grid = new Uint8Array(COLS*ROWS);
   for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++)
     if(x===0||x===COLS-1||y===0||y===ROWS-1) grid[idx(x,y)]=FILLED;
-  // reveal border ring
-  rvc.clearRect(0,0,W,H);
+  // reset claim mask + reveal border ring
+  maskCtx.clearRect(0,0,W,H);
   for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++)
     if(grid[idx(x,y)]===FILLED) revealCell(x,y);
   claimedInterior=0;
+  // try to swap in a real photograph of the monument (async; keeps the art if it fails)
+  loadRealPhoto(m, ++bgLoadToken);
   // player at bottom-middle border
   player={x:(COLS/2)|0, y:ROWS-1};
   trail=[]; trailSet=new Set(); drawing=false; heldDir=null; lastDir=null;
@@ -574,8 +626,74 @@ function loadLevel(i){
   updateHUD();
 }
 
-function revealCell(x,y){
-  rvc.drawImage(bg, x*CELL*SS, y*CELL*SS, CELL*SS, CELL*SS, x*CELL, y*CELL, CELL, CELL);
+function revealCell(x,y){ maskCtx.fillStyle='#fff'; maskCtx.fillRect(x*CELL, y*CELL, CELL, CELL); }
+
+// ============================================================
+//  REAL PHOTOGRAPHS  (loaded live; silently fall back to vector art)
+//  Priority: local file img/<id>.jpg  ->  Wikimedia Commons  ->  vector art
+// ============================================================
+const PHOTO_QUERY = {
+  parthenon:  'Parthenon Acropolis Athens temple',
+  erechtheion:'Caryatids Erechtheion Acropolis Athens',
+  sounion:    'Temple of Poseidon Sounion'
+};
+function drawCover(img){
+  const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+  if(!iw||!ih) return;
+  const s=Math.max(W/iw, H/ih), dw=iw*s, dh=ih*s;
+  srcCtx.clearRect(0,0,W,H);
+  srcCtx.drawImage(img, (W-dw)/2, (H-dh)/2, dw, dh);
+}
+function loadImage(url, cross){
+  return new Promise((res,rej)=>{ const im=new Image();
+    if(cross) im.crossOrigin='anonymous';
+    im.onload=()=>res(im); im.onerror=()=>rej(new Error('img')); im.src=url; });
+}
+async function loadRealPhoto(m, token){
+  // 1) local override the user can drop in next to index.html
+  try{ const im=await loadImage('img/'+m.id+'.jpg', false);
+    if(token!==bgLoadToken) return;
+    drawCover(im); photoInfo={artist:'plik lokalny',license:'',title:'img/'+m.id+'.jpg',sourceUrl:''};
+    setPhotoTag(); return;
+  }catch(e){}
+  // 2) real current-day photo from Wikimedia Commons
+  try{
+    const info=await fetchWikimedia(PHOTO_QUERY[m.id]||m.name);
+    if(!info || token!==bgLoadToken) return;
+    const im=await loadImage(info.url, true);
+    if(token!==bgLoadToken) return;
+    drawCover(im); photoInfo=info; setPhotoTag();
+  }catch(e){ /* offline / blocked -> keep the vector art */ }
+}
+async function fetchWikimedia(query){
+  const api='https://commons.wikimedia.org/w/api.php';
+  const qs=new URLSearchParams({ action:'query', generator:'search',
+    gsrsearch:'filetype:bitmap '+query, gsrnamespace:'6', gsrlimit:'8',
+    prop:'imageinfo', iiprop:'url|extmetadata|mime', iiurlwidth:'1600',
+    format:'json', origin:'*' });
+  const r=await fetch(api+'?'+qs.toString(), {mode:'cors'}); if(!r.ok) throw 0;
+  const j=await r.json(); const pages=j&&j.query&&j.query.pages; if(!pages) return null;
+  const arr=Object.values(pages).sort((a,b)=>(a.index||0)-(b.index||0));
+  for(const pg of arr){ const ii=pg.imageinfo&&pg.imageinfo[0]; if(!ii) continue;
+    if(ii.mime && !/^image\/(jpeg|png)$/.test(ii.mime)) continue;
+    if(ii.thumbwidth && ii.thumbheight && ii.thumbheight>ii.thumbwidth) continue; // prefer landscape
+    const md=ii.extmetadata||{};
+    return { url: ii.thumburl||ii.url,
+      artist: stripHtml((md.Artist&&md.Artist.value)||''),
+      license: stripHtml((md.LicenseShortName&&md.LicenseShortName.value)||''),
+      title: (pg.title||'').replace(/^File:/,''),
+      sourceUrl: ii.descriptionurl||'' };
+  }
+  return null;
+}
+function stripHtml(s){ const d=document.createElement('div'); d.innerHTML=s;
+  return (d.textContent||'').replace(/\s+/g,' ').trim().slice(0,60); }
+function setPhotoTag(){
+  const el=document.getElementById('photoTag');
+  if(photoInfo && (photoInfo.artist||photoInfo.license)){
+    el.textContent='📷 '+[photoInfo.artist,photoInfo.license].filter(Boolean).join(' · ');
+    el.style.display='block';
+  } else el.style.display='none';
 }
 
 // ============================================================
@@ -757,6 +875,7 @@ function loop(t){
   rafId=requestAnimationFrame(loop);
   if(!lastT) lastT=t;
   let dt=(t-lastT)/1000; lastT=t; if(dt>0.05)dt=0.05;
+  animT+=dt;
   if(state==='playing'){
     if(invuln>0) invuln-=dt;
     if(flash>0) flash-=dt;
@@ -769,7 +888,22 @@ function loop(t){
   render();
 }
 
+const KBZ = 1.12;  // ken-burns zoom (also guarantees the pan never exposes edges)
+function drawScene(){
+  const dw=W*KBZ, dh=H*KBZ, mx=dw-W, my=dh-H;
+  const px=-mx*0.5 + Math.sin(animT*0.13+kbPhase)*mx*0.5;
+  const py=-my*0.5 + Math.cos(animT*0.10+kbPhase*1.3)*my*0.5;
+  sceneCtx.clearRect(0,0,W,H);
+  sceneCtx.drawImage(srcC, px, py, dw, dh);
+  sceneCtx.globalCompositeOperation='destination-in';
+  sceneCtx.drawImage(maskC,0,0);
+  sceneCtx.globalCompositeOperation='source-over';
+}
+
 function render(){
+  // in-game photo credit only while playing
+  const tag=document.getElementById('photoTag');
+  tag.style.display=(state==='playing' && photoInfo && (photoInfo.artist||photoInfo.license))?'block':'none';
   // veil (unclaimed)
   ctx.save();
   ctx.fillStyle=veil; ctx.fillRect(0,0,W,H);
@@ -779,8 +913,9 @@ function render(){
   ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
   ctx.restore();
 
-  // revealed monument
-  ctx.drawImage(rv,0,0);
+  // revealed monument — ken-burns animated, masked to the claimed area
+  drawScene();
+  ctx.drawImage(sceneC,0,0);
 
   // claim flash
   if(flash>0){ ctx.fillStyle=`rgba(242,205,107,${flash*0.6})`; ctx.fillRect(0,0,W,H); }
@@ -853,6 +988,60 @@ function spark(x,y,color,r){
 }
 
 // ============================================================
+//  HIGH SCORES  (localStorage)
+// ============================================================
+const SKEY='qix_grecja_scores_v1';
+function loadScores(){ try{ return JSON.parse(localStorage.getItem(SKEY))||[]; }catch(e){ return []; } }
+function saveScores(a){ try{ localStorage.setItem(SKEY, JSON.stringify(a.slice(0,10))); }catch(e){} }
+function qualifies(sc){ const a=loadScores(); return sc>0 && (a.length<10 || sc>a[a.length-1].score); }
+function addScore(name, sc, lvl){
+  const a=loadScores();
+  a.push({ name:(name||'???').toUpperCase().replace(/[^A-ZŻŹĆŃŁÓĘĄŚ0-9]/gi,'').slice(0,3)||'???',
+    score:sc, lvl:lvl, d:new Date().toISOString().slice(0,10) });
+  a.sort((x,y)=>y.score-x.score); saveScores(a); return a.slice(0,10);
+}
+function renderScores(el, opt){
+  opt=opt||{}; const a=loadScores();
+  if(!a.length){ el.innerHTML='<p class="center" style="color:#8a6a1e;font-size:13px">Brak wyników — bądź pierwszy!</p>'; return; }
+  const lim=opt.limit||a.length;
+  let h='<table class="scores"><thead><tr><th>#</th><th>Gracz</th><th>Wynik</th><th>Poz.</th><th>Data</th></tr></thead><tbody>';
+  a.slice(0,lim).forEach((s,i)=>{ h+='<tr'+(i===opt.highlight?' class="hl"':'')+'><td>'+(i+1)+'</td><td>'+s.name+
+    '</td><td>'+s.score+'</td><td>'+(s.lvl||0)+'/'+MONUMENTS.length+'</td><td>'+(s.d||'')+'</td></tr>'; });
+  el.innerHTML=h+'</tbody></table>';
+}
+function finalizeScore(kind, sc, lvl){
+  const entry=document.getElementById(kind+'Entry');
+  const scoresEl=document.getElementById(kind+'Scores');
+  const q=qualifies(sc);
+  renderScores(scoresEl,{});
+  entry.style.display=q?'block':'none';
+  if(q){
+    const nameI=document.getElementById(kind+'Name'); nameI.value='';
+    const saveB=document.getElementById(kind+'Save'); saveB.disabled=false; saveB.textContent='Zapisz';
+    const doSave=()=>{ if(saveB.disabled) return;
+      const arr=addScore(nameI.value, sc, lvl);
+      const hi=arr.findIndex(s=>s.score===sc && s.name===(nameI.value||'???').toUpperCase().slice(0,3));
+      renderScores(scoresEl,{highlight:hi>=0?hi:arr.findIndex(s=>s.score===sc)});
+      saveB.disabled=true; entry.style.display='none'; renderMenuScores(); };
+    saveB.onclick=doSave;
+    nameI.onkeydown=(e)=>{ if(e.key==='Enter'){ e.preventDefault(); doSave(); } };
+    setTimeout(()=>{ try{ nameI.focus(); }catch(e){} }, 50);
+  }
+}
+function renderMenuScores(){ renderScores(document.getElementById('menuScores'), {limit:5}); }
+
+// Monument preview inside the info card (photo if loaded, else vector art)
+function drawPreview(m){
+  const pc=document.getElementById('iPhoto'); const px=pc.getContext('2d');
+  px.clearRect(0,0,pc.width,pc.height);
+  let src, sw, sh;
+  if(m===MONUMENTS[levelIdx]){ src=srcC; sw=W; sh=H; }        // current: art or real photo
+  else { const t=mkC(W*SS,H*SS); m.paint(t.getContext('2d')); src=t; sw=W*SS; sh=H*SS; }
+  const s=Math.max(pc.width/sw, pc.height/sh);
+  px.drawImage(src, (pc.width-sw*s)/2, (pc.height-sh*s)/2, sw*s, sh*s);
+}
+
+// ============================================================
 //  FLOW / UI
 // ============================================================
 function updateHUD(){
@@ -890,12 +1079,14 @@ function gameOver(){
   state='over';
   document.getElementById('overTxt').textContent=
     'Zabrakło żyć. Odkryto '+Math.floor(claimedInterior/interiorTotal*100)+'% zabytku. Wynik: '+score+'.';
+  finalizeScore('over', score, levelIdx+1);
   show('ovOver',true);
 }
 function victory(){
   state='win';
   document.getElementById('winTxt').textContent='Odkryłeś wszystkie '+MONUMENTS.length+
     ' zabytki starożytnej Grecji! Wynik końcowy: '+score+'.';
+  finalizeScore('win', score, MONUMENTS.length);
   const g=document.getElementById('winGallery'); g.innerHTML='';
   MONUMENTS.forEach((m,i)=>{
     const cc=document.createElement('canvas'); cc.width=200; cc.height=150;
@@ -916,6 +1107,19 @@ function victory(){
 function showInfo(m, completed){
   document.getElementById('iName').textContent=m.name;
   document.getElementById('iGreek').textContent=m.greek;
+  // monument preview (real photo when available for the current level, else artwork)
+  drawPreview(m);
+  const attr=document.getElementById('iAttr');
+  if(m===MONUMENTS[levelIdx] && photoInfo && (photoInfo.artist||photoInfo.license)){
+    const credit='Zdjęcie: '+[photoInfo.artist,photoInfo.license].filter(Boolean).join(' · ');
+    attr.innerHTML = photoInfo.sourceUrl
+      ? credit+' — <a href="'+photoInfo.sourceUrl+'" target="_blank" rel="noopener">Wikimedia Commons</a>'
+      : credit;
+  } else if(m===MONUMENTS[levelIdx] && photoInfo && photoInfo.title){
+    attr.textContent='Zdjęcie: '+photoInfo.title;
+  } else {
+    attr.textContent='Ilustracja wektorowa (tryb offline)';
+  }
   const meta=document.getElementById('iMeta'); meta.innerHTML='';
   for(const k in m.meta){ const dt=document.createElement('dt'); dt.textContent=k;
     const dd=document.createElement('dd'); dd.textContent=m.meta[k]; meta.append(dt,dd); }
@@ -945,7 +1149,7 @@ cv.addEventListener('click',()=>{ if(state==='playing'){ state='info'; showInfo(
 document.getElementById('btnStart').onclick=startGame;
 document.getElementById('btnRetry').onclick=startGame;
 document.getElementById('btnAgain').onclick=startGame;
-document.getElementById('btnMenu').onclick=()=>{ state='menu'; hideAllOverlays(); show('ovMenu',true); };
+document.getElementById('btnMenu').onclick=()=>{ state='menu'; hideAllOverlays(); renderMenuScores(); show('ovMenu',true); };
 
 // ============================================================
 //  INPUT
@@ -995,6 +1199,7 @@ function clampi(v,a,b){ return v<a?a:v>b?b:v; }
 // ============================================================
 //  BOOT
 // ============================================================
+renderMenuScores();
 loop();
 </script>
 </body>

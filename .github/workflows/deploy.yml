@@ -8,6 +8,7 @@ on:
       - main
       - master
       - claude/protocol-app-images-voice-liqxx7
+      - claude/ancient-greece-interactive-wsl8az
   workflow_dispatch:
 
 permissions:
