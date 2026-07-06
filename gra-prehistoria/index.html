@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#2b1a10" />
+<title>Prehistoryk — przygoda z epoki kamienia (gra edukacyjna, klasa 4)</title>
+<style>
+  :root{
+    --brand:#e8a33d; --brand2:#c8621e; --ink:#f5ead6; --panel:#3a2717; --panel2:#241509;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; height:100%;}
+  body{
+    background:#1a0f07 radial-gradient(circle at 50% 0%, #35200f, #120a04 70%);
+    color:var(--ink);
+    font-family:"Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+    min-height:100dvh; overflow-x:hidden;
+    user-select:none; -webkit-user-select:none;
+  }
+  h1{font-size:clamp(20px,5vw,34px); margin:10px 0 2px; letter-spacing:1px; color:var(--brand);
+     text-shadow:2px 2px 0 #5a2c0c;}
+  .sub{opacity:.8; font-size:14px; margin:0 0 8px;}
+  #wrap{position:relative; width:min(960px,100vw); aspect-ratio:16/10; max-height:70dvh;}
+  canvas{
+    width:100%; height:100%; display:block; image-rendering:pixelated;
+    background:#0b0f1a; border-radius:12px; border:3px solid #5a3a1c;
+    box-shadow:0 14px 40px rgba(0,0,0,.6);
+    touch-action:none;
+  }
+
+  /* ---------- Nakładki (overlay) ---------- */
+  .overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; gap:14px;
+    background:rgba(12,8,4,.86); border-radius:12px; padding:18px; backdrop-filter:blur(3px);
+    animation:fade .25s ease;
+  }
+  @keyframes fade{from{opacity:0} to{opacity:1}}
+  .hidden{display:none !important;}
+  .card{
+    background:linear-gradient(180deg,#402a17,#2a1a0c);
+    border:2px solid var(--brand); border-radius:16px; padding:18px 20px;
+    max-width:min(680px,92%); box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  .badge{display:inline-block; background:var(--brand2); color:#fff; font-weight:bold;
+    padding:4px 12px; border-radius:20px; font-size:13px; letter-spacing:1px;}
+  .fact-title{font-size:clamp(18px,4.5vw,26px); color:var(--brand); margin:8px 0 6px;}
+  .fact-text{font-size:clamp(15px,3.5vw,18px); line-height:1.5;}
+  button.btn{
+    font-family:inherit; font-weight:bold; font-size:16px; cursor:pointer;
+    background:linear-gradient(180deg,var(--brand),var(--brand2)); color:#231206;
+    border:none; border-radius:12px; padding:12px 22px; letter-spacing:.5px;
+    box-shadow:0 4px 0 #7d3c10; transition:transform .05s, box-shadow .05s;
+  }
+  button.btn:active{transform:translateY(3px); box-shadow:0 1px 0 #7d3c10;}
+  button.btn.ghost{background:transparent; color:var(--ink); border:2px solid var(--brand);
+    box-shadow:none;}
+  .row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+  .keys{font-size:13px; opacity:.85; line-height:1.7;}
+  kbd{background:#12100c; border:1px solid #6a4a26; border-bottom-width:3px; border-radius:6px;
+    padding:1px 7px; font-family:inherit; color:var(--brand);}
+
+  /* ---------- Sterowanie dotykowe ---------- */
+  #touch{position:absolute; inset:0; pointer-events:none;}
+  .tbtn{
+    position:absolute; bottom:14px; width:70px; height:70px; border-radius:50%;
+    background:rgba(232,163,61,.22); border:2px solid rgba(232,163,61,.7);
+    color:var(--brand); font-size:30px; display:flex; align-items:center; justify-content:center;
+    pointer-events:auto; touch-action:none;
+  }
+  .tbtn:active{background:rgba(232,163,61,.5);}
+  #tleft{left:14px;} #tright{left:96px;} #tjump{right:14px; width:88px; height:88px; font-size:22px;}
+
+  /* ---------- Pasek wiedzy / postępu ---------- */
+  #progress{width:min(960px,100vw); margin:10px 0 30px; padding:0 6px;}
+  .kbar{display:flex; align-items:center; gap:8px; font-size:14px; margin:6px 0;}
+  .kname{width:130px; text-align:right; opacity:.9;}
+  .ktrack{flex:1; height:16px; background:#241509; border-radius:10px; overflow:hidden; border:1px solid #5a3a1c;}
+  .kfill{height:100%; width:0; background:linear-gradient(90deg,var(--brand),var(--brand2)); transition:width .4s;}
+  .kcount{width:46px; font-variant-numeric:tabular-nums;}
+  #encyklopedia{margin-top:8px;}
+  details{background:#241509; border:1px solid #5a3a1c; border-radius:10px; padding:8px 12px; margin:6px 0;}
+  summary{cursor:pointer; font-weight:bold; color:var(--brand);}
+  details ul{margin:8px 0 2px; padding-left:20px; line-height:1.5; font-size:14px;}
+  details li{margin:4px 0;}
+  .locked{opacity:.45; font-style:italic;}
+  footer{opacity:.6; font-size:12px; margin-bottom:16px; text-align:center; padding:0 12px;}
+  a{color:var(--brand);}
+</style>
+</head>
+<body>
+  <h1>🦣 PREHISTORYK — Przygoda z epoki kamienia</h1>
+  <p class="sub">Gra edukacyjna dla klasy 4 · paleolit · jaskiniowcy · życie koczownicze</p>
+
+  <div id="wrap">
+    <canvas id="game" width="960" height="600"></canvas>
+
+    <!-- Ekran startowy -->
+    <div id="start" class="overlay">
+      <div class="card">
+        <span class="badge">EPOKA KAMIENIA</span>
+        <h2 class="fact-title">Pomóż jaskiniowcowi Kremkowi!</h2>
+        <p class="fact-text">Wędruj przez prehistoryczny świat, zbieraj <b>🍖 jedzenie</b>
+        (energia!) i <b>💎 kamienie wiedzy</b>. Za każdy zebrany kamień odkryjesz
+        <b>ciekawostkę</b> o życiu ludzi w epoce kamienia. Uważaj na 🕷️ pająki i 🦇 nietoperze!</p>
+        <p class="keys">
+          <kbd>◀</kbd> <kbd>▶</kbd> lub <kbd>A</kbd> <kbd>D</kbd> — ruch &nbsp;·&nbsp;
+          <kbd>SPACJA</kbd> / <kbd>▲</kbd> / <kbd>W</kbd> — skok &nbsp;·&nbsp; na telefonie użyj przycisków
+        </p>
+        <div class="row">
+          <button class="btn" id="btnStart">▶ ZACZNIJ GRĘ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Karta ciekawostki -->
+    <div id="fact" class="overlay hidden">
+      <div class="card">
+        <span class="badge" id="factBadge">WIEDZA</span>
+        <h2 class="fact-title" id="factTitle"></h2>
+        <p class="fact-text" id="factText"></p>
+        <div class="row"><button class="btn" id="btnFactOk">Gramy dalej! ▶</button></div>
+      </div>
+    </div>
+
+    <!-- Koniec poziomu -->
+    <div id="levelEnd" class="overlay hidden">
+      <div class="card">
+        <span class="badge">🏆 OSIĄGNIĘCIE</span>
+        <h2 class="fact-title" id="levelTitle">Poziom ukończony!</h2>
+        <p class="fact-text" id="levelText"></p>
+        <div class="row"><button class="btn" id="btnNext">Dalej ▶</button></div>
+      </div>
+    </div>
+
+    <!-- Game over -->
+    <div id="over" class="overlay hidden">
+      <div class="card">
+        <h2 class="fact-title" id="overTitle">Koniec gry</h2>
+        <p class="fact-text" id="overText"></p>
+        <div class="row"><button class="btn" id="btnRetry">🔄 Zagraj jeszcze raz</button></div>
+      </div>
+    </div>
+
+    <!-- Sterowanie dotykowe -->
+    <div id="touch">
+      <div class="tbtn" id="tleft">◀</div>
+      <div class="tbtn" id="tright">▶</div>
+      <div class="tbtn" id="tjump">SKOK</div>
+    </div>
+  </div>
+
+  <!-- Postęp wiedzy + encyklopedia -->
+  <div id="progress">
+    <div class="kbar"><span class="kname">🔥 Paleolit</span>
+      <div class="ktrack"><div class="kfill" id="fill-paleolit"></div></div>
+      <span class="kcount" id="cnt-paleolit">0/5</span></div>
+    <div class="kbar"><span class="kname">🎨 Jaskiniowcy</span>
+      <div class="ktrack"><div class="kfill" id="fill-jaskinia"></div></div>
+      <span class="kcount" id="cnt-jaskinia">0/5</span></div>
+    <div class="kbar"><span class="kname">🐾 Koczownicy</span>
+      <div class="ktrack"><div class="kfill" id="fill-koczownik"></div></div>
+      <span class="kcount" id="cnt-koczownik">0/5</span></div>
+    <div id="encyklopedia"></div>
+  </div>
+
+  <footer>
+    Gra edukacyjna inspirowana klasyczną platformówką „Prehistorik". Powstała jako pomoc do lekcji
+    historii w klasie 4 SP. Działa w całości w przeglądarce — bez internetu i bez instalacji.
+  </footer>
+
+<script>
+"use strict";
+/* ============================================================
+   PREHISTORYK — gra edukacyjna (klasa 4)
+   Silnik platformowy 2D na <canvas>. Wszystko w jednym pliku.
+   ============================================================ */
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+/* ---------- BAZA WIEDZY (ciekawostki) ----------
+   Każdy kamień wiedzy odsłania jedną kartę. Fakty pogrupowane w 3 tematy. */
+const WIEDZA = {
+  paleolit: {
+    nazwa: "Paleolit — starsza epoka kamienia",
+    kolor: "#e8a33d",
+    fakty: [
+      { t:"Najdłuższa epoka w dziejach", x:"Paleolit to najstarsza i najdłuższa epoka w historii człowieka. Trwała setki tysięcy lat — o wiele dłużej niż wszystkie późniejsze czasy razem wzięte!" },
+      { t:"Skąd ta nazwa?", x:"Słowo „paleolit” pochodzi z języka greckiego i znaczy „stara epoka kamienia”. Ludzie robili wtedy narzędzia głównie z kamienia." },
+      { t:"Bez metali i bez pisma", x:"W paleolicie ludzie nie znali jeszcze metali ani pisma. Nie budowali też miast — cały świat wyglądał zupełnie inaczej niż dziś." },
+      { t:"Ujarzmienie ognia", x:"Najważniejszym odkryciem paleolitu było rozpalanie i pilnowanie ognia. Ogień dawał ciepło, światło i odstraszał dzikie zwierzęta." },
+      { t:"Pieczone jedzenie", x:"Dzięki ogniowi ludzie mogli piec mięso. Pieczone jedzenie było smaczniejsze, zdrowsze i łatwiejsze do przeżucia niż surowe." },
+    ]
+  },
+  jaskinia: {
+    nazwa: "Życie jaskiniowców",
+    kolor: "#7bc4e8",
+    fakty: [
+      { t:"Dom w jaskini", x:"Ludzie pierwotni często chronili się w jaskiniach. Kamienne ściany dawały schronienie przed zimnem, deszczem i wiatrem." },
+      { t:"Malowidła na ścianach", x:"Na ścianach jaskiń malowali zwierzęta i sceny polowań. Najsłynniejsze takie malowidła znaleziono w jaskiniach Lascaux i Altamira." },
+      { t:"Ubrania ze skór", x:"Jaskiniowcy ubierali się w skóry upolowanych zwierząt. Skóry chroniły ich ciało przed mrozem podczas długiej zimy." },
+      { t:"Narzędzia z kamienia i kości", x:"Robili narzędzia z krzemienia, kości i drewna — np. pięściaki, groty do włóczni, skrobacze i igły do szycia skór." },
+      { t:"Polowanie w grupie", x:"Na wielkie zwierzęta, takie jak mamuty czy renifery, polowali razem, całą grupą. W pojedynkę byłoby to zbyt niebezpieczne." },
+    ]
+  },
+  koczownik: {
+    nazwa: "Życie koczownicze (wędrowne)",
+    kolor: "#8fd28f",
+    fakty: [
+      { t:"Bez stałego domu", x:"Koczownicy nie mieli jednego, stałego domu. Wędrowali z miejsca na miejsce — dlatego mówimy o „życiu koczowniczym”." },
+      { t:"Wędrówka za jedzeniem", x:"Ludzie wędrowali tam, gdzie było jedzenie: za stadami zwierząt oraz w poszukiwaniu owoców, orzechów i jadalnych roślin." },
+      { t:"Zbieractwo i łowiectwo", x:"Zdobywali pożywienie na dwa sposoby: zbierali to, co dała natura (zbieractwo), i polowali na zwierzęta (łowiectwo)." },
+      { t:"Życie w gromadzie", x:"Żyli w niewielkich grupach zwanych gromadami. Pomagali sobie nawzajem — razem łatwiej było zdobyć jedzenie i przetrwać." },
+      { t:"Koniec wędrówek", x:"Dopiero gdy ludzie nauczyli się uprawiać ziemię i hodować zwierzęta (w epoce zwanej neolitem), przestali wędrować i zbudowali pierwsze wsie." },
+    ]
+  },
+};
+const TEMATY = ["paleolit","jaskinia","koczownik"];
+
+/* ---------- POZIOMY ----------
+   Każdy poziom to zestaw platform, wrogów, jedzenia i kamieni wiedzy.
+   Kamienie wiedzy mają temat + numer faktu (0-4). */
+const TILE = 40;
+function plat(x,y,w){ return {x:x*TILE, y:y*TILE, w:w*TILE, h:TILE}; }
+
+const POZIOMY = [
+  { // Poziom 1 — Dolina (paleolit)
+    nazwa:"Dolina Ognia",
+    temat:"paleolit",
+    tlo:"#243b1e", tlo2:"#0e1a0a",
+    szer: 40*TILE,
+    platformy:[
+      plat(0,13,40),          // podłoga
+      plat(5,10,3), plat(10,8,2), plat(14,10,3),
+      plat(19,9,2), plat(23,11,2), plat(27,8,3), plat(32,10,3),
+    ],
+    jedzenie:[[6,9],[15,9],[24,10],[33,9],[20,8]],
+    kamienie:[
+      {x:10,y:7,temat:"paleolit",i:0},
+      {x:19,y:8,temat:"paleolit",i:1},
+      {x:28,y:7,temat:"paleolit",i:2},
+      {x:36,y:12,temat:"paleolit",i:3},
+      {x:12,y:12,temat:"paleolit",i:4},
+    ],
+    wrogowie:[ {x:16,y:12,t:"spider",r:120}, {x:26,y:12,t:"spider",r:100} ],
+    meta:38,
+  },
+  { // Poziom 2 — Jaskinia (jaskiniowcy)
+    nazwa:"Wielka Jaskinia",
+    temat:"jaskinia",
+    tlo:"#1c2740", tlo2:"#080c16",
+    szer: 40*TILE,
+    platformy:[
+      plat(0,13,40),
+      plat(4,11,2), plat(8,9,2), plat(12,11,3), plat(17,9,2),
+      plat(21,7,2), plat(25,10,2), plat(29,8,3), plat(34,11,2),
+    ],
+    jedzenie:[[5,10],[13,10],[22,6],[30,7],[35,10]],
+    kamienie:[
+      {x:8,y:8,temat:"jaskinia",i:0},
+      {x:17,y:8,temat:"jaskinia",i:1},
+      {x:21,y:6,temat:"jaskinia",i:2},
+      {x:29,y:7,temat:"jaskinia",i:3},
+      {x:37,y:12,temat:"jaskinia",i:4},
+    ],
+    wrogowie:[ {x:14,y:12,t:"spider",r:120}, {x:24,y:9,t:"bat",r:120}, {x:32,y:12,t:"spider",r:110} ],
+    meta:38,
+  },
+  { // Poziom 3 — Step (koczownicy)
+    nazwa:"Wielki Step",
+    temat:"koczownik",
+    tlo:"#3a2f1a", tlo2:"#14100a",
+    szer: 44*TILE,
+    platformy:[
+      plat(0,13,44),
+      plat(6,10,2), plat(10,11,2), plat(14,9,3), plat(19,10,2),
+      plat(23,8,2), plat(27,11,2), plat(31,9,3), plat(36,11,2), plat(40,9,2),
+    ],
+    jedzenie:[[7,9],[15,8],[24,7],[32,8],[41,8],[20,9]],
+    kamienie:[
+      {x:14,y:8,temat:"koczownik",i:0},
+      {x:23,y:7,temat:"koczownik",i:1},
+      {x:27,y:10,temat:"koczownik",i:2},
+      {x:31,y:8,temat:"koczownik",i:3},
+      {x:41,y:8,temat:"koczownik",i:4},
+    ],
+    wrogowie:[ {x:12,y:12,t:"spider",r:130}, {x:21,y:12,t:"spider",r:120},
+               {x:29,y:12,t:"bat",r:140}, {x:37,y:12,t:"spider",r:110} ],
+    meta:42,
+  },
+];
+
+/* ---------- STAN GRY ---------- */
+const zebrane = { paleolit:new Set(), jaskinia:new Set(), koczownik:new Set() };
+let stan = "start";      // start | gra | pauza | fakt | koniecPoziomu | over
+let poziomIdx = 0;
+let level = null;
+let kamera = 0;
+let wynik = 0, zycia = 3, energia = 100;
+let klawisze = {};
+let ostatniCzas = 0;
+
+const player = {
+  x:80, y:400, w:30, h:38, vx:0, vy:0, naZiemi:false, kier:1,
+  chodStep:0, nietykalny:0,
+};
+
+/* ---------- BUDOWA POZIOMU ---------- */
+function ladujPoziom(i){
+  const P = POZIOMY[i];
+  level = {
+    ...P,
+    jedz: P.jedzenie.map(([x,y])=>({x:x*TILE, y:y*TILE, zjedzone:false})),
+    kam: P.kamienie.map(k=>({...k, px:k.x*TILE, py:k.y*TILE,
+        wziete: zebrane[k.temat].has(k.i)})),
+    wrogo: P.wrogowie.map(w=>({...w, px:w.x*TILE, py:w.y*TILE,
+        startX:w.x*TILE, dir:1, faza:Math.random()*6})),
+  };
+  player.x = 80; player.y = 400; player.vx = 0; player.vy = 0;
+  player.nietykalny = 60;
+  kamera = 0;
+}
+
+/* ---------- STEROWANIE ---------- */
+document.addEventListener('keydown', e=>{
+  klawisze[e.code] = true;
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
+});
+document.addEventListener('keyup', e=>{ klawisze[e.code] = false; });
+
+// dotyk
+function bindTouch(id, code){
+  const el = document.getElementById(id);
+  const on = e=>{ e.preventDefault(); klawisze[code]=true; };
+  const off = e=>{ e.preventDefault(); klawisze[code]=false; };
+  el.addEventListener('touchstart', on, {passive:false});
+  el.addEventListener('touchend', off, {passive:false});
+  el.addEventListener('touchcancel', off, {passive:false});
+  el.addEventListener('mousedown', on); el.addEventListener('mouseup', off);
+  el.addEventListener('mouseleave', off);
+}
+bindTouch('tleft','ArrowLeft');
+bindTouch('tright','ArrowRight');
+bindTouch('tjump','Space');
+
+/* ---------- PĘTLA GRY ---------- */
+function loop(t){
+  const dt = Math.min((t - ostatniCzas)/16.67, 2) || 1; // klatki znormalizowane do 60fps
+  ostatniCzas = t;
+  if(stan === "gra"){ update(dt); }
+  render();
+  requestAnimationFrame(loop);
+}
+
+function update(dt){
+  // ruch poziomy
+  const przysp = 0.9, maxV = 4.6, tarcie = 0.8;
+  let ruch = 0;
+  if(klawisze.ArrowLeft || klawisze.KeyA) ruch -= 1;
+  if(klawisze.ArrowRight || klawisze.KeyD) ruch += 1;
+  if(ruch !== 0){
+    player.vx += ruch * przysp * dt;
+    player.kier = ruch;
+    player.chodStep += 0.3 * dt;
+  } else {
+    player.vx *= Math.pow(tarcie, dt);
+    if(Math.abs(player.vx) < 0.05) player.vx = 0;
+  }
+  player.vx = Math.max(-maxV, Math.min(maxV, player.vx));
+
+  // skok
+  const skok = klawisze.Space || klawisze.ArrowUp || klawisze.KeyW;
+  if(skok && player.naZiemi){
+    player.vy = -12.2; player.naZiemi = false;
+  }
+
+  // grawitacja
+  player.vy += 0.62 * dt;
+  if(player.vy > 16) player.vy = 16;
+
+  // ruch + kolizje z platformami (osobno X i Y)
+  player.x += player.vx * dt;
+  kolizjaX();
+  player.y += player.vy * dt;
+  kolizjaY();
+
+  // granice świata
+  if(player.x < 0){ player.x = 0; player.vx = 0; }
+  if(player.x + player.w > level.szer){ player.x = level.szer - player.w; player.vx = 0; }
+
+  // spadnięcie w przepaść (poza dolną krawędź) — tu nie ma dziur, ale zabezpieczenie
+  if(player.y > H + 200){ obrazenia(true); }
+
+  if(player.nietykalny > 0) player.nietykalny -= dt;
+
+  // kamera podąża za graczem
+  const cel = player.x - W*0.35;
+  kamera += (cel - kamera) * 0.12 * dt;
+  kamera = Math.max(0, Math.min(kamera, level.szer - W));
+
+  // energia spada powoli — jedzenie ją uzupełnia (jak w Prehistoriku "FOOD/ENERGY")
+  energia -= 0.02 * dt;
+  if(energia <= 0){ energia = 0; obrazenia(true); }
+
+  // jedzenie
+  for(const f of level.jedz){
+    if(!f.zjedzone && kol(player, {x:f.x, y:f.y, w:26, h:26})){
+      f.zjedzone = true; wynik += 50; energia = Math.min(100, energia + 25);
+    }
+  }
+
+  // kamienie wiedzy
+  for(const k of level.kam){
+    if(!k.wziete && kol(player, {x:k.px, y:k.py, w:30, h:30})){
+      k.wziete = true;
+      zebrane[k.temat].add(k.i);
+      wynik += 100;
+      pokazFakt(k.temat, k.i);
+      aktualizujPasek();
+      return; // pauza na czas karty
+    }
+  }
+
+  // wrogowie
+  for(const w of level.wrogo){
+    w.faza += 0.05 * dt;
+    if(w.t === "spider"){
+      // patrol poziomy po platformie
+      w.px += w.dir * 1.3 * dt;
+      if(w.px > w.startX + w.r){ w.dir = -1; }
+      if(w.px < w.startX - w.r){ w.dir = 1; }
+      w.py = w.startX!=null ? w.py : w.py;
+      w.oy = Math.sin(w.faza)*4; // lekkie kołysanie
+    } else { // bat — lot sinusoidalny
+      w.px += w.dir * 1.9 * dt;
+      if(w.px > w.startX + w.r){ w.dir = -1; }
+      if(w.px < w.startX - w.r){ w.dir = 1; }
+      w.oy = Math.sin(w.faza*2)*46;
+    }
+    const wr = {x:w.px, y:w.py + (w.oy||0), w:30, h:26};
+    if(kol(player, wr) && player.nietykalny <= 0){
+      // skok na wroga (z góry) = pokonanie
+      if(player.vy > 1 && player.y + player.h - 18 < wr.y){
+        player.vy = -8; wynik += 75; w.px = -9999; // usuń
+      } else {
+        obrazenia(false);
+      }
+    }
+  }
+
+  // meta poziomu
+  if(player.x > level.meta*TILE){
+    koniecPoziomu();
+  }
+}
+
+function kolizjaX(){
+  for(const p of level.platformy){
+    if(kol(player, p)){
+      if(player.vx > 0) player.x = p.x - player.w;
+      else if(player.vx < 0) player.x = p.x + p.w;
+      player.vx = 0;
+    }
+  }
+}
+function kolizjaY(){
+  player.naZiemi = false;
+  for(const p of level.platformy){
+    if(kol(player, p)){
+      if(player.vy > 0){ player.y = p.y - player.h; player.naZiemi = true; }
+      else if(player.vy < 0){ player.y = p.y + p.h; }
+      player.vy = 0;
+    }
+  }
+}
+function kol(a,b){
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function obrazenia(smiertelne){
+  if(player.nietykalny > 0 && !smiertelne) return;
+  zycia--;
+  player.nietykalny = 90;
+  energia = Math.max(40, energia);
+  player.vy = -7; player.vx = -player.kier*3;
+  if(zycia <= 0){ gameOver(); }
+  else if(smiertelne){ // reset pozycji przy śmiertelnym
+    player.x = Math.max(80, player.x - 120); player.y = 300; player.vy = 0;
+  }
+}
+
+/* ---------- PRZEJŚCIA STANÓW / KARTY ---------- */
+const el = id => document.getElementById(id);
+function show(id){ el(id).classList.remove('hidden'); }
+function hide(id){ el(id).classList.add('hidden'); }
+
+function pokazFakt(temat, i){
+  stan = "fakt";
+  const grupa = WIEDZA[temat];
+  const f = grupa.fakty[i];
+  el('factBadge').textContent = grupa.nazwa.toUpperCase();
+  el('factBadge').style.background = grupa.kolor;
+  el('factBadge').style.color = "#231206";
+  el('factTitle').textContent = "💎 " + f.t;
+  el('factText').textContent = f.x;
+  show('fact');
+}
+el('btnFactOk').onclick = ()=>{ hide('fact'); stan = "gra"; ostatniCzas = performance.now(); };
+
+function koniecPoziomu(){
+  stan = "koniecPoziomu";
+  const zebranychTu = level.kam.filter(k=>k.wziete).length;
+  el('levelTitle').textContent = "🏆 Ukończono: " + level.nazwa + "!";
+  el('levelText').innerHTML =
+    `Zdobyłeś <b>${zebranychTu}/5</b> kamieni wiedzy na tym poziomie.<br>` +
+    `Twój wynik: <b>${wynik}</b> punktów.` +
+    (poziomIdx < POZIOMY.length-1
+       ? "<br><br>Czas ruszyć dalej w prehistoryczną wędrówkę!"
+       : "<br><br>To był ostatni etap — jesteś prawdziwym znawcą epoki kamienia!");
+  el('btnNext').textContent = poziomIdx < POZIOMY.length-1 ? "Następny poziom ▶" : "Zobacz podsumowanie 🎉";
+  show('levelEnd');
+}
+el('btnNext').onclick = ()=>{
+  hide('levelEnd');
+  if(poziomIdx < POZIOMY.length-1){
+    poziomIdx++; ladujPoziom(poziomIdx); stan = "gra"; ostatniCzas = performance.now();
+  } else {
+    zwyciestwo();
+  }
+};
+
+function gameOver(){
+  stan = "over";
+  const ile = TEMATY.reduce((s,t)=>s+zebrane[t].size,0);
+  el('overTitle').textContent = "😵 Kremek potrzebuje odpoczynku!";
+  el('overText').innerHTML = `Skończyły się życia. Ale nie martw się —<br>` +
+    `zdobyłeś już <b>${ile}/15</b> ciekawostek i <b>${wynik}</b> punktów!<br>` +
+    `Spróbuj jeszcze raz i odkryj resztę.`;
+  show('over');
+}
+el('btnRetry').onclick = ()=>{ hide('over'); resetGra(); };
+
+function zwyciestwo(){
+  stan = "over";
+  const ile = TEMATY.reduce((s,t)=>s+zebrane[t].size,0);
+  el('overTitle').textContent = "🎉 GRATULACJE! Ukończyłeś grę!";
+  el('overText').innerHTML =
+    `Przeszedłeś całą epokę kamienia z wynikiem <b>${wynik}</b> punktów.<br>` +
+    `Odkryłeś <b>${ile}/15</b> ciekawostek o życiu prehistorycznych ludzi.<br><br>` +
+    (ile===15 ? "Zdobyłeś <b>WSZYSTKIE</b> kamienie wiedzy — brawo, mistrzu historii! 🏅"
+              : "Zagraj jeszcze raz, by odkryć brakujące ciekawostki (są w encyklopedii poniżej).");
+  show('over');
+}
+
+function resetGra(){
+  poziomIdx = 0; wynik = 0; zycia = 3; energia = 100;
+  ladujPoziom(0); stan = "gra"; ostatniCzas = performance.now();
+}
+el('btnStart').onclick = ()=>{ hide('start'); resetGra(); };
+
+/* ---------- PASEK WIEDZY + ENCYKLOPEDIA ---------- */
+function aktualizujPasek(){
+  for(const t of TEMATY){
+    const n = zebrane[t].size;
+    el('fill-'+key(t)).style.width = (n/5*100)+'%';
+    el('cnt-'+key(t)).textContent = n+'/5';
+  }
+  budujEncyklopedie();
+}
+function key(t){ return t==="paleolit"?"paleolit": t==="jaskinia"?"jaskinia":"koczownik"; }
+
+function budujEncyklopedie(){
+  const box = el('encyklopedia');
+  box.innerHTML = "<h3 style='margin:14px 0 4px;color:var(--brand)'>📖 Encyklopedia wiedzy</h3>" +
+    "<p style='font-size:13px;opacity:.75;margin:0 0 8px'>Odkryte ciekawostki zapisują się tutaj — możesz do nich wracać.</p>";
+  for(const t of TEMATY){
+    const g = WIEDZA[t];
+    const items = g.fakty.map((f,i)=>{
+      const ok = zebrane[t].has(i);
+      return ok
+        ? `<li><b>${f.t}</b> — ${f.x}</li>`
+        : `<li class="locked">🔒 Jeszcze nieodkryte — zdobądź kamień wiedzy w grze!</li>`;
+    }).join("");
+    const n = zebrane[t].size;
+    box.innerHTML += `<details ${n>0?'open':''}><summary>${g.nazwa} (${n}/5)</summary><ul>${items}</ul></details>`;
+  }
+}
+
+/* ---------- RYSOWANIE ---------- */
+function render(){
+  // tło
+  const g = ctx.createLinearGradient(0,0,0,H);
+  const bg1 = level ? level.tlo : "#243b1e";
+  const bg2 = level ? level.tlo2 : "#0e1a0a";
+  g.addColorStop(0,bg1); g.addColorStop(1,bg2);
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+  if(!level){ return; }
+
+  // dalekie tło — góry / warstwy paralaksy
+  rysujParalakse();
+
+  ctx.save();
+  ctx.translate(-kamera, 0);
+
+  rysujPodloze();
+  rysujPlatformy();
+  rysujJedzenie();
+  rysujKamienie();
+  rysujWrogow();
+  rysujMete();
+  rysujGracza();
+
+  ctx.restore();
+
+  rysujHUD();
+}
+
+function rysujParalakse(){
+  ctx.save();
+  const off = kamera*0.3;
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = level.tlo2;
+  for(let i=-1;i<8;i++){
+    const bx = (i*260 - (off%260)) ;
+    ctx.beginPath();
+    ctx.moveTo(bx, H*0.72);
+    ctx.lineTo(bx+130, H*0.35);
+    ctx.lineTo(bx+260, H*0.72);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+  // słońce/księżyc
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.fillStyle = level.temat==="jaskinia" ? "#cfe4ff" : "#ffe6a8";
+  ctx.beginPath(); ctx.arc(W-120, 90, 40, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function rysujPodloze(){
+  const y0 = 13*TILE;
+  // powierzchnia trawy/ziemi
+  ctx.fillStyle = "#5a3a1c";
+  ctx.fillRect(0, y0, level.szer, H-y0);
+  ctx.fillStyle = level.temat==="jaskinia" ? "#3a4a66" :
+                  level.temat==="koczownik" ? "#6b5a2e" : "#3f6b2f";
+  ctx.fillRect(0, y0, level.szer, 10);
+  // faktura kamieni
+  ctx.fillStyle = "rgba(0,0,0,.18)";
+  for(let x=0; x<level.szer; x+=40){
+    ctx.fillRect(x+ (x/40%2?10:26), y0+22, 8, 8);
+  }
+}
+
+function rysujPlatformy(){
+  for(const p of level.platformy){
+    if(p.y >= 13*TILE) continue; // podłoga rysowana osobno
+    ctx.fillStyle = "#6b4423";
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    ctx.fillStyle = level.temat==="jaskinia" ? "#4a5f80" :
+                    level.temat==="koczownik" ? "#7d6a38" : "#4f7d3a";
+    ctx.fillRect(p.x, p.y, p.w, 8);
+    ctx.fillStyle="rgba(0,0,0,.2)";
+    ctx.fillRect(p.x, p.y+p.h-6, p.w, 6);
+  }
+}
+
+function rysujJedzenie(){
+  for(const f of level.jedz){
+    if(f.zjedzone) continue;
+    const b = Math.sin(performance.now()/300 + f.x)*3;
+    // udko/mięso 🍖
+    ctx.save();
+    ctx.translate(f.x+13, f.y+13+b);
+    ctx.fillStyle="#b5651d";
+    ctx.beginPath(); ctx.ellipse(0,0,12,9,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#f2e9d0"; // kość
+    ctx.fillRect(6,-3,10,5);
+    ctx.beginPath(); ctx.arc(16,-4,3,0,Math.PI*2); ctx.arc(16,3,3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function rysujKamienie(){
+  for(const k of level.kam){
+    if(k.wziete) continue;
+    const b = Math.sin(performance.now()/250 + k.px)*4;
+    const cx = k.px+15, cy = k.py+15+b;
+    // poświata
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = WIEDZA[k.temat].kolor;
+    ctx.beginPath(); ctx.arc(cx, cy, 20, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+    // kryształ 💎
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.fillStyle = WIEDZA[k.temat].kolor;
+    ctx.strokeStyle="#fff"; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.moveTo(0,-13); ctx.lineTo(11,-2); ctx.lineTo(0,15); ctx.lineTo(-11,-2);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle="rgba(255,255,255,.6)";
+    ctx.beginPath(); ctx.moveTo(0,-13); ctx.lineTo(0,15); ctx.moveTo(-11,-2); ctx.lineTo(11,-2); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function rysujWrogow(){
+  for(const w of level.wrogo){
+    if(w.px < -9000) continue;
+    const x = w.px+15, y = w.py + (w.oy||0) + 13;
+    if(w.t === "spider"){
+      // nić dla pająka wiszącego? tu chodzą po platformie
+      ctx.fillStyle="#2b1608";
+      ctx.beginPath(); ctx.ellipse(x,y,13,10,0,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle="#2b1608"; ctx.lineWidth=2;
+      for(let i=-1;i<=1;i++){
+        ctx.beginPath(); ctx.moveTo(x-8,y); ctx.lineTo(x-16, y+8+i*3); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x+8,y); ctx.lineTo(x+16, y+8+i*3); ctx.stroke();
+      }
+      ctx.fillStyle="#e33"; // oczy
+      ctx.beginPath(); ctx.arc(x-4,y-3,2,0,7); ctx.arc(x+4,y-3,2,0,7); ctx.fill();
+    } else { // bat 🦇
+      const flap = Math.sin(performance.now()/90)*8;
+      ctx.fillStyle="#3a2a44";
+      ctx.beginPath(); ctx.ellipse(x,y,8,7,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x,y); ctx.quadraticCurveTo(x-16,y-10-flap, x-22,y+flap);
+      ctx.quadraticCurveTo(x-14,y+2, x,y); ctx.fill();
+      ctx.moveTo(x,y); ctx.quadraticCurveTo(x+16,y-10-flap, x+22,y+flap);
+      ctx.quadraticCurveTo(x+14,y+2, x,y); ctx.fill();
+      ctx.fillStyle="#fd5"; ctx.beginPath(); ctx.arc(x-3,y-1,1.5,0,7); ctx.arc(x+3,y-1,1.5,0,7); ctx.fill();
+    }
+  }
+}
+
+function rysujMete(){
+  const x = level.meta*TILE;
+  // ognisko-cel (jak w Prehistoriku ognisko)
+  const y = 13*TILE;
+  ctx.save();
+  const f = Math.sin(performance.now()/120);
+  ctx.fillStyle="#5a3a1c";
+  ctx.fillRect(x-4,y-8,8,8); ctx.fillRect(x+18,y-8,8,8);
+  ctx.strokeStyle="#7a5a2a"; ctx.lineWidth=5;
+  ctx.beginPath(); ctx.moveTo(x-6,y); ctx.lineTo(x+28,y-14); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x+28,y); ctx.lineTo(x-6,y-14); ctx.stroke();
+  // płomień
+  ctx.fillStyle="#ff9a2b";
+  ctx.beginPath(); ctx.moveTo(x+11,y-10);
+  ctx.quadraticCurveTo(x+2, y-30-f*6, x+11, y-46-f*8);
+  ctx.quadraticCurveTo(x+20, y-30-f*6, x+11, y-10); ctx.fill();
+  ctx.fillStyle="#ffe23a";
+  ctx.beginPath(); ctx.moveTo(x+11,y-14);
+  ctx.quadraticCurveTo(x+6, y-26-f*4, x+11, y-36-f*6);
+  ctx.quadraticCurveTo(x+16, y-26-f*4, x+11, y-14); ctx.fill();
+  // znacznik META
+  ctx.fillStyle="#fff"; ctx.font="bold 16px Trebuchet MS"; ctx.textAlign="center";
+  ctx.fillText("🏁 META", x+11, y-58);
+  ctx.restore();
+}
+
+function rysujGracza(){
+  const p = player;
+  if(p.nietykalny > 0 && Math.floor(p.nietykalny/6)%2===0) { /* miganie */ ctx.globalAlpha=0.45; }
+  const x = p.x, y = p.y;
+  const krok = Math.sin(p.chodStep)* (Math.abs(p.vx)>0.4?6:0);
+  ctx.save();
+  ctx.translate(x + p.w/2, y);
+  ctx.scale(p.kier, 1);
+  // nogi
+  ctx.fillStyle="#6b4a2a";
+  ctx.fillRect(-9, 26, 7, 12+krok);
+  ctx.fillRect(2, 26, 7, 12-krok);
+  // ciało (skóra/futro)
+  ctx.fillStyle="#8a5a2b";
+  ctx.beginPath(); ctx.roundRect(-11, 8, 22, 22, 6); ctx.fill();
+  // pas ze skóry (cętki)
+  ctx.fillStyle="#5a3618";
+  ctx.fillRect(-11,18,22,4);
+  ctx.fillStyle="#c9a06a";
+  ctx.fillRect(-8,11,3,3); ctx.fillRect(3,14,3,3);
+  // głowa
+  ctx.fillStyle="#e0b184";
+  ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI*2); ctx.fill();
+  // włosy/broda
+  ctx.fillStyle="#3a2412";
+  ctx.beginPath(); ctx.arc(0,-3,11, Math.PI*0.9, Math.PI*2.1); ctx.fill();
+  ctx.fillRect(-11,-1,4,8); // broda bok
+  ctx.beginPath(); ctx.arc(0,4,7, 0, Math.PI); ctx.fill(); // broda
+  // oko
+  ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(5,-1,1.8,0,7); ctx.fill();
+  // maczuga w ręce
+  ctx.fillStyle="#6b4423";
+  ctx.save(); ctx.translate(9,14); ctx.rotate(-0.5+krok*0.02);
+  ctx.fillRect(-2,0,4,16); ctx.beginPath(); ctx.arc(0,18,6,0,7); ctx.fill();
+  ctx.restore();
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+function rysujHUD(){
+  // pasek u góry w stylu retro
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,.45)";
+  ctx.fillRect(0,0,W,44);
+  ctx.font="bold 20px 'Courier New', monospace";
+  ctx.textAlign="left"; ctx.fillStyle="#ffe6a8";
+  ctx.fillText("WYNIK "+String(wynik).padStart(6,"0"), 16, 30);
+
+  // życia
+  ctx.fillStyle="#ff6a6a";
+  ctx.fillText("ŻYCIA", 300, 30);
+  for(let i=0;i<zycia;i++){ rysujSerce(390+i*26, 22); }
+
+  // energia (FOOD/ENERGY jak w oryginale)
+  ctx.fillStyle="#ffe6a8"; ctx.fillText("ENERGIA", 500, 30);
+  ctx.fillStyle="#241509"; ctx.fillRect(620, 14, 160, 16);
+  const en = Math.max(0, energia)/100;
+  ctx.fillStyle = en>0.3 ? "#7bd66a" : "#e8552b";
+  ctx.fillRect(620, 14, 160*en, 16);
+  ctx.strokeStyle="#ffe6a8"; ctx.lineWidth=1; ctx.strokeRect(620,14,160,16);
+
+  // nazwa poziomu
+  ctx.textAlign="right"; ctx.fillStyle="#e8a33d"; ctx.font="bold 16px Trebuchet MS";
+  ctx.fillText("📍 "+level.nazwa, W-16, 30);
+  ctx.restore();
+}
+function rysujSerce(x,y){
+  ctx.save(); ctx.translate(x,y); ctx.fillStyle="#ff5a5a";
+  ctx.beginPath();
+  ctx.moveTo(0,4);
+  ctx.bezierCurveTo(0,0, -8,-2, -8,4);
+  ctx.bezierCurveTo(-8,9, 0,12, 0,15);
+  ctx.bezierCurveTo(0,12, 8,9, 8,4);
+  ctx.bezierCurveTo(8,-2, 0,0, 0,4);
+  ctx.fill(); ctx.restore();
+}
+
+// polyfill roundRect (starsze przeglądarki)
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+    this.beginPath();
+    this.moveTo(x+r,y); this.arcTo(x+w,y,x+w,y+h,r); this.arcTo(x+w,y+h,x,y+h,r);
+    this.arcTo(x,y+h,x,y,r); this.arcTo(x,y,x+w,y,r); this.closePath(); return this;
+  };
+}
+
+/* ---------- HOOK TESTOWY (nieinwazyjny) ---------- */
+window.__gra = {
+  info: ()=>({ stan, wynik, zycia, poziom: poziomIdx, energia:Math.round(energia),
+               nazwa: level && level.nazwa, zebrane: TEMATY.reduce((s,t)=>s+zebrane[t].size,0) }),
+  daKamien: ()=>{ if(!level) return false;
+    const k = level.kam.find(k=>!k.wziete); if(!k) return false;
+    player.x = k.px; player.y = k.py; return true; },
+};
+
+/* ---------- START ---------- */
+budujEncyklopedie();
+aktualizujPasek();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
