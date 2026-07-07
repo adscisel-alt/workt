@@ -16,8 +16,10 @@ const DOMYSLNY_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // „String contains non ISO-8859-1 code point" przy zepsutym wklejeniu klucza.
 function czysc(s) { return (s || '').replace(/[^\x20-\x7E]/g, '').trim(); }
 
-let url = czysc(localStorage.getItem(LS_URL)) || DOMYSLNY_URL;
-let key = czysc(localStorage.getItem(LS_KEY)) || DOMYSLNY_KEY;
+// Gdy wbudowane wartości są ustawione — zawsze mają pierwszeństwo (pomijamy ewentualny
+// zepsuty klucz zapisany wcześniej w pamięci przeglądarki).
+let url = DOMYSLNY_URL || czysc(localStorage.getItem(LS_URL));
+let key = DOMYSLNY_KEY || czysc(localStorage.getItem(LS_KEY));
 let client = null;
 let sesja = null;
 const sluchacze = new Set();
