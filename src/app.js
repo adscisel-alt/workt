@@ -801,7 +801,11 @@ function renderGaleria(sekId, ustId, zdjecia) {
         rows="2" placeholder="Opis i zalecenia (np. elewacja czysta)">${escapeHtml(z.opis)}</textarea>
       ${iloscWGrupie > 1 ? `<div class="foto-grupa-info">Wspólny opis dla ${iloscWGrupie} zdjęć</div>` : ''}`;
     const przyciskGrupa = grupyDozwolone
-      ? `<button class="foto-grupa-btn" data-action="foto-grupa" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">➕ Zdjęcie do tego opisu</button>`
+      ? `<div class="foto-grupa-akcje">
+           <span class="foto-grupa-label">➕ Do tego opisu:</span>
+           <button class="foto-grupa-btn" data-action="foto-grupa-aparat" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">📸 Aparat</button>
+           <button class="foto-grupa-btn" data-action="foto-grupa-plik" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">🖼️ Pliki</button>
+         </div>`
       : '';
     return `
     <figure class="foto ${wGrupie ? 'foto-czlon' : ''}">
@@ -1086,7 +1090,8 @@ function onClick(e) {
       break;
     case 'foto-lewo': przesunZdjecieWGalerii(sec, b.getAttribute('data-ust'), b.getAttribute('data-foto'), -1); break;
     case 'foto-prawo': przesunZdjecieWGalerii(sec, b.getAttribute('data-ust'), b.getAttribute('data-foto'), 1); break;
-    case 'foto-grupa': otworzWyborZdjecia(sec, b.getAttribute('data-ust'), false, { grupa: true, poFoto: b.getAttribute('data-foto') }); break;
+    case 'foto-grupa-aparat': otworzWyborZdjecia(sec, b.getAttribute('data-ust'), true, { grupa: true, poFoto: b.getAttribute('data-foto') }); break;
+    case 'foto-grupa-plik': otworzWyborZdjecia(sec, b.getAttribute('data-ust'), false, { grupa: true, poFoto: b.getAttribute('data-foto') }); break;
     case 'zamknij-przenies': przenoszone = null; render(); break;
     case 'przenies-do': {
       const p = przenoszone; przenoszone = null;

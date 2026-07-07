@@ -175,8 +175,8 @@ try {
   sprawdz(poZmianie === 'Awaryjny' && parentNadal === 'Dostateczny',
     'Można zmienić stan techniczny pojedynczego zdjęcia bez zmiany podrozdziału');
 
-  // Dodanie zdjęcia do istniejącego opisu (wspólny opis / ten sam temat)
-  await page.click(`.foto-grupa-btn[data-foto="${fotoId}"]`);
+  // Dodanie zdjęcia do istniejącego opisu (wspólny opis / ten sam temat) — z plików
+  await page.click(`[data-action="foto-grupa-plik"][data-foto="${fotoId}"]`);
   await page.setInputFiles('#plik-zdjecie', '/tmp/test-foto.png');
   await page.waitForTimeout(300);
   const czlonkowie = await page.locator(`${galSel} .foto-czlon`).count();

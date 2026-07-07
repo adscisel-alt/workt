@@ -179,8 +179,10 @@ input:focus, textarea:focus, select:focus {
 .foto-opis { margin-top: 6px; font-size: 13px; }
 .foto-ocena { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--szary); }
 .foto-ocena select { flex: 1; padding: 5px 4px; font-size: 12px; }
+.foto-grupa-akcje { margin-top: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.foto-grupa-label { flex-basis: 100%; font-size: 11px; font-weight: 700; color: var(--primary-d); }
 .foto-grupa-btn {
-  margin-top: 6px; width: 100%; padding: 7px 6px; font-size: 12px; cursor: pointer;
+  flex: 1; min-width: 70px; padding: 7px 6px; font-size: 12px; cursor: pointer;
   border: 1px solid var(--linia); border-radius: 6px; background: #fff; color: var(--primary-d);
 }
 .foto-grupa-btn:hover { background: #f0f5ff; }
