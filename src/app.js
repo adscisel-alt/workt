@@ -1249,12 +1249,31 @@ async function obsluzSupa(akcja) {
       const haslo = document.getElementById('supa-haslo')?.value || '';
       if (!mail.trim() || !haslo.trim()) { pokazToast('Podaj e-mail i hasło.'); break; }
       try {
-        if (akcja === 'zarejestruj') { await supa.zarejestruj(mail, haslo); pokazToast('Konto utworzone — zalogowano.'); }
-        else { await supa.zaloguj(mail, haslo); pokazToast('Zalogowano ✓'); }
+        if (akcja === 'zarejestruj') {
+          await supa.zarejestruj(mail, haslo);
+          if (!supa.zalogowany()) {
+            pokazToast('Konto utworzone. Sprawdź e-mail, kliknij link potwierdzający, a potem kliknij „Zaloguj”.');
+            odswiezPanelSupa();
+            break;
+          }
+          pokazToast('Konto utworzone — zalogowano ✓');
+        } else {
+          await supa.zaloguj(mail, haslo);
+          pokazToast('Zalogowano ✓');
+        }
         odswiezPrzyciskChmura();
         zamknijSupa();
         await pokazWybor(); // pokaż projekty z chmury
-      } catch (e) { pokazToast('Błąd: ' + (e.message || e)); }
+      } catch (e) {
+        const m = (e && e.message) ? e.message : String(e);
+        if (/not confirmed|confirm/i.test(m)) {
+          pokazToast('Najpierw potwierdź konto: kliknij link w e-mailu od Supabase, potem „Zaloguj”.');
+        } else if (/invalid login|credentials/i.test(m)) {
+          pokazToast('Błędny e-mail lub hasło.');
+        } else {
+          pokazToast('Błąd: ' + m);
+        }
+      }
       break;
     }
     case 'sync':
