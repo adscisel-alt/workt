@@ -211,8 +211,8 @@ export function noweUstalenie(text = '', element = '') {
   return { id: uid(), element, text, ocena: 'Dobry', pilnosc: '0', zdjecia: [] };
 }
 
-export function noweZdjecie(opis = '') {
-  return { id: uid(), opis };
+export function noweZdjecie(opis = '', ocena = '') {
+  return { id: uid(), opis, ocena };
 }
 
 // Prosty generator identyfikatorów (bez zależności od Date/Math.random w SSR)

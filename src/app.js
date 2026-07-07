@@ -51,7 +51,10 @@ function normalizuj(zap) {
       if (typeof u.element !== 'string') u.element = '';
       if (typeof u.ocena !== 'string') u.ocena = s.ogolnaOcena || 'Dobry'; // przejmij dawną ocenę sekcji
       u.pilnosc = String(u.pilnosc ?? '0');   // dawniej liczba
+      // Zdjęcie dziedziczy stan techniczny podrozdziału, dopóki nie ustawiono własnego.
+      for (const z of u.zdjecia) if (typeof z.ocena !== 'string' || z.ocena === '') z.ocena = u.ocena || 'Dobry';
     }
+    for (const z of s.zdjecia) if (typeof z.ocena !== 'string') z.ocena = '';
   }
   for (const z of (d.rozdzialI || [])) z.pilnosc = String(z.pilnosc ?? '0');
   return d;
@@ -373,15 +376,24 @@ function otworzWyborZdjecia(sekId, ustId, aparat = false) {
   inp.click();
 }
 
+// Stan techniczny (ocena) podrozdziału-ustalenia — do dziedziczenia przez zdjęcia.
+function ocenaUstalenia(sekId, ustId) {
+  if (!ustId) return '';
+  const s = doc.sekcje.find((x) => x.id === sekId);
+  const u = s && s.ustalenia.find((x) => x.id === ustId);
+  return (u && u.ocena) || '';
+}
+
 async function dodajZdjecia(sekId, ustId, pliki) {
   const arr = tablicaZdjec(sekId, ustId);
   if (!arr) { pokazToast('Najpierw dodaj sekcję / ustalenie.'); return; }
+  const domyslnaOcena = ocenaUstalenia(sekId, ustId);
   let dodane = 0;
   for (const f of pliki) {
     if (!f.type || !f.type.startsWith('image/')) continue;
     try {
       const { blob, width, height } = await przetworzObraz(f);
-      const z = noweZdjecie('');
+      const z = noweZdjecie('', domyslnaOcena);
       z.w = width; z.h = height;
       await zapiszZdjecie(z.id, blob);
       arr.push(z);
@@ -757,11 +769,20 @@ function sekcjaUstalen() {
 function renderGaleria(sekId, ustId, zdjecia) {
   const attrUst = ustId ? `data-ust="${ustId}"` : '';
   const arr = zdjecia || [];
-  return arr.map((z, i) => `
+  const parentOcena = ocenaUstalenia(sekId, ustId) || 'Dobry';
+  return arr.map((z, i) => {
+    const ocenaZdj = z.ocena || parentOcena;
+    return `
     <figure class="foto">
       <img data-foto-img="${z.id}" data-action="foto-menu" data-sec="${sekId}" ${attrUst} data-foto="${z.id}"
         src="${urlZdjecia(z) || ''}" alt="zdjęcie" loading="lazy" title="Kliknij, aby przenieść zdjęcie" />
       <button class="foto-del" data-action="usun-foto" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">✕</button>
+      <label class="foto-ocena">Stan techniczny:
+        <select data-sec="${sekId}" ${attrUst} data-foto="${z.id}" data-field="foto-ocena">
+          ${STANY_TECHNICZNE.map((o) =>
+    `<option value="${o.value}" ${o.value === ocenaZdj ? 'selected' : ''}>${o.value}</option>`).join('')}
+        </select>
+      </label>
       <textarea class="foto-opis" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" data-field="opis"
         rows="2" placeholder="Opis i zalecenia (np. elewacja czysta)">${escapeHtml(z.opis)}</textarea>
       <div class="foto-order">
@@ -769,7 +790,8 @@ function renderGaleria(sekId, ustId, zdjecia) {
         <button class="btn-mini" data-action="foto-prawo" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" title="Później" ${i === arr.length - 1 ? 'disabled' : ''}>▶</button>
       </div>
       <button class="foto-move-btn" data-action="foto-menu" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">↪ Przenieś do…</button>
-    </figure>`).join('');
+    </figure>`;
+  }).join('');
 }
 
 // Lista gotowych elementów (podpowiedzi ustaleń) dla sekcji — po kluczu lub tytule.
@@ -1145,6 +1167,13 @@ function onChange(e) {
   if (!s) return;
   const field = el.getAttribute('data-field');
   const ust = el.getAttribute('data-ust');
+  const foto = el.getAttribute('data-foto');
+  if (foto && field === 'foto-ocena') {
+    const arr = tablicaZdjec(sec, ust || null);
+    const z = arr && arr.find((x) => x.id === foto);
+    if (z) z.ocena = el.value;
+    zapisz(); return;
+  }
   if (ust && field === 'pilnosc') {
     const u = s.ustalenia.find((x) => x.id === ust);
     if (u) u.pilnosc = el.value;

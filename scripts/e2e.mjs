@@ -155,6 +155,22 @@ try {
   sprawdz(poKol[0] === przedKol[1] && poKol[1] === przedKol[0],
     'Zmieniono kolejność zdjęć w podrozdziale');
 
+  // Stan techniczny przy zdjęciu: dziedziczy z podrozdziału, z możliwością zmiany
+  const ustOcenaSel = `[data-sec="${srcSek}"]${srcUst ? `[data-ust="${srcUst}"]` : ''}[data-field="ocena"]`;
+  await page.selectOption(ustOcenaSel, 'Dostateczny');
+  await page.waitForTimeout(150);
+  await page.click(`[data-action="z-pliku"][data-sec="${srcSek}"]${srcUst ? `[data-ust="${srcUst}"]` : ''}`);
+  await page.setInputFiles('#plik-zdjecie', '/tmp/test-foto.png');
+  await page.waitForTimeout(300);
+  const nowaOcena = await page.locator(`${galSel} .foto-ocena select`).last().inputValue();
+  sprawdz(nowaOcena === 'Dostateczny', 'Nowe zdjęcie dziedziczy stan techniczny podrozdziału');
+  await page.locator(`${galSel} .foto-ocena select`).last().selectOption('Awaryjny');
+  await page.waitForTimeout(150);
+  const poZmianie = await page.locator(`${galSel} .foto-ocena select`).last().inputValue();
+  const parentNadal = await page.locator(ustOcenaSel).inputValue();
+  sprawdz(poZmianie === 'Awaryjny' && parentNadal === 'Dostateczny',
+    'Można zmienić stan techniczny pojedynczego zdjęcia bez zmiany podrozdziału');
+
   // Zdjęcie główne obiektu
   await page.click('[data-action="glowne-plik"]');
   await page.setInputFiles('#plik-zdjecie', '/tmp/test-foto.png');
