@@ -177,6 +177,8 @@ input:focus, textarea:focus, select:focus {
   color: #fff; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 13px;
 }
 .foto-opis { margin-top: 6px; font-size: 13px; }
+.foto-move-l { display: flex; align-items: center; gap: 4px; margin-top: 5px; font-size: 12px; color: var(--szary); }
+.foto-move { width: 100%; padding: 5px 4px; font-size: 12px; }
 
 .pusto { text-align: center; color: var(--szary); padding: 16px; }
 .pusto-mini { color: var(--szary); font-size: 13px; margin: 6px 0; }

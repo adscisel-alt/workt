@@ -120,6 +120,19 @@ try {
   sprawdz(liczbaZdjec >= 1, 'Dodano zdjęcie do ustalenia');
   await page.fill('.ust-card .foto-opis', 'Uszkodzenie ściany przy śmietniku.');
 
+  // Przenoszenie zdjęcia między sekcjami / pozycjami
+  const fotoId = await page.locator('.ust-card .foto img').first().getAttribute('data-foto-img');
+  const mv = page.locator(`.foto-move[data-foto="${fotoId}"]`).first();
+  const origCel = await mv.inputValue();
+  await mv.selectOption(`sek:${secId}`);
+  await page.waitForTimeout(200);
+  const przeniesione = await page.locator(
+    `[data-drop-sec="${secId}"]:not([data-drop-ust]) [data-foto-img="${fotoId}"]`).count();
+  sprawdz(przeniesione === 1, 'Przeniesiono zdjęcie do innej sekcji');
+  // Wróć na pierwotne miejsce (żeby nie zaburzać dalszych sprawdzeń eksportu)
+  await page.locator(`.foto-move[data-foto="${fotoId}"]`).first().selectOption(origCel);
+  await page.waitForTimeout(200);
+
   // Zdjęcie główne obiektu
   await page.click('[data-action="glowne-plik"]');
   await page.setInputFiles('#plik-zdjecie', '/tmp/test-foto.png');

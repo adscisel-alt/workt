@@ -437,6 +437,41 @@ async function usunZdjecieZCelu(sekId, ustId, fotoId) {
   zapiszTeraz(); render();
 }
 
+// Wszystkie możliwe „miejsca" dla zdjęcia: galeria ogólna sekcji + każda pozycja (ustalenie).
+function celeZdjec() {
+  const cele = [];
+  doc.sekcje.forEach((s, si) => {
+    const st = ((s.title || '').trim()) || `Sekcja ${si + 1}`;
+    cele.push({ value: `sek:${s.id}`, label: `${st} — zdjęcia ogólne` });
+    (s.ustalenia || []).forEach((u, ui) => {
+      let et = ((u.element || u.text || '').trim()) || `Pozycja ${ui + 1}`;
+      if (et.length > 45) et = et.slice(0, 45) + '…';
+      cele.push({ value: `ust:${s.id}:${u.id}`, label: `${st} › ${et}` });
+    });
+  });
+  return cele;
+}
+
+// Przenosi zdjęcie z jednego miejsca do innego (między sekcjami / pozycjami).
+function przeniesZdjecie(srcSekId, srcUstId, fotoId, cel) {
+  const zrodlo = tablicaZdjec(srcSekId, srcUstId || null);
+  if (!zrodlo) return;
+  let docelowa = null;
+  if (cel.startsWith('ust:')) {
+    const cz = cel.split(':');
+    docelowa = tablicaZdjec(cz[1], cz[2]);
+  } else if (cel.startsWith('sek:')) {
+    docelowa = tablicaZdjec(cel.slice(4), null);
+  }
+  if (!docelowa || docelowa === zrodlo) { render(); return; }
+  const i = zrodlo.findIndex((z) => z.id === fotoId);
+  if (i === -1) return;
+  const [z] = zrodlo.splice(i, 1);
+  docelowa.push(z);
+  zapiszTeraz(); render();
+  pokazToast('Przeniesiono zdjęcie.');
+}
+
 function dodajZalecenieI() {
   const z = noweZalecenieI('');
   doc.rozdzialI.push(z);
@@ -693,12 +728,21 @@ function sekcjaUstalen() {
 // Renderuje miniatury zdjęć dla celu (ustalenie lub sekcja).
 function renderGaleria(sekId, ustId, zdjecia) {
   const attrUst = ustId ? `data-ust="${ustId}"` : '';
+  const aktualnyCel = ustId ? `ust:${sekId}:${ustId}` : `sek:${sekId}`;
+  const cele = celeZdjec();
+  const opcje = cele.map((c) =>
+    `<option value="${esc(c.value)}" ${c.value === aktualnyCel ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('');
   return (zdjecia || []).map((z) => `
     <figure class="foto">
       <img data-foto-img="${z.id}" src="${urlZdjecia(z) || ''}" alt="zdjęcie" loading="lazy" />
       <button class="foto-del" data-action="usun-foto" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">✕</button>
       <textarea class="foto-opis" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" data-field="opis"
         rows="2" placeholder="Opis i zalecenia (np. elewacja czysta)">${escapeHtml(z.opis)}</textarea>
+      <label class="foto-move-l" title="Przenieś zdjęcie do innej sekcji / pozycji">↪
+        <select class="foto-move" data-foto-move data-sec="${sekId}" ${attrUst} data-foto="${z.id}">
+          ${opcje}
+        </select>
+      </label>
     </figure>`).join('');
 }
 
@@ -1019,6 +1063,12 @@ function onInput(e) {
 
 function onChange(e) {
   const el = e.target;
+  // Przenoszenie zdjęcia do innej sekcji / pozycji (musi być przed obsługą data-sec)
+  if (el.hasAttribute && el.hasAttribute('data-foto-move')) {
+    przeniesZdjecie(el.getAttribute('data-sec'), el.getAttribute('data-ust') || null,
+      el.getAttribute('data-foto'), el.value);
+    return;
+  }
   // Pole meta wybierane z listy (np. rodzaj kontroli)
   const metaSel = el.getAttribute && el.getAttribute('data-meta-select');
   if (metaSel) { doc.meta[metaSel] = el.value; zapisz(); return; }
