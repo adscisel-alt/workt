@@ -437,20 +437,8 @@ async function usunZdjecieZCelu(sekId, ustId, fotoId) {
   zapiszTeraz(); render();
 }
 
-// Wszystkie możliwe „miejsca" dla zdjęcia: galeria ogólna sekcji + każda pozycja (ustalenie).
-function celeZdjec() {
-  const cele = [];
-  doc.sekcje.forEach((s, si) => {
-    const st = ((s.title || '').trim()) || `Sekcja ${si + 1}`;
-    cele.push({ value: `sek:${s.id}`, label: `${st} — zdjęcia ogólne` });
-    (s.ustalenia || []).forEach((u, ui) => {
-      let et = ((u.element || u.text || '').trim()) || `Pozycja ${ui + 1}`;
-      if (et.length > 45) et = et.slice(0, 45) + '…';
-      cele.push({ value: `ust:${s.id}:${u.id}`, label: `${st} › ${et}` });
-    });
-  });
-  return cele;
-}
+// Zdjęcie wskazane do przeniesienia (otwiera okno wyboru miejsca docelowego).
+let przenoszone = null; // { sekId, ustId, fotoId } albo null
 
 // Przenosi zdjęcie z jednego miejsca do innego (między sekcjami / pozycjami).
 function przeniesZdjecie(srcSekId, srcUstId, fotoId, cel) {
@@ -470,6 +458,39 @@ function przeniesZdjecie(srcSekId, srcUstId, fotoId, cel) {
   docelowa.push(z);
   zapiszTeraz(); render();
   pokazToast('Przeniesiono zdjęcie.');
+}
+
+// Okno wyboru miejsca docelowego dla zdjęcia (rozdziały = sekcje, podrozdziały = pozycje).
+function modalPrzenoszenia() {
+  if (!przenoszone) return '';
+  const aktualnyCel = przenoszone.ustId
+    ? `ust:${przenoszone.sekId}:${przenoszone.ustId}` : `sek:${przenoszone.sekId}`;
+  const grupy = doc.sekcje.map((s, si) => {
+    const st = ((s.title || '').trim()) || `Sekcja ${si + 1}`;
+    const ogolneVal = `sek:${s.id}`;
+    const znacznik = (v) => (v === aktualnyCel ? ' <span class="cel-tu">✓ tu jest</span>' : '');
+    const pozycje = (s.ustalenia || []).map((u, ui) => {
+      let et = ((u.element || u.text || '').trim()) || `Pozycja ${ui + 1}`;
+      if (et.length > 70) et = et.slice(0, 70) + '…';
+      const val = `ust:${s.id}:${u.id}`;
+      return `<button class="cel-poz ${val === aktualnyCel ? 'aktualny' : ''}" data-action="przenies-do" data-cel="${esc(val)}">↳ ${escapeHtml(et)}${znacznik(val)}</button>`;
+    }).join('');
+    return `<div class="cel-grupa">
+      <div class="cel-naglowek">📌 ${escapeHtml(st)}</div>
+      <button class="cel-poz cel-ogolne ${ogolneVal === aktualnyCel ? 'aktualny' : ''}" data-action="przenies-do" data-cel="${esc(ogolneVal)}">Zdjęcia ogólne sekcji${znacznik(ogolneVal)}</button>
+      ${pozycje}
+    </div>`;
+  }).join('');
+  return `
+  <div class="przenies-tlo">
+    <div class="przenies-okno" role="dialog" aria-label="Przenieś zdjęcie">
+      <div class="przenies-head">
+        <span>↪ Przenieś zdjęcie do…</span>
+        <button class="btn-mini" data-action="zamknij-przenies">✕</button>
+      </div>
+      <div class="przenies-body">${grupy || '<p class="pusto-mini">Brak innych miejsc.</p>'}</div>
+    </div>
+  </div>`;
 }
 
 function dodajZalecenieI() {
@@ -566,6 +587,7 @@ function render() {
       ${sekcjaPodsumowania()}
     </main>
     ${pasekGlosu(voice.stan())}
+    ${modalPrzenoszenia()}
   `;
 }
 
@@ -728,21 +750,14 @@ function sekcjaUstalen() {
 // Renderuje miniatury zdjęć dla celu (ustalenie lub sekcja).
 function renderGaleria(sekId, ustId, zdjecia) {
   const attrUst = ustId ? `data-ust="${ustId}"` : '';
-  const aktualnyCel = ustId ? `ust:${sekId}:${ustId}` : `sek:${sekId}`;
-  const cele = celeZdjec();
-  const opcje = cele.map((c) =>
-    `<option value="${esc(c.value)}" ${c.value === aktualnyCel ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('');
   return (zdjecia || []).map((z) => `
     <figure class="foto">
-      <img data-foto-img="${z.id}" src="${urlZdjecia(z) || ''}" alt="zdjęcie" loading="lazy" />
+      <img data-foto-img="${z.id}" data-action="foto-menu" data-sec="${sekId}" ${attrUst} data-foto="${z.id}"
+        src="${urlZdjecia(z) || ''}" alt="zdjęcie" loading="lazy" title="Kliknij, aby przenieść zdjęcie" />
       <button class="foto-del" data-action="usun-foto" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">✕</button>
       <textarea class="foto-opis" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" data-field="opis"
         rows="2" placeholder="Opis i zalecenia (np. elewacja czysta)">${escapeHtml(z.opis)}</textarea>
-      <label class="foto-move-l" title="Przenieś zdjęcie do innej sekcji / pozycji">↪
-        <select class="foto-move" data-foto-move data-sec="${sekId}" ${attrUst} data-foto="${z.id}">
-          ${opcje}
-        </select>
-      </label>
+      <button class="foto-move-btn" data-action="foto-menu" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">↪ Przenieś do…</button>
     </figure>`).join('');
 }
 
@@ -972,6 +987,10 @@ function podepnijZdarzeniaGlobalne() {
 }
 
 function onClick(e) {
+  // Kliknięcie w tło okna „Przenieś zdjęcie" — zamknij
+  if (e.target.classList && e.target.classList.contains('przenies-tlo')) {
+    przenoszone = null; render(); return;
+  }
   const b = e.target.closest('[data-action]');
   if (!b) return;
   const action = b.getAttribute('data-action');
@@ -1003,6 +1022,17 @@ function onClick(e) {
     case 'glowne-plik': otworzWyborGlowne(false); break;
     case 'usun-glowne': usunZdjecieGlowne(); break;
     case 'usun-foto': usunZdjecieZCelu(sec, b.getAttribute('data-ust'), b.getAttribute('data-foto')); break;
+    case 'foto-menu':
+      przenoszone = { sekId: sec, ustId: b.getAttribute('data-ust') || null, fotoId: b.getAttribute('data-foto') };
+      render();
+      break;
+    case 'zamknij-przenies': przenoszone = null; render(); break;
+    case 'przenies-do': {
+      const p = przenoszone; przenoszone = null;
+      if (p) przeniesZdjecie(p.sekId, p.ustId, p.fotoId, b.getAttribute('data-cel'));
+      else render();
+      break;
+    }
     case 'dodaj-insp': dodajInspektora(); break;
     case 'dodaj-wyp': {
       const inp = document.getElementById('wyp-nowa');
@@ -1063,12 +1093,6 @@ function onInput(e) {
 
 function onChange(e) {
   const el = e.target;
-  // Przenoszenie zdjęcia do innej sekcji / pozycji (musi być przed obsługą data-sec)
-  if (el.hasAttribute && el.hasAttribute('data-foto-move')) {
-    przeniesZdjecie(el.getAttribute('data-sec'), el.getAttribute('data-ust') || null,
-      el.getAttribute('data-foto'), el.value);
-    return;
-  }
   // Pole meta wybierane z listy (np. rodzaj kontroli)
   const metaSel = el.getAttribute && el.getAttribute('data-meta-select');
   if (metaSel) { doc.meta[metaSel] = el.value; zapisz(); return; }
