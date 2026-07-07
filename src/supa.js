@@ -12,8 +12,12 @@ const LS_UP = 'supa_wyslane'; // lista id zdjęć już wysłanych
 const DOMYSLNY_URL = 'https://wksfihvyccvvfdgicvji.supabase.co';
 const DOMYSLNY_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indrc2ZpaHZ5Y2N2dmZkZ2ljdmppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNjM2NTAsImV4cCI6MjA5ODgzOTY1MH0.EQd3epfubYJOOgOB6l4lqb1SZejMTbgJ00VxmuS8K0o';
 
-let url = localStorage.getItem(LS_URL) || DOMYSLNY_URL;
-let key = localStorage.getItem(LS_KEY) || DOMYSLNY_KEY;
+// Usuwa ukryte/niedozwolone znaki (spoza ASCII) i białe znaki — chroni przed błędem
+// „String contains non ISO-8859-1 code point" przy zepsutym wklejeniu klucza.
+function czysc(s) { return (s || '').replace(/[^\x20-\x7E]/g, '').trim(); }
+
+let url = czysc(localStorage.getItem(LS_URL)) || DOMYSLNY_URL;
+let key = czysc(localStorage.getItem(LS_KEY)) || DOMYSLNY_KEY;
 let client = null;
 let sesja = null;
 const sluchacze = new Set();
@@ -26,8 +30,8 @@ export function pobierzUrl() { return url; }
 export function pobierzKey() { return key; }
 
 export function ustawKonfig(u, k) {
-  url = (u || '').trim().replace(/\/+$/, '');
-  key = (k || '').trim();
+  url = czysc(u).replace(/\/+$/, '') || DOMYSLNY_URL;
+  key = czysc(k) || DOMYSLNY_KEY;
   localStorage.setItem(LS_URL, url);
   localStorage.setItem(LS_KEY, key);
   client = null; sesja = null;
@@ -61,7 +65,7 @@ export function status() {
 
 export async function zarejestruj(mail, haslo) {
   const c = klient(); if (!c) throw new Error('Brak konfiguracji Supabase.');
-  const { data, error } = await c.auth.signUp({ email: mail, password: haslo });
+  const { data, error } = await c.auth.signUp({ email: (mail || '').trim().toLowerCase(), password: haslo });
   if (error) throw error;
   if (data.session) sesja = data.session;
   emit();
@@ -69,7 +73,7 @@ export async function zarejestruj(mail, haslo) {
 }
 export async function zaloguj(mail, haslo) {
   const c = klient(); if (!c) throw new Error('Brak konfiguracji Supabase.');
-  const { data, error } = await c.auth.signInWithPassword({ email: mail, password: haslo });
+  const { data, error } = await c.auth.signInWithPassword({ email: (mail || '').trim().toLowerCase(), password: haslo });
   if (error) throw error;
   sesja = data.session; emit();
   return data;
