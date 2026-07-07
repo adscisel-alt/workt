@@ -75,7 +75,11 @@ try {
   await page.click(`[data-action="dodaj-ust"][data-sec="${secId}"]`);
   await page.waitForSelector(`[data-sec="${secId}"][data-field="text"]`);
   await page.fill(`[data-sec="${secId}"][data-field="element"]`, 'Ściany zewnętrzne');
-  await page.fill(`[data-sec="${secId}"][data-field="text"]`, 'Mechaniczne uszkodzenia ścian przy wejściu do śmietnika.');
+  // Wpisujemy z małej litery — aplikacja ma wymusić wielką na początku
+  await page.fill(`[data-sec="${secId}"][data-field="text"]`, 'mechaniczne uszkodzenia ścian przy wejściu do śmietnika.');
+  await page.waitForTimeout(120);
+  const tekstPoprawiony = await page.locator(`[data-sec="${secId}"][data-field="text"]`).inputValue();
+  sprawdz(tekstPoprawiony.startsWith('Mechaniczne'), 'Wymuszono wielką literę na początku opisu');
   // Ocena stanu technicznego przy tej pozycji
   await page.selectOption(`[data-sec="${secId}"][data-field="ocena"]`, 'Zły');
   const ocenaVal = await page.locator(`[data-sec="${secId}"][data-field="ocena"]`).first().inputValue();

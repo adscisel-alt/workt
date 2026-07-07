@@ -1083,8 +1083,25 @@ function onClick(e) {
   }
 }
 
+// Zamienia pierwszą literę tekstu na wielką (pomija początkowe spacje/enter).
+function zWielkiej(s) {
+  return (s || '').replace(/^(\s*)(\p{Ll})/u, (_, sp, ch) => sp + ch.toUpperCase());
+}
+// Wymusza wielką literę na początku pola tekstowego (zachowuje pozycję kursora — długość bez zmian).
+function wymusWielkaLitere(el) {
+  const nowy = zWielkiej(el.value);
+  if (nowy !== el.value) {
+    const pos = el.selectionStart;
+    el.value = nowy;
+    try { el.setSelectionRange(pos, pos); } catch (e) { /* ignore */ }
+  }
+}
+
 function onInput(e) {
   const el = e.target;
+  // Wymuś wielką literę na początku opisu / treści (podrozdział, podpis zdjęcia, zalecenia Rozdz. I)
+  const polePisane = el.getAttribute('data-field');
+  if (polePisane === 'opis' || polePisane === 'text') wymusWielkaLitere(el);
   // Meta proste
   const meta = el.getAttribute('data-meta');
   if (meta === 'podsumowanie-pole') { doc.podsumowanie = el.value; zapisz(); return; }

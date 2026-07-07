@@ -11,6 +11,9 @@ import {
 } from './constants.js';
 
 const FONT = 'Calibri';
+
+// Wymusza wielką literę na początku tekstu (pomija początkowe spacje/entery).
+function duzaLitera(s) { return (s || '').replace(/^(\s*)(\p{Ll})/u, (_, sp, ch) => sp + ch.toUpperCase()); }
 const CZARNA = { style: BorderStyle.SINGLE, size: 4, color: '000000' };
 const BORDERS = { top: CZARNA, bottom: CZARNA, left: CZARNA, right: CZARNA,
   insideHorizontal: CZARNA, insideVertical: CZARNA };
@@ -161,7 +164,7 @@ function tabelaRozdzialI(zalecenia) {
   ] });
   const rows = zalecenia.map((z, i) => new TableRow({ children: [
     komorka(String(i + 1), { width: 6, align: AlignmentType.CENTER }),
-    komorka(z.text || '', { width: 56, valign: VerticalAlign.TOP }),
+    komorka(duzaLitera(z.text || ''), { width: 56, valign: VerticalAlign.TOP }),
     komorka(etykietaPilnosci(z.pilnosc), { width: 13, align: AlignmentType.CENTER }),
     komorka(z.status || '', { width: 25 }),
   ] }));
@@ -171,7 +174,7 @@ function tabelaRozdzialI(zalecenia) {
 // Akapit treści ustalenia: pogrubiony element + opis (używany w Rozdziale III).
 function akapitUstalenie(u) {
   const el = (u.element || '').trim();
-  const tx = (u.text || '').trim();
+  const tx = duzaLitera((u.text || '').trim());
   const runs = [];
   if (el) runs.push(new TextRun({ text: el, bold: true, size: 22, font: FONT }));
   if (el && tx) runs.push(new TextRun({ text: ' – ', size: 22, font: FONT }));
@@ -202,7 +205,7 @@ async function tabelaUstalen(ustalenia) {
   for (const u of ustalenia) {
     const zdj = u.zdjecia || [];
     const liczbaWierszy = Math.max(1, zdj.length);   // co najmniej 1 wiersz
-    const opisPodrozdzialu = (u.text || '').trim();
+    const opisPodrozdzialu = duzaLitera((u.text || '').trim());
     let ostatniPodpis = null;                        // do pomijania powtórzeń
     for (let i = 0; i < liczbaWierszy; i += 1) {
       const pierwszy = i === 0;
@@ -221,7 +224,7 @@ async function tabelaUstalen(ustalenia) {
       const opisDzieci = [];
       if (pierwszy && opisPodrozdzialu) opisDzieci.push(p(opisPodrozdzialu, { size: 20 }));
       if (zdj.length) {
-        const podpis = (zdj[i].opis || '').trim();
+        const podpis = duzaLitera((zdj[i].opis || '').trim());
         if (podpis && podpis !== ostatniPodpis) { opisDzieci.push(p(podpis, { size: 20 })); ostatniPodpis = podpis; }
       }
       children.push(komorka(opisDzieci, { width: 26, valign: VerticalAlign.TOP }));
