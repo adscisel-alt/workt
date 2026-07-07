@@ -140,6 +140,21 @@ try {
   await page.click(`[data-action="przenies-do"][data-cel="${origCel}"]`);
   await page.waitForTimeout(200);
 
+  // Zmiana kolejności zdjęć w obrębie tego samego podrozdziału (◀ / ▶)
+  await page.click(`.ust-card [data-action="z-pliku"][data-ust]`); // to samo ustalenie
+  await page.setInputFiles('#plik-zdjecie', '/tmp/test-foto.png');
+  await page.waitForTimeout(300);
+  const galSel = `[data-drop-sec="${srcSek}"]${srcUst ? `[data-drop-ust="${srcUst}"]` : ''}`;
+  const przedKol = await page.locator(`${galSel} .foto img`).evaluateAll(
+    (els) => els.map((e) => e.getAttribute('data-foto-img')));
+  sprawdz(przedKol.length >= 2, 'Dodano drugie zdjęcie do tego samego podrozdziału');
+  await page.click(`${galSel} .foto:first-child [data-action="foto-prawo"]`);
+  await page.waitForTimeout(200);
+  const poKol = await page.locator(`${galSel} .foto img`).evaluateAll(
+    (els) => els.map((e) => e.getAttribute('data-foto-img')));
+  sprawdz(poKol[0] === przedKol[1] && poKol[1] === przedKol[0],
+    'Zmieniono kolejność zdjęć w podrozdziale');
+
   // Zdjęcie główne obiektu
   await page.click('[data-action="glowne-plik"]');
   await page.setInputFiles('#plik-zdjecie', '/tmp/test-foto.png');

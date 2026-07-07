@@ -460,6 +460,12 @@ function przeniesZdjecie(srcSekId, srcUstId, fotoId, cel) {
   pokazToast('Przeniesiono zdjęcie.');
 }
 
+// Zmiana kolejności zdjęć w obrębie tej samej galerii (podrozdziału / sekcji).
+function przesunZdjecieWGalerii(sekId, ustId, fotoId, kierunek) {
+  const arr = tablicaZdjec(sekId, ustId || null);
+  if (arr && przesunWTablicy(arr, fotoId, kierunek)) { zapiszTeraz(); render(); }
+}
+
 // Okno wyboru miejsca docelowego dla zdjęcia (rozdziały = sekcje, podrozdziały = pozycje).
 function modalPrzenoszenia() {
   if (!przenoszone) return '';
@@ -750,13 +756,18 @@ function sekcjaUstalen() {
 // Renderuje miniatury zdjęć dla celu (ustalenie lub sekcja).
 function renderGaleria(sekId, ustId, zdjecia) {
   const attrUst = ustId ? `data-ust="${ustId}"` : '';
-  return (zdjecia || []).map((z) => `
+  const arr = zdjecia || [];
+  return arr.map((z, i) => `
     <figure class="foto">
       <img data-foto-img="${z.id}" data-action="foto-menu" data-sec="${sekId}" ${attrUst} data-foto="${z.id}"
         src="${urlZdjecia(z) || ''}" alt="zdjęcie" loading="lazy" title="Kliknij, aby przenieść zdjęcie" />
       <button class="foto-del" data-action="usun-foto" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">✕</button>
       <textarea class="foto-opis" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" data-field="opis"
         rows="2" placeholder="Opis i zalecenia (np. elewacja czysta)">${escapeHtml(z.opis)}</textarea>
+      <div class="foto-order">
+        <button class="btn-mini" data-action="foto-lewo" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" title="Wcześniej" ${i === 0 ? 'disabled' : ''}>◀</button>
+        <button class="btn-mini" data-action="foto-prawo" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" title="Później" ${i === arr.length - 1 ? 'disabled' : ''}>▶</button>
+      </div>
       <button class="foto-move-btn" data-action="foto-menu" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">↪ Przenieś do…</button>
     </figure>`).join('');
 }
@@ -1026,6 +1037,8 @@ function onClick(e) {
       przenoszone = { sekId: sec, ustId: b.getAttribute('data-ust') || null, fotoId: b.getAttribute('data-foto') };
       render();
       break;
+    case 'foto-lewo': przesunZdjecieWGalerii(sec, b.getAttribute('data-ust'), b.getAttribute('data-foto'), -1); break;
+    case 'foto-prawo': przesunZdjecieWGalerii(sec, b.getAttribute('data-ust'), b.getAttribute('data-foto'), 1); break;
     case 'zamknij-przenies': przenoszone = null; render(); break;
     case 'przenies-do': {
       const p = przenoszone; przenoszone = null;
