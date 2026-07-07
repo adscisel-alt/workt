@@ -156,6 +156,21 @@ function zapisz(natychmiast = false) {
   zaplanujSupa();
 }
 
+// Jednorazowe wysłanie wszystkich lokalnych projektów do chmury (po zalogowaniu).
+async function wyslijLokalneDoChmury() {
+  if (!supa.zalogowany()) return;
+  const lokalne = await listaProjektow();
+  if (!lokalne.length) return;
+  let n = 0;
+  for (const p of lokalne) {
+    try {
+      const d = await wczytajProjekt(p.id);
+      if (d) { await supa.zapiszProjekt(normalizuj(d)); n += 1; pokazToast(`Wysyłanie projektów do chmury: ${n}/${lokalne.length}…`); }
+    } catch (e) { console.warn('Wysyłanie do chmury:', p.id, e); }
+  }
+  if (n) pokazToast(`Twoje projekty są w chmurze: ${n} ✓`);
+}
+
 let supaTimer = null;
 function zaplanujSupa() {
   if (!supa.zalogowany() || !doc) return;
@@ -1225,6 +1240,9 @@ function panelSupaHTML() {
       <p class="hint">Projekty synchronizują się automatycznie. Na drugim urządzeniu zaloguj się tym samym kontem — zobaczysz tu tę samą listę.</p>
       <div class="modal-akcje">
         <button class="btn btn-primary" data-supa="sync">☁️ Synchronizuj teraz</button>
+        <button class="btn" data-supa="wyslij">⬆️ Wyślij wszystkie moje projekty do chmury</button>
+      </div>
+      <div class="modal-akcje">
         <button class="btn btn-ghost" data-supa="wyloguj">Wyloguj</button>
         <button class="btn btn-ghost" data-supa="zamknij">Zamknij</button>
       </div>`;
@@ -1263,6 +1281,7 @@ async function obsluzSupa(akcja) {
         }
         odswiezPrzyciskChmura();
         zamknijSupa();
+        await wyslijLokalneDoChmury(); // wyślij dotychczasowe projekty do chmury
         await pokazWybor(); // pokaż projekty z chmury
       } catch (e) {
         const m = (e && e.message) ? e.message : String(e);
@@ -1279,6 +1298,11 @@ async function obsluzSupa(akcja) {
     case 'sync':
       if (doc) { try { await supa.zapiszProjekt(doc); pokazToast('Zsynchronizowano ✓'); } catch (e) { pokazToast('Błąd sync: ' + e.message); } }
       else { pokazToast('Otwórz projekt, aby go zsynchronizować.'); }
+      break;
+    case 'wyslij':
+      zamknijSupa();
+      await wyslijLokalneDoChmury();
+      await pokazWybor();
       break;
     case 'wyloguj': await supa.wyloguj(); odswiezPrzyciskChmura(); odswiezPanelSupa(); await pokazWybor(); break;
     case 'zamknij': zamknijSupa(); break;
