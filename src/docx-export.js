@@ -3,7 +3,7 @@
 import {
   Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
   Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun, VerticalAlign,
-  Footer, PageNumber,
+  VerticalMergeType, Footer, PageNumber,
 } from 'docx';
 import { wczytajZdjecie } from './storage.js';
 import {
@@ -33,11 +33,12 @@ function komorka(content, opts = {}) {
   const children = Array.isArray(content) ? content
     : [typeof content === 'string' ? p(content, opts) : content];
   return new TableCell({
-    children,
+    children: children.length ? children : [new Paragraph({ children: [] })],
     width: opts.width ? { size: opts.width, type: WidthType.PERCENTAGE } : undefined,
     verticalAlign: opts.valign || VerticalAlign.CENTER,
     shading: opts.shade ? { fill: opts.shade } : undefined,
     columnSpan: opts.span,
+    verticalMerge: opts.vmerge,
   });
 }
 
@@ -167,29 +168,7 @@ function tabelaRozdzialI(zalecenia) {
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] });
 }
 
-// Zawartość komórki „Fotografia": same zdjęcia (bez podpisu — podpis idzie do kolumny „Opis”).
-async function komorkaFoto(zdjecia) {
-  const dzieci = [];
-  for (const z of (zdjecia || [])) {
-    const run = await obrazRun(z, 190);
-    if (run) dzieci.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 }, children: [run] }));
-  }
-  if (!dzieci.length) dzieci.push(p('—', { align: AlignmentType.CENTER, color: '999999' }));
-  return dzieci;
-}
-
-// Zawartość komórki „Opis": podpisy zdjęć (np. „elewacja czysta”), jeden pod drugim.
-function komorkaOpis(zdjecia) {
-  const dzieci = [];
-  for (const z of (zdjecia || [])) {
-    const o = (z.opis || '').trim();
-    if (o) dzieci.push(p(o, { size: 20 }));
-  }
-  if (!dzieci.length) dzieci.push(p('', { size: 20 }));
-  return dzieci;
-}
-
-// Akapit treści ustalenia: pogrubiony element + opis.
+// Akapit treści ustalenia: pogrubiony element + opis (używany w Rozdziale III).
 function akapitUstalenie(u) {
   const el = (u.element || '').trim();
   const tx = (u.text || '').trim();
@@ -201,7 +180,16 @@ function akapitUstalenie(u) {
   return new Paragraph({ spacing: { after: 40 }, children: runs });
 }
 
-// Tabela ustaleń w układzie wzoru: 4 kolumny z kolumną „Fotografia”.
+// Akapit samej nazwy elementu (kolumna 1 tabeli ustaleń) — pogrubiony.
+function akapitElement(u) {
+  const el = (u.element || '').trim();
+  return new Paragraph({ spacing: { after: 40 },
+    children: [new TextRun({ text: el, bold: true, size: 22, font: FONT })] });
+}
+
+// Tabela ustaleń: każde zdjęcie w osobnym wierszu, aby podpis w kolumnie „Opis"
+// był dokładnie na wysokości zdjęcia obok. Opis podrozdziału (tekst ustalenia)
+// zawsze na górze kolumny „Opis". Powtarzające się kolejno podpisy nie są powielane.
 async function tabelaUstalen(ustalenia) {
   const header = new TableRow({ tableHeader: true, children: [
     komorka('Element, urządzenie, instalacje podlegające kontroli', { width: 24, bold: true, shade: 'D9D9D9' }),
@@ -212,13 +200,43 @@ async function tabelaUstalen(ustalenia) {
   ] });
   const rows = [];
   for (const u of ustalenia) {
-    rows.push(new TableRow({ children: [
-      komorka([akapitUstalenie(u)], { width: 24, valign: VerticalAlign.TOP }),
-      komorka(u.ocena || '', { width: 12, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
-      komorka(etykietaPilnosci(u.pilnosc), { width: 10, align: AlignmentType.CENTER, valign: VerticalAlign.TOP }),
-      komorka(komorkaOpis(u.zdjecia), { width: 26, valign: VerticalAlign.TOP }),
-      komorka(await komorkaFoto(u.zdjecia), { width: 28, valign: VerticalAlign.TOP }),
-    ] }));
+    const zdj = u.zdjecia || [];
+    const liczbaWierszy = Math.max(1, zdj.length);   // co najmniej 1 wiersz
+    const opisPodrozdzialu = (u.text || '').trim();
+    let ostatniPodpis = null;                        // do pomijania powtórzeń
+    for (let i = 0; i < liczbaWierszy; i += 1) {
+      const pierwszy = i === 0;
+      const children = [];
+      // Kolumny 1–3: scalone w pionie (dane raz, na górze bloku)
+      if (pierwszy) {
+        children.push(komorka([akapitElement(u)], { width: 24, valign: VerticalAlign.TOP, vmerge: VerticalMergeType.RESTART }));
+        children.push(komorka(u.ocena || '', { width: 12, align: AlignmentType.CENTER, valign: VerticalAlign.TOP, vmerge: VerticalMergeType.RESTART }));
+        children.push(komorka(etykietaPilnosci(u.pilnosc), { width: 10, align: AlignmentType.CENTER, valign: VerticalAlign.TOP, vmerge: VerticalMergeType.RESTART }));
+      } else {
+        children.push(komorka('', { width: 24, vmerge: VerticalMergeType.CONTINUE }));
+        children.push(komorka('', { width: 12, vmerge: VerticalMergeType.CONTINUE }));
+        children.push(komorka('', { width: 10, vmerge: VerticalMergeType.CONTINUE }));
+      }
+      // Kolumna „Opis": opis podrozdziału na górze (1. wiersz) + podpis danego zdjęcia
+      const opisDzieci = [];
+      if (pierwszy && opisPodrozdzialu) opisDzieci.push(p(opisPodrozdzialu, { size: 20 }));
+      if (zdj.length) {
+        const podpis = (zdj[i].opis || '').trim();
+        if (podpis && podpis !== ostatniPodpis) { opisDzieci.push(p(podpis, { size: 20 })); ostatniPodpis = podpis; }
+      }
+      children.push(komorka(opisDzieci, { width: 26, valign: VerticalAlign.TOP }));
+      // Kolumna „Fotografia": jedno zdjęcie w tym wierszu
+      const fotoDzieci = [];
+      if (zdj.length) {
+        const run = await obrazRun(zdj[i], 190);
+        if (run) fotoDzieci.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [run] }));
+        else fotoDzieci.push(p('[brak danych zdjęcia]', { italics: true, color: '999999' }));
+      } else {
+        fotoDzieci.push(p('—', { align: AlignmentType.CENTER, color: '999999' }));
+      }
+      children.push(komorka(fotoDzieci, { width: 28, valign: VerticalAlign.TOP }));
+      rows.push(new TableRow({ children }));
+    }
   }
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: BORDERS, rows: [header, ...rows] });
 }
