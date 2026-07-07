@@ -99,6 +99,7 @@ export async function sprzatnijZdjecia() {
     for (const p of idx) {
       const doc = await get(PROJ_PREFIX + p.id);
       if (!doc) continue;
+      if (doc.meta && doc.meta.zdjecieGlowne && doc.meta.zdjecieGlowne.id) uzywane.add(PHOTO_PREFIX + doc.meta.zdjecieGlowne.id);
       for (const s of doc.sekcje || []) {
         for (const z of (s.zdjecia || [])) uzywane.add(PHOTO_PREFIX + z.id);
         for (const u of (s.ustalenia || [])) for (const z of (u.zdjecia || [])) uzywane.add(PHOTO_PREFIX + z.id);

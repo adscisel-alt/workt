@@ -102,6 +102,13 @@ try {
   sprawdz(liczbaZdjec >= 1, 'Dodano zdjęcie do ustalenia');
   await page.fill('.ust-card .foto-opis', 'Uszkodzenie ściany przy śmietniku.');
 
+  // Zdjęcie główne obiektu
+  await page.click('[data-action="glowne-plik"]');
+  await page.setInputFiles('#plik-zdjecie', '/tmp/test-foto.png');
+  await page.waitForSelector('.glowne-podglad img', { timeout: 5000 });
+  const maGlowne = await page.locator('.glowne-podglad img').count();
+  sprawdz(maGlowne === 1, 'Dodano zdjęcie główne obiektu');
+
   // Osoby wykonujące przegląd — dodanie z zapisanej listy
   await page.selectOption('[data-osoba-select]', '1'); // Zbigniew Łukaszewski
   await page.waitForTimeout(200);

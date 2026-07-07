@@ -158,6 +158,7 @@ export function pustyDokument() {
       wyposazenie: [],            // np. ['instalacja kanalizacji', ...]
       wyposazenieDodatkowe: [],   // własne pozycje dopisane przez użytkownika
       poprzedniaKontrola: '',     // opis/data poprzedniej kontroli (Rozdział I)
+      zdjecieGlowne: null,        // zdjęcie główne obiektu (na 1. stronie): {id,w,h}
     },
     rozdzialI: [],                // wykonanie zaleceń z poprzedniej kontroli
     sekcje: [],

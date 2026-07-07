@@ -354,6 +354,12 @@ export async function generujDocx(doc) {
   dzieci.push(p(`BRANŻA ${m.branza || ''}`, { align: AlignmentType.CENTER, bold: true }));
   dzieci.push(p(`KONTROLA ${m.rodzajKontroli || ''}`, { align: AlignmentType.CENTER }));
 
+  // Zdjęcie główne obiektu na 1. stronie
+  if (m.zdjecieGlowne && m.zdjecieGlowne.id) {
+    const run = await obrazRun(m.zdjecieGlowne, 380);
+    if (run) dzieci.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 160, after: 160 }, children: [run] }));
+  }
+
   dzieci.push(naglowek('PODSTAWA OPRACOWANIA'));
   dzieci.push(p(m.podstawa));
 

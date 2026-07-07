@@ -43,6 +43,7 @@ function normalizuj(zap) {
   if (!Array.isArray(d.meta.rodzajKonstrukcji)) d.meta.rodzajKonstrukcji = [];
   if (!Array.isArray(d.meta.wyposazenie)) d.meta.wyposazenie = [];
   if (!Array.isArray(d.meta.wyposazenieDodatkowe)) d.meta.wyposazenieDodatkowe = [];
+  if (d.meta.zdjecieGlowne === undefined) d.meta.zdjecieGlowne = null;
   for (const s of (d.sekcje || [])) {
     if (!Array.isArray(s.zdjecia)) s.zdjecia = [];
     for (const u of (s.ustalenia || [])) {
@@ -370,6 +371,39 @@ async function dodajZdjecia(sekId, ustId, pliki) {
   if (dodane) { zapiszTeraz(); render(); pokazToast(`Dodano zdjęć: ${dodane}`); }
 }
 
+function otworzWyborGlowne(aparat = false) {
+  celZdjecia = { glowne: true };
+  const inp = document.getElementById(aparat ? 'plik-aparat' : 'plik-zdjecie');
+  inp.value = '';
+  if (aparat) inp.onchange = (ev) => dodajZdjecieGlowne([...ev.target.files]);
+  inp.click();
+}
+
+async function dodajZdjecieGlowne(pliki) {
+  const f = (pliki || []).find((x) => x.type && x.type.startsWith('image/'));
+  if (!f) return;
+  try {
+    const { blob, width, height } = await przetworzObraz(f);
+    // usuń poprzednie zdjęcie główne (jeśli było)
+    if (doc.meta.zdjecieGlowne) { zwolnijUrl(doc.meta.zdjecieGlowne.id); await usunZdjecie(doc.meta.zdjecieGlowne.id); }
+    const z = noweZdjecie('');
+    z.w = width; z.h = height;
+    await zapiszZdjecie(z.id, blob);
+    doc.meta.zdjecieGlowne = { id: z.id, w: width, h: height };
+    zapiszTeraz(); render();
+    pokazToast('Dodano zdjęcie główne.');
+  } catch (e) { console.error(e); pokazToast('Nie udało się wczytać zdjęcia.'); }
+}
+
+async function usunZdjecieGlowne() {
+  const zg = doc.meta.zdjecieGlowne;
+  if (!zg) return;
+  zwolnijUrl(zg.id);
+  await usunZdjecie(zg.id);
+  doc.meta.zdjecieGlowne = null;
+  zapiszTeraz(); render();
+}
+
 async function usunZdjecieZCelu(sekId, ustId, fotoId) {
   const arr = tablicaZdjec(sekId, ustId);
   if (!arr) return;
@@ -540,6 +574,21 @@ function sekcjaMeta() {
       ${pole('Powierzchnia zabudowy', { meta: 'powierzchniaZabudowy' }, m.powierzchniaZabudowy)}
       ${pole('Kubatura', { meta: 'kubatura' }, m.kubatura)}
     </div>
+    <div class="podtytul">Zdjęcie główne obiektu (na 1. stronie protokołu)</div>
+    <div class="glowne-box">
+      <div class="glowne-akcje">
+        <button class="btn-mini" data-action="glowne-aparat">📸 Aparat</button>
+        <button class="btn-mini" data-action="glowne-plik">🖼️ Z plików</button>
+        ${m.zdjecieGlowne ? '<button class="btn-mini btn-del" data-action="usun-glowne">✕ Usuń zdjęcie</button>' : ''}
+        <span class="hint">albo przeciągnij tutaj plik</span>
+      </div>
+      <div class="glowne-podglad" data-drop-glowne="1">
+        ${m.zdjecieGlowne
+    ? `<img data-foto-img="${m.zdjecieGlowne.id}" src="${urlZdjecia(m.zdjecieGlowne) || ''}" alt="zdjęcie główne" />`
+    : '<span class="pusto-mini">Brak zdjęcia głównego.</span>'}
+      </div>
+    </div>
+
     <div class="podtytul">Rodzaj konstrukcji</div>
     ${grupaWyboru(RODZAJE_KONSTRUKCJI, m.rodzajKonstrukcji, 'rodzaj')}
     <div class="podtytul">Wyposażenie budynku</div>
@@ -796,9 +845,16 @@ function podepnijZdarzeniaGlobalne() {
   });
   // Przeciąganie i upuszczanie zdjęć na galerię (ustalenia lub ogólną)
   app.addEventListener('dragover', (e) => {
-    if (e.target.closest('[data-drop-sec]')) { e.preventDefault(); }
+    if (e.target.closest('[data-drop-sec],[data-drop-glowne]')) { e.preventDefault(); }
   });
   app.addEventListener('drop', (e) => {
+    const gl = e.target.closest('[data-drop-glowne]');
+    if (gl) {
+      e.preventDefault();
+      const pliki = [...(e.dataTransfer?.files || [])];
+      if (pliki.length) dodajZdjecieGlowne(pliki);
+      return;
+    }
     const strefa = e.target.closest('[data-drop-sec]');
     if (!strefa) return;
     e.preventDefault();
@@ -810,6 +866,7 @@ function podepnijZdarzeniaGlobalne() {
 
   // Input pliku (z galerii) — używa ostatnio wybranego celu
   document.getElementById('plik-zdjecie').addEventListener('change', (e) => {
+    if (celZdjecia.glowne) { dodajZdjecieGlowne([...e.target.files]); return; }
     const { sekId, ustId } = celZdjecia.sekId ? celZdjecia : { sekId: aktywnaSekcjaId, ustId: null };
     if (sekId) dodajZdjecia(sekId, ustId, [...e.target.files]);
   });
@@ -861,6 +918,9 @@ function onClick(e) {
     case 'usun-ust': usunUstalenie(sec, b.getAttribute('data-ust')); break;
     case 'aparat': otworzWyborZdjecia(sec, b.getAttribute('data-ust'), true); break;
     case 'z-pliku': otworzWyborZdjecia(sec, b.getAttribute('data-ust'), false); break;
+    case 'glowne-aparat': otworzWyborGlowne(true); break;
+    case 'glowne-plik': otworzWyborGlowne(false); break;
+    case 'usun-glowne': usunZdjecieGlowne(); break;
     case 'usun-foto': usunZdjecieZCelu(sec, b.getAttribute('data-ust'), b.getAttribute('data-foto')); break;
     case 'dodaj-insp': dodajInspektora(); break;
     case 'dodaj-wyp': {

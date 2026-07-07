@@ -94,6 +94,7 @@ function zapiszWyslane(set) { localStorage.setItem(LS_UP, JSON.stringify([...set
 
 function idyZdjec(doc) {
   const ids = [];
+  if (doc.meta && doc.meta.zdjecieGlowne && doc.meta.zdjecieGlowne.id) ids.push(doc.meta.zdjecieGlowne.id);
   for (const s of doc.sekcje || []) {
     for (const z of s.zdjecia || []) ids.push(z.id);
     for (const u of s.ustalenia || []) for (const z of (u.zdjecia || [])) ids.push(z.id);

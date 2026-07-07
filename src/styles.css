@@ -79,6 +79,12 @@ input:focus, textarea:focus, select:focus {
 
 .podtytul { font-weight: 700; margin: 14px 0 6px; }
 
+/* Zdjęcie główne obiektu */
+.glowne-box { border: 1px solid var(--linia); border-radius: 10px; padding: 10px; margin-bottom: 6px; }
+.glowne-akcje { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.glowne-podglad { border: 1px dashed var(--linia); border-radius: 8px; padding: 8px; min-height: 60px; display: flex; justify-content: center; align-items: center; }
+.glowne-podglad img { max-width: 100%; max-height: 240px; border-radius: 6px; }
+
 /* Chipy wyboru (checkboxy) */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
 .chip {
