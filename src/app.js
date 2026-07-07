@@ -367,12 +367,12 @@ function tablicaZdjec(sekId, ustId) {
   return s.zdjecia;
 }
 
-function otworzWyborZdjecia(sekId, ustId, aparat = false) {
+function otworzWyborZdjecia(sekId, ustId, aparat = false, opcje = {}) {
   aktywnaSekcjaId = sekId;
-  celZdjecia = { sekId, ustId: ustId || null };
+  celZdjecia = { sekId, ustId: ustId || null, grupa: !!opcje.grupa, poFoto: opcje.poFoto || null };
   const inp = document.getElementById(aparat ? 'plik-aparat' : 'plik-zdjecie');
   inp.value = '';
-  if (aparat) inp.onchange = (ev) => dodajZdjecia(sekId, ustId || null, [...ev.target.files]);
+  if (aparat) inp.onchange = (ev) => dodajZdjecia(sekId, ustId || null, [...ev.target.files], opcje);
   inp.click();
 }
 
@@ -384,26 +384,35 @@ function ocenaUstalenia(sekId, ustId) {
   return (u && u.ocena) || '';
 }
 
-async function dodajZdjecia(sekId, ustId, pliki) {
+async function dodajZdjecia(sekId, ustId, pliki, opcje = {}) {
   const arr = tablicaZdjec(sekId, ustId);
   if (!arr) { pokazToast('Najpierw dodaj sekcję / ustalenie.'); return; }
   const domyslnaOcena = ocenaUstalenia(sekId, ustId);
-  let dodane = 0;
+  const nowe = [];
   for (const f of pliki) {
     if (!f.type || !f.type.startsWith('image/')) continue;
     try {
       const { blob, width, height } = await przetworzObraz(f);
       const z = noweZdjecie('', domyslnaOcena);
       z.w = width; z.h = height;
+      if (opcje.grupa) z.laczZPoprzednim = true; // wspólny opis z poprzednim zdjęciem
       await zapiszZdjecie(z.id, blob);
-      arr.push(z);
-      dodane++;
+      nowe.push(z);
     } catch (e) {
       console.error(e);
       pokazToast('Nie udało się wczytać zdjęcia.');
     }
   }
-  if (dodane) { zapiszTeraz(); render(); pokazToast(`Dodano zdjęć: ${dodane}`); }
+  if (nowe.length) {
+    if (opcje.grupa && opcje.poFoto) {
+      const idx = arr.findIndex((x) => x.id === opcje.poFoto);
+      if (idx !== -1) arr.splice(idx + 1, 0, ...nowe); else arr.push(...nowe);
+    } else {
+      arr.push(...nowe);
+    }
+    zapiszTeraz(); render();
+    pokazToast(opcje.grupa ? `Dodano do tego opisu: ${nowe.length}` : `Dodano zdjęć: ${nowe.length}`);
+  }
 }
 
 function otworzWyborGlowne(aparat = false) {
@@ -770,13 +779,18 @@ function renderGaleria(sekId, ustId, zdjecia) {
   const attrUst = ustId ? `data-ust="${ustId}"` : '';
   const arr = zdjecia || [];
   const parentOcena = ocenaUstalenia(sekId, ustId) || 'Dobry';
+  const grupyDozwolone = !!ustId; // wspólny opis dla kilku zdjęć — tylko w ustaleniach
   return arr.map((z, i) => {
+    const wGrupie = grupyDozwolone && !!z.laczZPoprzednim;   // dzieli opis z poprzednim
     const ocenaZdj = z.ocena || parentOcena;
-    return `
-    <figure class="foto">
-      <img data-foto-img="${z.id}" data-action="foto-menu" data-sec="${sekId}" ${attrUst} data-foto="${z.id}"
-        src="${urlZdjecia(z) || ''}" alt="zdjęcie" loading="lazy" title="Kliknij, aby przenieść zdjęcie" />
-      <button class="foto-del" data-action="usun-foto" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">✕</button>
+    // ile zdjęć dzieli ten sam opis (dla pierwszego zdjęcia w grupie)
+    let iloscWGrupie = 1;
+    if (grupyDozwolone && !z.laczZPoprzednim) {
+      for (let j = i + 1; j < arr.length && arr[j].laczZPoprzednim; j += 1) iloscWGrupie += 1;
+    }
+    const blokOpisu = wGrupie
+      ? '<div class="foto-wspolny">↳ To zdjęcie dzieli opis z poprzednim (ten sam temat)</div>'
+      : `
       <label class="foto-ocena">Stan techniczny:
         <select data-sec="${sekId}" ${attrUst} data-foto="${z.id}" data-field="foto-ocena">
           ${STANY_TECHNICZNE.map((o) =>
@@ -785,10 +799,21 @@ function renderGaleria(sekId, ustId, zdjecia) {
       </label>
       <textarea class="foto-opis" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" data-field="opis"
         rows="2" placeholder="Opis i zalecenia (np. elewacja czysta)">${escapeHtml(z.opis)}</textarea>
+      ${iloscWGrupie > 1 ? `<div class="foto-grupa-info">Wspólny opis dla ${iloscWGrupie} zdjęć</div>` : ''}`;
+    const przyciskGrupa = grupyDozwolone
+      ? `<button class="foto-grupa-btn" data-action="foto-grupa" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">➕ Zdjęcie do tego opisu</button>`
+      : '';
+    return `
+    <figure class="foto ${wGrupie ? 'foto-czlon' : ''}">
+      <img data-foto-img="${z.id}" data-action="foto-menu" data-sec="${sekId}" ${attrUst} data-foto="${z.id}"
+        src="${urlZdjecia(z) || ''}" alt="zdjęcie" loading="lazy" title="Kliknij, aby przenieść zdjęcie" />
+      <button class="foto-del" data-action="usun-foto" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">✕</button>
+      ${blokOpisu}
       <div class="foto-order">
         <button class="btn-mini" data-action="foto-lewo" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" title="Wcześniej" ${i === 0 ? 'disabled' : ''}>◀</button>
         <button class="btn-mini" data-action="foto-prawo" data-sec="${sekId}" ${attrUst} data-foto="${z.id}" title="Później" ${i === arr.length - 1 ? 'disabled' : ''}>▶</button>
       </div>
+      ${przyciskGrupa}
       <button class="foto-move-btn" data-action="foto-menu" data-sec="${sekId}" ${attrUst} data-foto="${z.id}">↪ Przenieś do…</button>
     </figure>`;
   }).join('');
@@ -992,8 +1017,8 @@ function podepnijZdarzeniaGlobalne() {
   // Input pliku (z galerii) — używa ostatnio wybranego celu
   document.getElementById('plik-zdjecie').addEventListener('change', (e) => {
     if (celZdjecia.glowne) { dodajZdjecieGlowne([...e.target.files]); return; }
-    const { sekId, ustId } = celZdjecia.sekId ? celZdjecia : { sekId: aktywnaSekcjaId, ustId: null };
-    if (sekId) dodajZdjecia(sekId, ustId, [...e.target.files]);
+    const { sekId, ustId, grupa, poFoto } = celZdjecia.sekId ? celZdjecia : { sekId: aktywnaSekcjaId, ustId: null };
+    if (sekId) dodajZdjecia(sekId, ustId, [...e.target.files], { grupa, poFoto });
   });
 
   // Zrzut zapisu przy ukryciu/zamknięciu strony — zabezpieczenie przed utratą danych
@@ -1061,6 +1086,7 @@ function onClick(e) {
       break;
     case 'foto-lewo': przesunZdjecieWGalerii(sec, b.getAttribute('data-ust'), b.getAttribute('data-foto'), -1); break;
     case 'foto-prawo': przesunZdjecieWGalerii(sec, b.getAttribute('data-ust'), b.getAttribute('data-foto'), 1); break;
+    case 'foto-grupa': otworzWyborZdjecia(sec, b.getAttribute('data-ust'), false, { grupa: true, poFoto: b.getAttribute('data-foto') }); break;
     case 'zamknij-przenies': przenoszone = null; render(); break;
     case 'przenies-do': {
       const p = przenoszone; przenoszone = null;

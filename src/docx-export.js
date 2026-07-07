@@ -204,11 +204,19 @@ async function tabelaUstalen(ustalenia) {
   const rows = [];
   for (const u of ustalenia) {
     const zdj = u.zdjecia || [];
-    const liczbaWierszy = Math.max(1, zdj.length);   // co najmniej 1 wiersz
     const opisPodrozdzialu = duzaLitera((u.text || '').trim());
-    let ostatniPodpis = null;                        // do pomijania powtórzeń
+    // Grupowanie: zdjęcia z „laczZPoprzednim" trafiają do tej samej grupy (wspólny opis,
+    // wspólny wiersz — bez rozgraniczenia w tabeli). Pozostałe zaczynają nową grupę.
+    const grupy = [];
+    for (const z of zdj) {
+      if (!z.laczZPoprzednim || grupy.length === 0) grupy.push([z]);
+      else grupy[grupy.length - 1].push(z);
+    }
+    const liczbaWierszy = Math.max(1, grupy.length);   // co najmniej 1 wiersz
+    let ostatniPodpis = null;                          // do pomijania powtórzeń
     for (let i = 0; i < liczbaWierszy; i += 1) {
       const pierwszy = i === 0;
+      const grupa = grupy[i] || null;
       const children = [];
       // Kolumny 1–3: scalone w pionie (dane raz, na górze bloku)
       if (pierwszy) {
@@ -220,20 +228,24 @@ async function tabelaUstalen(ustalenia) {
         children.push(komorka('', { width: 12, vmerge: VerticalMergeType.CONTINUE }));
         children.push(komorka('', { width: 10, vmerge: VerticalMergeType.CONTINUE }));
       }
-      // Kolumna „Opis": opis podrozdziału na górze (1. wiersz) + podpis danego zdjęcia
+      // Kolumna „Opis": opis podrozdziału na górze (1. wiersz) + wspólny podpis grupy
       const opisDzieci = [];
       if (pierwszy && opisPodrozdzialu) opisDzieci.push(p(opisPodrozdzialu, { size: 20 }));
-      if (zdj.length) {
-        const podpis = duzaLitera((zdj[i].opis || '').trim());
+      if (grupa) {
+        // podpis grupy = pierwszy niepusty podpis wśród zdjęć grupy
+        let podpis = '';
+        for (const z of grupa) { const o = duzaLitera((z.opis || '').trim()); if (o) { podpis = o; break; } }
         if (podpis && podpis !== ostatniPodpis) { opisDzieci.push(p(podpis, { size: 20 })); ostatniPodpis = podpis; }
       }
       children.push(komorka(opisDzieci, { width: 26, valign: VerticalAlign.TOP }));
-      // Kolumna „Fotografia": jedno zdjęcie w tym wierszu
+      // Kolumna „Fotografia": wszystkie zdjęcia grupy w jednym wierszu (bez rozgraniczenia)
       const fotoDzieci = [];
-      if (zdj.length) {
-        const run = await obrazRun(zdj[i], 190);
-        if (run) fotoDzieci.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [run] }));
-        else fotoDzieci.push(p('[brak danych zdjęcia]', { italics: true, color: '999999' }));
+      if (grupa) {
+        for (const z of grupa) {
+          const run = await obrazRun(z, 190);
+          if (run) fotoDzieci.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 }, children: [run] }));
+          else fotoDzieci.push(p('[brak danych zdjęcia]', { italics: true, color: '999999' }));
+        }
       } else {
         fotoDzieci.push(p('—', { align: AlignmentType.CENTER, color: '999999' }));
       }

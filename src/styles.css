@@ -179,6 +179,14 @@ input:focus, textarea:focus, select:focus {
 .foto-opis { margin-top: 6px; font-size: 13px; }
 .foto-ocena { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--szary); }
 .foto-ocena select { flex: 1; padding: 5px 4px; font-size: 12px; }
+.foto-grupa-btn {
+  margin-top: 6px; width: 100%; padding: 7px 6px; font-size: 12px; cursor: pointer;
+  border: 1px solid var(--linia); border-radius: 6px; background: #fff; color: var(--primary-d);
+}
+.foto-grupa-btn:hover { background: #f0f5ff; }
+.foto-grupa-info { margin-top: 5px; font-size: 11px; font-weight: 700; color: var(--primary-d); }
+.foto-wspolny { margin-top: 6px; font-size: 12px; font-style: italic; color: var(--szary); }
+.foto-czlon { border-style: dashed; background: #f7faff; }
 .foto img { cursor: pointer; }
 .foto-move-btn {
   margin-top: 6px; width: 100%; padding: 7px 6px; font-size: 12px; cursor: pointer;

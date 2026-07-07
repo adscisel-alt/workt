@@ -175,6 +175,15 @@ try {
   sprawdz(poZmianie === 'Awaryjny' && parentNadal === 'Dostateczny',
     'Można zmienić stan techniczny pojedynczego zdjęcia bez zmiany podrozdziału');
 
+  // Dodanie zdjęcia do istniejącego opisu (wspólny opis / ten sam temat)
+  await page.click(`.foto-grupa-btn[data-foto="${fotoId}"]`);
+  await page.setInputFiles('#plik-zdjecie', '/tmp/test-foto.png');
+  await page.waitForTimeout(300);
+  const czlonkowie = await page.locator(`${galSel} .foto-czlon`).count();
+  sprawdz(czlonkowie >= 1, 'Dodano zdjęcie do istniejącego opisu (wspólny opis)');
+  const info = await page.locator(`${galSel} .foto-grupa-info`).count();
+  sprawdz(info >= 1, 'Widoczna informacja o wspólnym opisie dla kilku zdjęć');
+
   // Zdjęcie główne obiektu
   await page.click('[data-action="glowne-plik"]');
   await page.setInputFiles('#plik-zdjecie', '/tmp/test-foto.png');
