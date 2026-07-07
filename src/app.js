@@ -284,6 +284,7 @@ function dyktujDoPola(tekst) {
 function aktualnaSekcja() {
   return doc.sekcje.find((s) => s.id === aktywnaSekcjaId) || doc.sekcje[doc.sekcje.length - 1] || null;
 }
+function indeksSekcji(id) { return doc.sekcje.findIndex((s) => s.id === id); }
 
 function dodajSekcje(title) {
   const s = nowaSekcja(title);
@@ -323,6 +324,28 @@ function usunUstalenie(sekId, ustId) {
   s.ustalenia = s.ustalenia.filter((x) => x.id !== ustId);
   zapiszTeraz(); render();
   sprzatnijZdjecia();
+}
+
+// Przesuwanie pozycji (ręczna zmiana kolejności). kierunek: -1 w górę, +1 w dół.
+function przesunWTablicy(arr, id, kierunek) {
+  const i = arr.findIndex((x) => x.id === id);
+  if (i === -1) return false;
+  const j = i + kierunek;
+  if (j < 0 || j >= arr.length) return false;
+  const [el] = arr.splice(i, 1);
+  arr.splice(j, 0, el);
+  return true;
+}
+function przesunUstalenie(sekId, ustId, kierunek) {
+  const s = doc.sekcje.find((x) => x.id === sekId);
+  if (!s) return;
+  if (przesunWTablicy(s.ustalenia, ustId, kierunek)) { zapiszTeraz(); render(); }
+}
+function przesunSekcje(sekId, kierunek) {
+  if (przesunWTablicy(doc.sekcje, sekId, kierunek)) { zapiszTeraz(); render(); }
+}
+function przesunZalecenieI(id, kierunek) {
+  if (przesunWTablicy(doc.rozdzialI, id, kierunek)) { zapiszTeraz(); render(); }
 }
 
 // Cel ostatnio wybranego wstawiania zdjęcia (sekcja lub ustalenie)
@@ -634,7 +657,11 @@ function sekcjaRozdzialI() {
         ${STATUSY_WYKONANIA.map((s) =>
     `<option value="${esc(s)}" ${s === z.status ? 'selected' : ''}>${s}</option>`).join('')}
       </select>
-      <button class="btn-mini btn-del" data-action="usun-zal" data-zal="${z.id}">✕</button>
+      <div class="ust-akcje">
+        <button class="btn-mini" data-action="zal-gora" data-zal="${z.id}" title="Przesuń wyżej" ${i === 0 ? 'disabled' : ''}>▲</button>
+        <button class="btn-mini" data-action="zal-dol" data-zal="${z.id}" title="Przesuń niżej" ${i === doc.rozdzialI.length - 1 ? 'disabled' : ''}>▼</button>
+        <button class="btn-mini btn-del" data-action="usun-zal" data-zal="${z.id}">✕</button>
+      </div>
     </div>`).join('');
 
   return `
@@ -706,7 +733,11 @@ function kartaSekcji(s) {
           ${STOPNIE_PILNOSCI.map((sp) =>
     `<option value="${sp.value}" ${sp.value === u.pilnosc ? 'selected' : ''}>${sp.label}</option>`).join('')}
         </select>
-        <button class="btn-mini btn-del" data-action="usun-ust" data-sec="${s.id}" data-ust="${u.id}">✕</button>
+        <div class="ust-akcje">
+          <button class="btn-mini" data-action="ust-gora" data-sec="${s.id}" data-ust="${u.id}" title="Przesuń wyżej" ${i === 0 ? 'disabled' : ''}>▲</button>
+          <button class="btn-mini" data-action="ust-dol" data-sec="${s.id}" data-ust="${u.id}" title="Przesuń niżej" ${i === s.ustalenia.length - 1 ? 'disabled' : ''}>▼</button>
+          <button class="btn-mini btn-del" data-action="usun-ust" data-sec="${s.id}" data-ust="${u.id}">✕</button>
+        </div>
       </div>
       <div class="ust-foto">
         <div class="ust-foto-akcje">
@@ -730,6 +761,8 @@ function kartaSekcji(s) {
     <div class="sekcja-head">
       <input class="sekcja-title" data-sec="${s.id}" data-field="title"
         placeholder="Nazwa obszaru kontroli" value="${esc(s.title)}" />
+      <button class="btn-mini" data-action="sekcja-gora" data-sec="${s.id}" title="Przesuń sekcję wyżej" ${indeksSekcji(s.id) === 0 ? 'disabled' : ''}>▲</button>
+      <button class="btn-mini" data-action="sekcja-dol" data-sec="${s.id}" title="Przesuń sekcję niżej" ${indeksSekcji(s.id) === doc.sekcje.length - 1 ? 'disabled' : ''}>▼</button>
       <button class="btn-mini btn-del" data-action="usun-sekcje" data-sec="${s.id}">🗑️</button>
     </div>
 
@@ -916,6 +949,10 @@ function onClick(e) {
     case 'usun-sekcje': if (confirm('Usunąć całą sekcję wraz ze zdjęciami?')) usunSekcje(sec); break;
     case 'dodaj-ust': dodajUstalenie(sec, ''); break;
     case 'usun-ust': usunUstalenie(sec, b.getAttribute('data-ust')); break;
+    case 'ust-gora': przesunUstalenie(sec, b.getAttribute('data-ust'), -1); break;
+    case 'ust-dol': przesunUstalenie(sec, b.getAttribute('data-ust'), 1); break;
+    case 'sekcja-gora': przesunSekcje(sec, -1); break;
+    case 'sekcja-dol': przesunSekcje(sec, 1); break;
     case 'aparat': otworzWyborZdjecia(sec, b.getAttribute('data-ust'), true); break;
     case 'z-pliku': otworzWyborZdjecia(sec, b.getAttribute('data-ust'), false); break;
     case 'glowne-aparat': otworzWyborGlowne(true); break;
@@ -931,6 +968,8 @@ function onClick(e) {
     case 'usun-insp': usunInspektora(parseInt(b.getAttribute('data-i'), 10)); break;
     case 'dodaj-zal': dodajZalecenieI(); break;
     case 'usun-zal': usunZalecenieI(b.getAttribute('data-zal')); break;
+    case 'zal-gora': przesunZalecenieI(b.getAttribute('data-zal'), -1); break;
+    case 'zal-dol': przesunZalecenieI(b.getAttribute('data-zal'), 1); break;
     default: break;
   }
 }

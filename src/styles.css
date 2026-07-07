@@ -97,14 +97,14 @@ input:focus, textarea:focus, select:focus {
 
 /* Wiersze Rozdziału I */
 .zal-naglowek, .zal-row {
-  display: grid; grid-template-columns: 34px 1fr 64px 150px 34px; gap: 6px; align-items: start;
+  display: grid; grid-template-columns: 34px 1fr 64px 150px 40px; gap: 6px; align-items: start;
 }
 .zal-naglowek { font-size: 12px; color: var(--szary); font-weight: 700; padding: 4px 0; }
 .zal-row { margin-bottom: 6px; }
 .zal-row select { width: 100%; padding: 9px 4px; }
 @media (max-width: 640px) {
   .zal-naglowek { display: none; }
-  .zal-row { grid-template-columns: 28px 1fr 34px; grid-auto-rows: auto; }
+  .zal-row { grid-template-columns: 28px 1fr 40px; grid-auto-rows: auto; }
   .zal-row select { grid-column: 2 / 4; }
 }
 .insp-row { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr auto; gap: 6px; margin-bottom: 6px; }
@@ -126,12 +126,16 @@ input:focus, textarea:focus, select:focus {
 .ust-dodaj { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
 .ust-dodaj select { width: auto; max-width: 100%; flex: 1 1 260px; }
 .ust-naglowek, .ust-row {
-  display: grid; grid-template-columns: 34px 1fr 64px 34px; gap: 6px; align-items: start;
+  display: grid; grid-template-columns: 34px 1fr 64px 40px; gap: 6px; align-items: start;
 }
 .ust-naglowek { font-size: 12px; color: var(--szary); font-weight: 700; padding: 4px 0; }
 .ust-row { margin-bottom: 6px; }
 .ust-lp { text-align: center; padding-top: 9px; color: var(--szary); font-weight: 700; }
 .ust-row select { width: 64px; padding: 9px 4px; }
+/* Kolumna akcji pozycji: przesuń wyżej/niżej + usuń */
+.ust-akcje { display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
+.ust-akcje .btn-mini { width: 100%; padding: 6px 0; line-height: 1; }
+.ust-akcje .btn-mini:disabled { opacity: .35; cursor: default; }
 .ust-tresc { display: flex; flex-direction: column; gap: 6px; }
 .ust-element { font-weight: 600; }
 .ust-ocena { font-size: 13px; color: var(--szary); display: flex; align-items: center; gap: 6px; }

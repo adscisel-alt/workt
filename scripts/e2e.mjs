@@ -94,6 +94,24 @@ try {
   const maUwaga = await page.locator('.zal-tabela tbody tr td.z-pil', { hasText: 'dobry z uwagą' }).count();
   sprawdz(maUwaga >= 1, 'Rozdział III: „dobry z uwagą” trafia do zaleceń');
 
+  // Ręczna zmiana kolejności pozycji w sekcji (przesuwanie w górę/w dół)
+  await page.click(`[data-action="dodaj-ust"][data-sec="${secId}"]`);
+  await page.waitForTimeout(150);
+  await page.locator(`[data-sec="${secId}"][data-field="element"]`).last().fill('Cokół budynku');
+  await page.waitForTimeout(150);
+  const przedElementy = await page.locator(`[data-sec-card="${secId}"] [data-field="element"]`).evaluateAll(
+    (els) => els.map((e) => e.value));
+  // Druga pozycja („Cokół budynku") — przesuń wyżej
+  await page.click(`[data-sec-card="${secId}"] .ust-card:nth-child(2) [data-action="ust-gora"]`);
+  await page.waitForTimeout(150);
+  const poElementy = await page.locator(`[data-sec-card="${secId}"] [data-field="element"]`).evaluateAll(
+    (els) => els.map((e) => e.value));
+  sprawdz(przedElementy[0] !== poElementy[0] && poElementy[0] === 'Cokół budynku',
+    'Przesunięto pozycję w górę (zmiana kolejności)');
+  // Przywróć pierwotną kolejność do dalszej części testu (Word)
+  await page.click(`[data-sec-card="${secId}"] .ust-card:nth-child(1) [data-action="ust-dol"]`);
+  await page.waitForTimeout(150);
+
   // Dodaj zdjęcie DO USTALENIA (klik „Zdjęcie” w karcie ustalenia ustawia cel)
   await page.click(`.ust-card [data-action="z-pliku"][data-ust]`);
   await page.setInputFiles('#plik-zdjecie', '/tmp/test-foto.png');
