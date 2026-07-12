@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1026" />
+  <title>Wehikuł czasu — podróż przez dzieje Polski</title>
+  <meta name="description" content="Edukacyjna gra planszowa 3D dla klasy IV: podróż wehikułem czasu przez dzieje Polski, od legend po Mikołaja Kopernika." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Scena 3D -->
+  <canvas id="scena"></canvas>
+
+  <!-- Warstwa interfejsu -->
+  <div id="ui">
+    <!-- Górny pasek: tytuł + drużyny -->
+    <div id="hud" style="display:none">
+      <div id="tytul-gry">⏳ Wehikuł czasu<small>podróż przez dzieje Polski</small></div>
+      <div id="druzyny-hud"></div>
+      <button class="przycisk-ikona" id="btn-pomoc" title="Zasady gry">?</button>
+      <button class="przycisk-ikona" id="btn-restart" title="Zagraj od nowa">↻</button>
+    </div>
+
+    <!-- Dolny panel: komunikat + kostka -->
+    <div id="panel-dolny" style="display:none">
+      <div id="komunikat">Witajcie, podróżnicy w czasie!</div>
+      <button class="przycisk-glowny" id="btn-kostka"><span class="kostka-emoji">🎲</span>Rzuć kostką</button>
+    </div>
+
+    <div id="podpowiedz-obrot">Przeciągnij palcem / myszą, aby obrócić planszę. Kółkiem myszy przybliżasz.</div>
+
+    <!-- Zasłona z kartami -->
+    <div id="zaslona">
+      <div class="karta" id="karta"></div>
+    </div>
+
+    <!-- Ekran startowy -->
+    <div id="ekran-start">
+      <div class="pudlo-start">
+        <h1><span class="em">⏳🚀</span>Wehikuł czasu</h1>
+        <div class="podtytul">Podróż przez dzieje Polski — od legend po Mikołaja Kopernika</div>
+
+        <div class="info-start">
+          Podróżujecie w drużynach przez <b>6 krain-epok</b>. Na polach losujecie karty:
+          <b>pytania</b>, <b>wydarzenia</b> i <b>wyzwania</b>. Aby dotrzeć do mety,
+          zbierzcie po drodze <b>3 żetony czasu</b> — inaczej wehikuł nie wyląduje w teraźniejszości!
+        </div>
+
+        <div class="pole-grupa">
+          <label>Ile drużyn gra?</label>
+          <div class="liczba-druzyn" id="wybor-liczby">
+            <button class="chip" data-n="2">2</button>
+            <button class="chip wybrany" data-n="3">3</button>
+            <button class="chip" data-n="4">4</button>
+          </div>
+        </div>
+
+        <div class="pole-grupa" id="wiersze-druzyn"></div>
+
+        <button class="przycisk-glowny" id="btn-start" style="width:100%">🚀 Startujemy!</button>
+      </div>
+    </div>
+
+    <!-- Ekran zwycięstwa -->
+    <div id="ekran-koniec">
+      <div class="pudlo-koniec">
+        <div class="puchar">🏆</div>
+        <h2>Koniec podróży!</h2>
+        <div class="zwyciezca" id="tekst-zwyciezca"></div>
+        <p id="tekst-koniec"></p>
+        <button class="przycisk-glowny" id="btn-jeszcze-raz" style="width:100%">↻ Zagrajcie jeszcze raz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Silnik 3D (wersja lokalna — działa bez internetu) -->
+  <script src="vendor/three.min.js"></script>
+  <!-- Treści gry: pytania, wydarzenia, wyzwania -->
+  <script src="pytania.js"></script>
+  <!-- Logika gry -->
+  <script src="gra.js"></script>
+</body>
+</html>

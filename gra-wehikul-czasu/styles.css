@@ -1,0 +1,226 @@
+/* Wehikuł czasu — style interfejsu gry */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --tlo: #0b1026;
+  --tlo2: #131a3a;
+  --panel: rgba(15, 20, 46, 0.92);
+  --panel-jasny: rgba(28, 36, 74, 0.95);
+  --akcent: #ffd43b;
+  --akcent2: #4dabf7;
+  --tekst: #eef1ff;
+  --tekst-cichy: #aab3d6;
+  --dobrze: #37b24d;
+  --zle: #e03131;
+  --ramka: rgba(120, 140, 220, 0.28);
+  --cien: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% -10%, #1c2450 0%, var(--tlo) 55%, #05081a 100%);
+  color: var(--tekst);
+  font-family: 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#scena { position: fixed; inset: 0; display: block; }
+
+/* ---------------------------------------------------------------- warstwa UI */
+#ui { position: fixed; inset: 0; pointer-events: none; }
+#ui > * { pointer-events: auto; }
+
+/* ---------------------------------------------------------------- pasek górny */
+#hud {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, rgba(5,8,26,0.85), rgba(5,8,26,0));
+}
+#tytul-gry { font-size: 15px; font-weight: 700; letter-spacing: .3px; }
+#tytul-gry small { display: block; font-weight: 400; font-size: 11px; color: var(--tekst-cichy); }
+#druzyny-hud { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; justify-content: center; }
+.dr-znacznik {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--panel); border: 1px solid var(--ramka);
+  border-radius: 999px; padding: 5px 12px 5px 8px; font-size: 13px; font-weight: 600;
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.dr-znacznik.aktywna { border-color: var(--akcent); box-shadow: 0 0 0 2px rgba(255,212,59,.35); transform: scale(1.06); }
+.dr-kropka { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+.dr-zetony { font-size: 12px; color: var(--akcent); }
+
+.przycisk-ikona {
+  background: var(--panel); border: 1px solid var(--ramka); color: var(--tekst);
+  width: 38px; height: 38px; border-radius: 10px; font-size: 17px; cursor: pointer;
+  display: grid; place-items: center; transition: background .15s, transform .1s;
+}
+.przycisk-ikona:hover { background: var(--panel-jasny); }
+.przycisk-ikona:active { transform: scale(.93); }
+
+/* ---------------------------------------------------------------- panel dolny */
+#panel-dolny {
+  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  width: min(94vw, 560px);
+}
+#komunikat {
+  background: var(--panel); border: 1px solid var(--ramka); border-radius: 14px;
+  padding: 10px 18px; font-size: 14px; text-align: center; min-height: 22px;
+  box-shadow: var(--cien); backdrop-filter: blur(6px); max-width: 100%;
+}
+#komunikat b { color: var(--akcent); }
+
+.przycisk-glowny {
+  border: none; border-radius: 14px; cursor: pointer;
+  font-size: 18px; font-weight: 800; letter-spacing: .4px;
+  padding: 15px 40px; color: #1a1400;
+  background: linear-gradient(180deg, #ffe066, var(--akcent));
+  box-shadow: 0 8px 24px rgba(255,212,59,.35), inset 0 -3px 0 rgba(0,0,0,.15);
+  transition: transform .1s, filter .15s;
+}
+.przycisk-glowny:hover { filter: brightness(1.06); }
+.przycisk-glowny:active { transform: translateY(2px); }
+.przycisk-glowny:disabled { filter: grayscale(.6) brightness(.7); cursor: default; transform: none; }
+.przycisk-glowny .kostka-emoji { display: inline-block; margin-right: 8px; }
+
+/* ---------------------------------------------------------------- karty (modal) */
+#zaslona {
+  position: absolute; inset: 0; background: rgba(4,6,20,.6);
+  display: none; align-items: center; justify-content: center; padding: 18px;
+  backdrop-filter: blur(3px);
+}
+#zaslona.pokaz { display: flex; }
+
+.karta {
+  width: min(94vw, 480px); border-radius: 22px; overflow: hidden;
+  background: var(--panel-jasny); border: 1px solid var(--ramka);
+  box-shadow: var(--cien); animation: wjazd .35s cubic-bezier(.2,.8,.3,1.2);
+}
+@keyframes wjazd { from { opacity: 0; transform: translateY(30px) scale(.94); } to { opacity: 1; transform: none; } }
+
+.karta-naglowek {
+  padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+  font-size: 17px; font-weight: 800; color: #fff;
+}
+.karta-naglowek .em { font-size: 26px; }
+.karta-tresc { padding: 18px 20px 22px; }
+.karta-pytanie { font-size: 17px; line-height: 1.4; margin-bottom: 16px; }
+.karta-region { font-size: 12px; color: var(--tekst-cichy); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .6px; }
+
+.opcje { display: flex; flex-direction: column; gap: 10px; }
+.opcja {
+  text-align: left; width: 100%; cursor: pointer;
+  background: rgba(255,255,255,.06); border: 1.5px solid var(--ramka);
+  color: var(--tekst); border-radius: 12px; padding: 13px 16px; font-size: 15px;
+  transition: background .15s, border-color .15s, transform .1s;
+  display: flex; align-items: center; gap: 12px;
+}
+.opcja .litera {
+  flex: 0 0 26px; height: 26px; border-radius: 7px; display: grid; place-items: center;
+  background: rgba(255,255,255,.12); font-weight: 800; font-size: 14px;
+}
+.opcja:hover:not(:disabled) { background: rgba(255,255,255,.12); }
+.opcja:active:not(:disabled) { transform: scale(.985); }
+.opcja.dobra { background: rgba(55,178,77,.25); border-color: var(--dobrze); }
+.opcja.dobra .litera { background: var(--dobrze); color: #fff; }
+.opcja.zla { background: rgba(224,49,49,.22); border-color: var(--zle); }
+.opcja.zla .litera { background: var(--zle); color: #fff; }
+.opcja:disabled { cursor: default; }
+
+.wskazowka {
+  margin-top: 16px; padding: 12px 14px; border-radius: 12px;
+  background: rgba(77,171,247,.12); border: 1px solid rgba(77,171,247,.3);
+  font-size: 14px; line-height: 1.4; color: #d5e6ff; display: none;
+}
+.wskazowka.pokaz { display: block; }
+.wskazowka b { color: var(--akcent2); }
+
+.wydarzenie-tekst, .wyzwanie-tekst {
+  font-size: 18px; line-height: 1.5; text-align: center; margin: 8px 0 22px;
+}
+.wyzwanie-podpis { text-align: center; font-size: 13px; color: var(--tekst-cichy); margin-bottom: 16px; }
+
+.karta-przyciski { display: flex; gap: 12px; }
+.btn {
+  flex: 1; border: none; border-radius: 12px; cursor: pointer;
+  padding: 14px; font-size: 15px; font-weight: 700; color: #fff;
+  transition: filter .15s, transform .1s;
+}
+.btn:active { transform: translateY(1px); }
+.btn-ok { background: linear-gradient(180deg,#51cf66,var(--dobrze)); }
+.btn-nie { background: linear-gradient(180deg,#ff6b6b,var(--zle)); }
+.btn-dalej { background: linear-gradient(180deg,#4dabf7,#1971c2); }
+.btn:hover { filter: brightness(1.07); }
+
+/* ---------------------------------------------------------------- ekran startu */
+#ekran-start {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: 20px; overflow-y: auto;
+}
+.pudlo-start {
+  width: min(94vw, 560px); background: var(--panel-jasny);
+  border: 1px solid var(--ramka); border-radius: 24px; box-shadow: var(--cien);
+  padding: 26px 26px 30px; text-align: center; margin: auto;
+}
+.pudlo-start h1 { font-size: 27px; line-height: 1.15; margin-bottom: 4px; }
+.pudlo-start h1 .em { display: block; font-size: 44px; margin-bottom: 6px; }
+.pudlo-start .podtytul { color: var(--tekst-cichy); font-size: 14px; margin-bottom: 20px; }
+
+.pole-grupa { text-align: left; margin-bottom: 18px; }
+.pole-grupa > label { display: block; font-size: 13px; color: var(--tekst-cichy); margin-bottom: 8px; font-weight: 600; }
+.liczba-druzyn { display: flex; gap: 8px; }
+.chip {
+  flex: 1; padding: 12px; border-radius: 12px; cursor: pointer;
+  background: rgba(255,255,255,.06); border: 1.5px solid var(--ramka);
+  color: var(--tekst); font-size: 16px; font-weight: 700; transition: .15s;
+}
+.chip.wybrany { background: rgba(255,212,59,.2); border-color: var(--akcent); }
+
+.wiersz-druzyny { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.wiersz-druzyny .kropka { width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 0 10px currentColor; flex: 0 0 auto; }
+.wiersz-druzyny input {
+  flex: 1; background: rgba(0,0,0,.25); border: 1.5px solid var(--ramka); color: var(--tekst);
+  border-radius: 10px; padding: 11px 13px; font-size: 15px; font-family: inherit;
+}
+.wiersz-druzyny input:focus { outline: none; border-color: var(--akcent2); }
+
+.info-start {
+  font-size: 13px; color: var(--tekst-cichy); line-height: 1.5;
+  background: rgba(77,171,247,.1); border: 1px solid rgba(77,171,247,.25);
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 20px; text-align: left;
+}
+.info-start b { color: var(--akcent); }
+
+/* ---------------------------------------------------------------- zwycięstwo */
+#ekran-koniec {
+  position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(4,6,20,.55); backdrop-filter: blur(4px);
+}
+#ekran-koniec.pokaz { display: flex; }
+.pudlo-koniec {
+  width: min(94vw, 460px); background: var(--panel-jasny); border: 1px solid var(--akcent);
+  border-radius: 24px; box-shadow: 0 0 60px rgba(255,212,59,.35); padding: 32px 26px; text-align: center;
+  animation: wjazd .5s cubic-bezier(.2,.8,.3,1.2);
+}
+.pudlo-koniec .puchar { font-size: 68px; animation: skok 1.4s ease-in-out infinite; }
+@keyframes skok { 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-14px); } }
+.pudlo-koniec h2 { font-size: 26px; margin: 10px 0 6px; }
+.pudlo-koniec .zwyciezca { font-size: 22px; font-weight: 800; margin: 6px 0 18px; }
+.pudlo-koniec p { color: var(--tekst-cichy); font-size: 14px; margin-bottom: 22px; }
+
+/* ---------------------------------------------------------------- podpowiedź sterowania */
+#podpowiedz-obrot {
+  position: absolute; right: 14px; bottom: 96px;
+  font-size: 11px; color: var(--tekst-cichy); background: var(--panel);
+  border: 1px solid var(--ramka); border-radius: 10px; padding: 7px 11px; max-width: 160px; line-height: 1.4;
+}
+
+@media (max-width: 560px) {
+  #tytul-gry small { display: none; }
+  .dr-znacznik { padding: 4px 9px 4px 6px; font-size: 12px; }
+  #podpowiedz-obrot { display: none; }
+  .pudlo-start h1 { font-size: 23px; }
+}
