@@ -252,7 +252,7 @@ try {
   sprawdz(docXml.includes('Zbigniew Łukaszewski'), 'Word: dane osoby zaciągnięte z Osób wykonujących przegląd');
   sprawdz(docXml.includes('Element, urządzenie, instalacje podlegające kontroli'), 'Word: nazwa kolumny 1');
   sprawdz(!docXml.includes('Ustalenia / opis stanu technicznego'), 'Word: usunięto starą nazwę/kolumnę L.p.');
-  sprawdz(docXml.includes('Opis i zalecenia'), 'Word: kolumna „Opis i zalecenia”');
+  sprawdz(docXml.includes('Stopień pilności, opis i zalecenia'), 'Word: scalona kolumna „Stopień pilności, opis i zalecenia”');
   sprawdz(docXml.includes('☑'), 'Dokument zawiera zaznaczone pola wyboru (dane budynku)');
   // Stopka z numeracją stron (pole PAGE) w osobnym pliku footer
   const listaFull = execSync(`unzip -l ${sciezka}`).toString();

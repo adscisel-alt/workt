@@ -197,8 +197,7 @@ async function tabelaUstalen(ustalenia) {
   const header = new TableRow({ tableHeader: true, children: [
     komorka('Element, urządzenie, instalacje podlegające kontroli', { width: 24, bold: true, shade: 'D9D9D9' }),
     komorka('Ocena stanu technicznego', { width: 12, bold: true, shade: 'D9D9D9' }),
-    komorka('Stopień pilności', { width: 10, bold: true, shade: 'D9D9D9' }),
-    komorka('Opis i zalecenia', { width: 26, bold: true, shade: 'D9D9D9' }),
+    komorka('Stopień pilności, opis i zalecenia', { width: 36, bold: true, shade: 'D9D9D9' }),
     komorka('Fotografia', { width: 28, bold: true, shade: 'D9D9D9' }),
   ] });
   const rows = [];
@@ -218,26 +217,31 @@ async function tabelaUstalen(ustalenia) {
       const pierwszy = i === 0;
       const grupa = grupy[i] || null;
       const children = [];
-      // Kolumny 1–3: scalone w pionie (dane raz, na górze bloku)
+      // Kolumny Element / Ocena: scalone w pionie (dane raz, na górze bloku)
       if (pierwszy) {
         children.push(komorka([akapitElement(u)], { width: 24, valign: VerticalAlign.TOP, vmerge: VerticalMergeType.RESTART }));
         children.push(komorka(u.ocena || '', { width: 12, align: AlignmentType.CENTER, valign: VerticalAlign.TOP, vmerge: VerticalMergeType.RESTART }));
-        children.push(komorka(etykietaPilnosci(u.pilnosc), { width: 10, align: AlignmentType.CENTER, valign: VerticalAlign.TOP, vmerge: VerticalMergeType.RESTART }));
       } else {
         children.push(komorka('', { width: 24, vmerge: VerticalMergeType.CONTINUE }));
         children.push(komorka('', { width: 12, vmerge: VerticalMergeType.CONTINUE }));
-        children.push(komorka('', { width: 10, vmerge: VerticalMergeType.CONTINUE }));
       }
-      // Kolumna „Opis": opis podrozdziału na górze (1. wiersz) + wspólny podpis grupy
+      // Kolumna „Stopień pilności, opis i zalecenia": stopień pilności + opis podrozdziału
+      // na górze (1. wiersz) + wspólny podpis grupy zdjęć.
       const opisDzieci = [];
-      if (pierwszy && opisPodrozdzialu) opisDzieci.push(p(opisPodrozdzialu, { size: 20 }));
+      if (pierwszy) {
+        opisDzieci.push(new Paragraph({ spacing: { after: 60 }, children: [
+          new TextRun({ text: 'Stopień pilności: ', bold: true, size: 20, font: FONT }),
+          new TextRun({ text: etykietaPilnosci(u.pilnosc), bold: true, size: 20, font: FONT }),
+        ] }));
+        if (opisPodrozdzialu) opisDzieci.push(p(opisPodrozdzialu, { size: 20 }));
+      }
       if (grupa) {
         // podpis grupy = pierwszy niepusty podpis wśród zdjęć grupy
         let podpis = '';
         for (const z of grupa) { const o = duzaLitera((z.opis || '').trim()); if (o) { podpis = o; break; } }
         if (podpis && podpis !== ostatniPodpis) { opisDzieci.push(p(podpis, { size: 20 })); ostatniPodpis = podpis; }
       }
-      children.push(komorka(opisDzieci, { width: 26, valign: VerticalAlign.TOP }));
+      children.push(komorka(opisDzieci, { width: 36, valign: VerticalAlign.TOP }));
       // Kolumna „Fotografia": wszystkie zdjęcia grupy w jednym wierszu (bez rozgraniczenia)
       const fotoDzieci = [];
       if (grupa) {
