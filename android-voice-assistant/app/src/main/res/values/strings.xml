@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Asystent Głosowy</string>
+    <string name="tap_to_speak">Naciśnij mikrofon i mów</string>
+    <string name="listening">Słucham…</string>
+    <string name="thinking">Chwila…</string>
+    <string name="speaking">Mówię…</string>
+    <string name="mic_denied">Bez dostępu do mikrofonu asystent nie zadziała</string>
+    <string name="hint">Np. „jaka pogoda”, „sprawdź sieć”, „włącz muzykę”, „sprawdź pocztę”, „powiedz ciekawostkę”</string>
+</resources>

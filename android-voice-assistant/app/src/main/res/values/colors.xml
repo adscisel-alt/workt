@@ -1,0 +1,7 @@
+<resources>
+    <color name="background">#0F1424</color>
+    <color name="on_background">#E8EAF2</color>
+    <color name="accent">#7C9CFF</color>
+    <color name="muted">#8A90A6</color>
+    <color name="ic_launcher_background">#0F1424</color>
+</resources>
