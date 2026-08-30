@@ -561,12 +561,20 @@ globalThis.GRA = globalThis.GRA || {};
 
   /* ======================= START ======================= */
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function init() {
     app = document.getElementById('app');
     // zapisuj czas także przy zamykaniu/ukrywaniu karty
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') stan.zapisz();
     });
     ekranStart();
-  });
+  }
+
+  // działa też, gdy skrypt zostanie wstrzyknięty po załadowaniu dokumentu
+  // (np. wersja jednoplikowa / osadzenie gry na innej stronie)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
