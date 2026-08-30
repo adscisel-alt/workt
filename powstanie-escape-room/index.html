@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#14161a" />
+    <meta
+      name="description"
+      content="GODZINA „W” — edukacyjna gra przeglądarkowa typu escape room o Powstaniu Warszawskim. 6 etapów, 63 minuty, prawdziwe szyfry i historie z 1944 roku."
+    />
+    <title>GODZINA „W” — escape room o Powstaniu Warszawskim</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%E2%9A%93%3C/text%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <div id="app" role="main"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Kolejność ma znaczenie: dane → dźwięk → stan → ui → gra -->
+    <script src="js/dane.js"></script>
+    <script src="js/dzwiek.js"></script>
+    <script src="js/stan.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/gra.js"></script>
+  </body>
+</html>

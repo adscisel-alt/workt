@@ -1,3 +1,7 @@
+> **🎮 Na tej gałęzi rozwijany jest także projekt semestralny
+> [GODZINA „W” — escape room o Powstaniu Warszawskim](powstanie-escape-room/README.md)**
+> (katalog `powstanie-escape-room/`, samodzielna gra bez kroku budowania).
+
 # Protokoły kontroli budynku 📋
 
 Aplikacja webowa (PWA) do tworzenia **protokołów okresowej kontroli stanu technicznego
