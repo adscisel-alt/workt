@@ -1,0 +1,936 @@
+<title>Club &amp; Grub</title>
+<meta name="description" content="A prehistoric one-more-run: club dinos, grab grub, beat your friend's score.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Fredoka:wght@400;500;600;700&display=swap">
+<style>
+  /* ------------------------------------------------------------------
+     Club & Grub — committed single-theme "torch-lit cave" world.
+     Every colour is painted explicitly so the page holds on any ground.
+  ------------------------------------------------------------------ */
+  :root{
+    --cave:#1c1712;        /* deep warm stone ground        */
+    --cave-2:#120e0a;      /* darker vignette               */
+    --rock:#3a322a;        /* warm neutral (panels/borders) */
+    --rock-2:#4b4136;
+    --bone:#f2e6cf;        /* parchment text                */
+    --bone-dim:#c9b895;
+    --ochre:#e8a13a;       /* torchlight accent             */
+    --ochre-deep:#c07f22;
+    --terra:#c8452f;       /* danger / hearts / club        */
+    --moss:#7a8b3c;        /* success / food                */
+    --gold:#ffd24a;        /* legendary                     */
+    --panel-shadow: 0 18px 50px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.04) inset;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  html{background:var(--cave-2)}   /* backstop so no edge ever shows through */
+  body{
+    margin:0;
+    background:
+      radial-gradient(120% 90% at 50% -10%, #2a2018 0%, var(--cave) 45%, var(--cave-2) 100%);
+    color:var(--bone);
+    font-family:"Fredoka", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+  }
+  #stage{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  /* The "cave screen" frame around the canvas */
+  #frame{
+    position:relative;
+    width:100%; height:100%;
+    max-width:1100px; max-height:100vh;
+    overflow:hidden;
+  }
+  canvas{ display:block; width:100%; height:100%; touch-action:none; }
+
+  /* Torch vignette painted over the canvas edges */
+  #vignette{
+    position:absolute; inset:0; pointer-events:none;
+    box-shadow: inset 0 0 140px 30px rgba(0,0,0,.6);
+    background:
+      radial-gradient(60% 40% at 50% 108%, rgba(232,161,58,.10), transparent 70%);
+    z-index:5;
+  }
+
+  /* ---------------- HUD ---------------- */
+  #hud{
+    position:absolute; inset:0; z-index:6; pointer-events:none;
+    padding:14px clamp(12px,3vw,26px);
+    display:flex; flex-direction:column; gap:8px;
+    opacity:0; transition:opacity .35s ease;
+  }
+  #hud.show{opacity:1}
+  .hud-row{display:flex; align-items:flex-start; justify-content:space-between; gap:12px}
+  .hearts{display:flex; gap:6px}
+  .heart{
+    width:26px; height:26px;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));
+    transition:transform .18s ease, opacity .3s ease;
+  }
+  .heart.lost{opacity:.18; transform:scale(.7)}
+  .score-wrap{text-align:right; line-height:1}
+  .score{
+    font-family:"Bungee",cursive; font-size:clamp(26px,6vw,44px);
+    color:var(--bone); letter-spacing:.5px;
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 3px 0 rgba(0,0,0,.35), 0 0 22px rgba(232,161,58,.25);
+  }
+  .score-label{font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:var(--bone-dim); margin-bottom:2px}
+  .sub-row{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .biome-tag{
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(28,23,18,.6); border:1px solid var(--rock);
+    padding:5px 12px; border-radius:999px; font-weight:600; font-size:13px;
+    letter-spacing:.04em; backdrop-filter:blur(3px);
+  }
+  .biome-dot{width:9px;height:9px;border-radius:50%;background:var(--ochre)}
+  .combo{
+    font-family:"Bungee",cursive; font-size:clamp(16px,3.4vw,24px);
+    color:var(--ochre); opacity:0; transform:translateY(4px) scale(.9);
+    transition:opacity .15s, transform .15s; text-shadow:0 2px 0 rgba(0,0,0,.4);
+    font-variant-numeric:tabular-nums;
+  }
+  .combo.on{opacity:1; transform:translateY(0) scale(1)}
+  .meters{font-size:13px; color:var(--bone-dim); font-variant-numeric:tabular-nums}
+
+  #muteBtn{
+    pointer-events:auto; position:absolute; right:clamp(12px,3vw,26px); bottom:14px;
+    width:42px;height:42px;border-radius:12px; cursor:pointer;
+    background:rgba(28,23,18,.65); border:1px solid var(--rock); color:var(--bone);
+    display:flex;align-items:center;justify-content:center; font-size:18px;
+    backdrop-filter:blur(3px); transition:transform .12s, border-color .12s;
+  }
+  #muteBtn:hover{transform:translateY(-2px); border-color:var(--ochre)}
+
+  /* Duel banner */
+  #duelBanner{
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    z-index:7; margin-top:6px; pointer-events:none;
+    background:linear-gradient(180deg,var(--terra),#a5361f);
+    color:#fff; font-weight:600; font-size:13px;
+    padding:7px 16px; border-radius:0 0 14px 14px;
+    box-shadow:0 8px 20px rgba(0,0,0,.4); display:none; text-align:center;
+  }
+  #duelBanner b{font-family:"Bungee",cursive; font-weight:400; font-size:15px}
+
+  /* ---------------- Overlays (stone tablets) ---------------- */
+  .overlay{
+    position:absolute; inset:0; z-index:10;
+    display:none; align-items:center; justify-content:center;
+    padding:20px; backdrop-filter:blur(2px);
+    background:radial-gradient(80% 80% at 50% 40%, rgba(18,14,10,.55), rgba(18,14,10,.82));
+  }
+  .overlay.show{display:flex; animation:fade .3s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .tablet{
+    width:min(460px,94vw); max-height:92vh; overflow:auto;
+    background:linear-gradient(180deg,#2a221a,#221b14);
+    border:1px solid var(--rock-2);
+    border-radius:22px; padding:26px clamp(20px,4vw,32px);
+    box-shadow:var(--panel-shadow);
+    text-align:center; position:relative;
+  }
+  .tablet::before{ /* carved top edge */
+    content:""; position:absolute; inset:8px 8px auto 8px; height:1px;
+    background:linear-gradient(90deg,transparent,rgba(232,161,58,.4),transparent);
+  }
+  .kicker{font-size:12px; letter-spacing:.36em; text-transform:uppercase; color:var(--ochre); margin:0 0 6px}
+  .title{
+    font-family:"Bungee",cursive; font-weight:400;
+    font-size:clamp(38px,9vw,58px); line-height:.92; margin:0;
+    color:var(--bone); text-wrap:balance;
+    text-shadow:0 4px 0 rgba(0,0,0,.35), 0 0 30px rgba(232,161,58,.25);
+  }
+  .title .amp{color:var(--ochre); display:inline-block; transform:rotate(-6deg)}
+  .tagline{color:var(--bone-dim); font-size:15px; margin:10px 0 20px; line-height:1.5}
+  .how{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 22px; text-align:left;
+  }
+  .how-item{
+    background:rgba(0,0,0,.22); border:1px solid var(--rock); border-radius:14px;
+    padding:12px 14px; display:flex; gap:11px; align-items:center;
+  }
+  .how-key{
+    flex:none; min-width:44px; height:34px; padding:0 8px; border-radius:9px;
+    background:linear-gradient(180deg,var(--rock-2),var(--rock));
+    border:1px solid #5c5040; box-shadow:0 2px 0 #14100b;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700; font-size:12px; color:var(--bone);
+  }
+  .how-txt b{color:var(--bone); font-weight:600; display:block; font-size:14px}
+  .how-txt span{color:var(--bone-dim); font-size:12px}
+
+  .btn{
+    font-family:"Fredoka",sans-serif; font-weight:600; cursor:pointer;
+    border:none; border-radius:14px; padding:15px 22px; font-size:17px;
+    transition:transform .12s ease, box-shadow .12s ease, filter .12s;
+    width:100%;
+  }
+  .btn:active{transform:translateY(2px)}
+  .btn-primary{
+    background:linear-gradient(180deg,var(--ochre),var(--ochre-deep));
+    color:#241a0a; box-shadow:0 5px 0 #8a5c17, 0 12px 24px rgba(232,161,58,.28);
+    letter-spacing:.02em;
+  }
+  .btn-primary:hover{filter:brightness(1.05)}
+  .btn-ghost{
+    background:rgba(255,255,255,.05); color:var(--bone);
+    border:1px solid var(--rock-2); box-shadow:none; font-size:15px; padding:13px 18px;
+  }
+  .btn-ghost:hover{border-color:var(--ochre)}
+  .btn-row{display:flex; gap:10px; margin-top:10px}
+  .btn-row .btn{width:auto; flex:1}
+
+  /* Game over score display */
+  .final-grid{display:flex; gap:14px; margin:6px 0 18px; justify-content:center}
+  .stat{
+    flex:1; background:rgba(0,0,0,.24); border:1px solid var(--rock);
+    border-radius:14px; padding:14px 6px;
+  }
+  .stat .n{font-family:"Bungee",cursive; font-size:clamp(24px,6vw,34px); color:var(--bone); font-variant-numeric:tabular-nums}
+  .stat .n.gold{color:var(--gold)}
+  .stat .l{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--bone-dim); margin-top:4px}
+  .verdict{
+    font-family:"Bungee",cursive; font-size:18px; margin:0 0 14px;
+    padding:10px; border-radius:12px;
+  }
+  .verdict.win{color:#1c2b0f; background:linear-gradient(180deg,#a8c24a,var(--moss))}
+  .verdict.lose{color:#fff; background:linear-gradient(180deg,var(--terra),#a5361f)}
+
+  /* ---- Lead / "Join the Tribe" ---- */
+  .lead{
+    margin-top:18px; padding-top:18px; border-top:1px dashed var(--rock-2); text-align:left;
+  }
+  .lead-head{display:flex; align-items:center; gap:10px; margin-bottom:4px}
+  .lead-badge{
+    font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--moss); background:rgba(122,139,60,.14);
+    padding:3px 9px; border-radius:999px; border:1px solid rgba(122,139,60,.4);
+  }
+  .lead h3{font-family:"Bungee",cursive; font-weight:400; font-size:19px; margin:0; color:var(--bone)}
+  .lead p{font-size:13px; color:var(--bone-dim); margin:6px 0 14px; line-height:1.5}
+  .field{margin-bottom:10px}
+  .field input[type=email], .field input[type=tel]{
+    width:100%; padding:13px 14px; border-radius:12px;
+    background:rgba(0,0,0,.3); border:1px solid var(--rock-2); color:var(--bone);
+    font-family:inherit; font-size:15px; outline:none; transition:border-color .12s;
+  }
+  .field input::placeholder{color:#8a7c66}
+  .field input:focus{border-color:var(--ochre)}
+  .consent{display:flex; gap:9px; align-items:flex-start; font-size:12px; color:var(--bone-dim); margin:2px 0 14px; cursor:pointer}
+  .consent input{margin-top:2px; accent-color:var(--moss); width:16px; height:16px; flex:none}
+  .lead-note{font-size:11px; color:#8a7c66; margin-top:10px; text-align:center}
+  .lead-success{
+    display:none; text-align:center; padding:10px 0 2px;
+  }
+  .lead-success.show{display:block; animation:fade .3s ease}
+  .lead-success .big{font-family:"Bungee",cursive; font-size:22px; color:var(--moss); margin-bottom:6px}
+  .lead-success p{color:var(--bone-dim); font-size:13px; margin:0 0 14px}
+
+  .toast{
+    position:absolute; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--rock-2); color:var(--bone); border:1px solid var(--ochre);
+    padding:12px 20px; border-radius:12px; font-weight:600; font-size:14px;
+    z-index:20; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  :focus-visible{outline:3px solid var(--ochre); outline-offset:2px}
+  .err{color:var(--terra); font-size:12px; margin-top:-6px; margin-bottom:8px; display:none}
+  .err.show{display:block}
+
+  @media (max-width:420px){
+    .how{grid-template-columns:1fr}
+    .final-grid{flex-wrap:wrap}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001s !important}
+  }
+</style>
+
+<div id="stage">
+  <div id="frame">
+    <canvas id="c"></canvas>
+    <div id="vignette"></div>
+
+    <div id="duelBanner"></div>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div class="hud-row">
+        <div class="hearts" id="hearts"></div>
+        <div class="score-wrap">
+          <div class="score-label">Score</div>
+          <div class="score" id="score">0</div>
+        </div>
+      </div>
+      <div class="sub-row">
+        <span class="biome-tag"><span class="biome-dot" id="biomeDot"></span><span id="biomeName">Dawn Savanna</span></span>
+        <span class="combo" id="combo">COMBO ×2</span>
+        <span class="meters" id="meters">0 m</span>
+      </div>
+    </div>
+    <button id="muteBtn" aria-label="Toggle sound">🔊</button>
+
+    <!-- START -->
+    <div class="overlay show" id="menu">
+      <div class="tablet">
+        <p class="kicker">Stone-age dash</p>
+        <h1 class="title">CLUB <span class="amp">&amp;</span> GRUB</h1>
+        <p class="tagline">Grug is hungry and the ground won't stop moving. Bonk the dinos, gobble the grub, and out-run your own legend.</p>
+        <div class="how">
+          <div class="how-item"><span class="how-key">SPACE</span><span class="how-txt"><b>Jump</b><span>Tap right side · double-jump</span></span></div>
+          <div class="how-item"><span class="how-key">X / ↓</span><span class="how-txt"><b>Club</b><span>Tap left side · bonk dinos</span></span></div>
+        </div>
+        <button class="btn btn-primary" id="playBtn">▶  Start running</button>
+        <p class="lead-note" id="bestLine">Best today: 0</p>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="overlay" id="gameover">
+      <div class="tablet">
+        <p class="kicker" id="goKicker">You got clobbered</p>
+        <h2 class="title" style="font-size:clamp(30px,7vw,44px)">GAME OVER</h2>
+
+        <div id="verdictWrap"></div>
+
+        <div class="final-grid">
+          <div class="stat"><div class="n" id="finalScore">0</div><div class="l">Score</div></div>
+          <div class="stat"><div class="n" id="finalMeters">0</div><div class="l">Metres</div></div>
+          <div class="stat"><div class="n gold" id="finalBonks">0</div><div class="l">Bonks</div></div>
+        </div>
+
+        <button class="btn btn-primary" id="challengeBtn">🦴  Challenge a friend</button>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="retryBtn">↻ Run again</button>
+        </div>
+
+        <!-- Lead capture: appears at the high-intent moment -->
+        <div class="lead" id="leadModule">
+          <div class="lead-head">
+            <span class="lead-badge">Join the tribe</span>
+          </div>
+          <h3 id="leadTitle">Get the full hunt</h3>
+          <p id="leadCopy">Drop your email or number and we'll send you early access + a tribe-only discount.</p>
+          <form id="leadForm" novalidate>
+            <div class="field"><input type="email" id="leadEmail" placeholder="you@cave.com" autocomplete="email"></div>
+            <div class="field"><input type="tel" id="leadPhone" placeholder="or +1 555 000 0000 (SMS)" autocomplete="tel"></div>
+            <div class="err" id="leadErr">Enter a valid email or phone number.</div>
+            <label class="consent"><input type="checkbox" id="leadConsent"><span id="consentTxt">Yes, send me updates and my discount. I can opt out anytime.</span></label>
+            <button class="btn btn-primary" type="submit" id="leadSubmit">Claim my discount →</button>
+          </form>
+          <div class="lead-success" id="leadSuccess">
+            <div class="big">You're in! 🎉</div>
+            <p id="successCopy">Check your inbox. Here's your reward:</p>
+            <a class="btn btn-primary" id="ctaBtn" href="#" target="_blank" rel="noopener">Open XYZ →</a>
+          </div>
+          <p class="lead-note" id="leadNote"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<script>
+/* ====================================================================
+   CONFIG — point this at your real product to wire the funnel.
+   Edit these five lines; nothing else needs to change.
+==================================================================== */
+const CONFIG = {
+  productName : "XYZ",                                   // your product's name
+  productTagline : "the smarter way to <do the thing>",  // one-line pitch (used in copy)
+  productUrl : "https://your-product.example.com",       // where the CTA button sends people
+  offer      : "20% tribe discount",                      // the incentive shown on the form
+  // POST endpoint for leads (Formspree / Zapier / your own API). JSON body:
+  // { email, phone, score, meters, biome, from, ts, source }
+  // Leave "" to run in local test-capture mode (stores to this browser only).
+  leadEndpoint : ""
+};
+/* ================================================================== */
+
+// Apply product copy
+document.getElementById('leadCopy').innerHTML =
+  `Drop your email or number and we'll send you early access to <b>${CONFIG.productName}</b> — ${CONFIG.productTagline} — plus a <b>${CONFIG.offer}</b>.`;
+document.getElementById('ctaBtn').textContent = `Open ${CONFIG.productName} →`;
+document.getElementById('ctaBtn').href = CONFIG.productUrl;
+document.getElementById('successCopy').textContent = `Your ${CONFIG.offer} is waiting inside ${CONFIG.productName}.`;
+
+/* ---------------- Canvas & sizing ---------------- */
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+let W=0,H=0,DPR=1, groundY=0, PU=0; // PU = player unit (scales everything)
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function resize(){
+  const r = cv.parentElement.getBoundingClientRect();
+  W = r.width; H = r.height;
+  DPR = Math.min(devicePixelRatio||1, 2);
+  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  groundY = H*0.82;
+  PU = Math.max(46, H*0.13);            // caveman height ~ world scale unit
+}
+addEventListener('resize', resize); resize();
+
+/* ---------------- Audio (procedural, no assets) ---------------- */
+let muted=false, actx=null;
+function AC(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+function tone(freq,dur,type='square',gain=.15,slideTo=null){
+  if(muted) return; const a=AC(); if(!a) return;
+  const o=a.createOscillator(), g=a.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,a.currentTime);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,a.currentTime+dur);
+  g.gain.setValueAtTime(gain,a.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
+  o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime+dur);
+}
+const SFX = {
+  jump:()=>tone(320,.14,'square',.12,620),
+  bonk:()=>{tone(150,.12,'sawtooth',.2,60); tone(420,.08,'square',.1);},
+  chomp:()=>tone(520,.08,'triangle',.14,700),
+  hurt:()=>tone(200,.25,'sawtooth',.2,70),
+  combo:()=>tone(660,.1,'square',.12,990),
+  mammoth:()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.16,'square',.16),i*90));},
+  over:()=>{[440,330,220].forEach((f,i)=>setTimeout(()=>tone(f,.3,'sawtooth',.18,f*.6),i*160));}
+};
+document.getElementById('muteBtn').onclick=()=>{
+  muted=!muted; document.getElementById('muteBtn').textContent = muted?'🔇':'🔊';
+};
+
+/* ---------------- Biomes ---------------- */
+const BIOMES = [
+  {name:"Dawn Savanna", sky:['#ffb867','#ffe3ab'], far:'#c98a52', mid:'#a86e3e', ground:'#7c5a34', groundTop:'#8f6a3e', dot:'#e8a13a', speck:'#5f421f'},
+  {name:"Tar Marsh",    sky:['#5c7a72','#93b0a3'], far:'#3d564c', mid:'#2c4038', ground:'#233029', groundTop:'#33463b', dot:'#7a8b3c', speck:'#16201a'},
+  {name:"Ember Volcano",sky:['#b8402a','#f0894a'], far:'#6e2a20', mid:'#4a1c16', ground:'#2c1712', groundTop:'#5a2318', dot:'#ff6a3a', speck:'#7a2a15'},
+  {name:"Frost Ridge",  sky:['#8fc4dd','#e6f4f8'], far:'#9fb6c4', mid:'#7d97a8', ground:'#c3d4dc', groundTop:'#e2eef2', dot:'#7fbfe0', speck:'#9fb2bd'}
+];
+function biomeAt(m){ return BIOMES[Math.floor(m/620)%BIOMES.length]; }
+
+/* ---------------- Game state ---------------- */
+let state='menu';                 // menu | playing | over
+let dist=0, meters=0, score=0, bonks=0;
+let hearts=3, combo=0, mult=1, shake=0, flash=0, invuln=0;
+let speed=0, spawnT=0, animT=0, mammothCooldown=9;
+let ents=[], parts=[], pops=[];
+let bestToday = Number(localStorage.getItem('cg_best')||0);
+
+// Duel target from URL (?beat=NNNN&from=Name)
+const params = new URLSearchParams(location.search);
+const duelTarget = Math.max(0, parseInt(params.get('beat')||'0',10)||0);
+const duelFrom = (params.get('from')||'').slice(0,24).replace(/[<>]/g,'') || 'A friend';
+if(duelTarget>0){
+  const b=document.getElementById('duelBanner');
+  b.style.display='block';
+  b.innerHTML = `${duelFrom} dares you to beat <b>${duelTarget.toLocaleString()}</b>`;
+}
+
+const player = { y:0, vy:0, onGround:true, jumps:0, club:0, clubCd:0, squash:1, run:0 };
+
+/* ---------------- Input ---------------- */
+function doJump(){
+  if(state!=='playing') return;
+  if(player.jumps<2){ player.vy = -PU*0.42*(player.jumps===0?1:0.9); player.onGround=false; player.jumps++; SFX.jump();
+    burst(player.px, groundY, 5, biome.speck, 1); }
+}
+function doClub(){
+  if(state!=='playing' || player.clubCd>0) return;
+  player.club=0.22; player.clubCd=0.34;
+  tone(180,.06,'square',.08,120);   // club swing whoosh (bonk plays on a hit)
+}
+addEventListener('keydown',e=>{
+  if(e.repeat) return;
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){ e.preventDefault();
+    if(state!=='playing') startOrRetry(); else doJump(); }
+  else if(e.code==='ArrowDown'||e.code==='KeyX'||e.code==='KeyS'){ e.preventDefault(); doClub(); }
+});
+cv.addEventListener('pointerdown',e=>{
+  if(state!=='playing') return;
+  const x = e.clientX - cv.getBoundingClientRect().left;
+  if(x < W*0.42) doClub(); else doJump();
+});
+
+/* ---------------- Spawning ---------------- */
+let biome = BIOMES[0];
+function spawn(){
+  const diff = Math.min(1, meters/1400);        // 0→1 ramp
+  const r = Math.random();
+  // mammoth: rare legendary
+  if(mammothCooldown<=0 && r<0.05){
+    ents.push({t:'mammoth', x:W+PU, w:PU*2.2, h:PU*1.8, dead:false, hit:false, vx:0});
+    mammothCooldown = 14 + Math.random()*10; return;
+  }
+  const roll = Math.random();
+  if(roll < 0.34){ // food
+    const high = Math.random()<0.45;
+    const kind = Math.random()<0.5?'meat':'egg';
+    ents.push({t:'food', kind, x:W+PU, y: groundY - (high?PU*1.55:PU*0.55), w:PU*0.5, h:PU*0.5, got:false, bob:Math.random()*6});
+  } else if(roll < 0.34+0.24){ // rock/log — must jump
+    const log = Math.random()<0.4;
+    ents.push({t:'rock', log, x:W+PU, w:PU*(log?0.95:0.75), h:PU*(log?0.5:0.7)});
+  } else if(roll < 0.34+0.24+0.27){ // raptor — bonk or jump
+    ents.push({t:'raptor', x:W+PU, w:PU*0.85, h:PU*0.95, dead:false, vx:PU*0.5*diff, leg:0});
+  } else { // ptero — don't jump / bonk for points
+    ents.push({t:'ptero', x:W+PU, w:PU*0.9, h:PU*0.55, dead:false, flap:0, bob:Math.random()*6});
+  }
+}
+
+/* ---------------- Particles & popups ---------------- */
+function burst(x,y,n,color,scale=1){
+  if(reduceMotion) n=Math.min(n,3);
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, sp=(1+Math.random()*3)*scale;
+    parts.push({x,y,vx:Math.cos(a)*sp*PU*0.03 - speed*0.002*PU, vy:Math.sin(a)*sp*PU*0.03 - PU*0.02,
+      life:0.5+Math.random()*0.4, t:0, color, r:PU*0.06*(0.6+Math.random())});
+  }
+}
+function popup(x,y,txt,color){ pops.push({x,y,txt,color,t:0,life:0.9}); }
+
+/* ---------------- Core loop ---------------- */
+let last=performance.now();
+function frame(now){
+  let dt=Math.min(0.033,(now-last)/1000); last=now;
+  animT+=dt;
+  if(state==='playing') update(dt);
+  else updateIdle(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+function updateIdle(dt){
+  dist += 60*dt;                       // slow attract scroll
+  player.run += dt*6;
+  player.y = Math.sin(animT*2)*PU*0.03;
+}
+
+function update(dt){
+  meters += speed*dt*0.02;
+  biome = biomeAt(meters);
+  document.getElementById('biomeName').textContent = biome.name;
+  document.getElementById('biomeDot').style.background = biome.dot;
+
+  // difficulty
+  const diff = Math.min(1, meters/1400);
+  speed = W*(0.30 + 0.42*diff);
+  dist += speed*dt;
+  mammothCooldown -= dt;
+
+  // player physics
+  player.vy += PU*3.4*dt;              // gravity
+  player.y  += player.vy*dt;
+  player.px  = W*0.24;
+  if(player.y>=0){ player.y=0; player.vy=0; if(!player.onGround){ player.squash=0.7; burst(player.px,groundY,4,biome.speck,0.8);} player.onGround=true; player.jumps=0; }
+  else player.onGround=false;
+  player.squash += (1-player.squash)*Math.min(1,dt*12);
+  player.run += dt*(9 + diff*5);
+  if(player.club>0) player.club-=dt;
+  if(player.clubCd>0) player.clubCd-=dt;
+  if(invuln>0) invuln-=dt;
+  if(shake>0) shake=Math.max(0,shake-dt*60);
+  if(flash>0) flash=Math.max(0,flash-dt*3);
+
+  // spawn
+  spawnT-=dt;
+  if(spawnT<=0){ spawn(); spawnT = (1.15 - 0.55*diff) * (0.8+Math.random()*0.5); }
+
+  // player hitboxes
+  const pH = PU*0.92*player.squash, pW=PU*0.7;
+  const pBox = {x:player.px-pW/2, y:groundY+player.y-pH, w:pW, h:pH};
+  const clubActive = player.club>0;
+  const clubBox = {x:player.px+pW*0.2, y:groundY+player.y-PU*1.5, w:PU*0.95, h:PU*1.5};
+
+  for(const e of ents){
+    e.x -= speed*dt + (e.vx||0)*dt;
+    if(e.t==='raptor'&&!e.dead) e.leg+=dt*14;
+    if(e.t==='ptero'){ e.flap+=dt*12; }
+
+    const eBox = boxOf(e);
+    // club kills
+    if(clubActive && (e.t==='raptor'||e.t==='ptero'||e.t==='mammoth') && !e.dead && overlap(clubBox,eBox)){
+      if(e.t==='mammoth'){ e.dead=true; e.hit=true; onMammoth(e); }
+      else { e.dead=true; onBonk(e); }
+      continue;
+    }
+    // food
+    if(e.t==='food' && !e.got && overlap(pBox,eBox)){ e.got=true; onFood(e); continue; }
+    // damage
+    if(!e.dead && (e.t==='rock'||e.t==='raptor'||e.t==='ptero') && invuln<=0 && overlap(pBox,eBox)){
+      onHurt(e);
+    }
+  }
+  ents = ents.filter(e=> e.x > -PU*3 && !(e.got) && !(e.dead && (e.deadT=(e.deadT||0)+dt)>0.35) );
+
+  // particles
+  for(const p of parts){ p.t+=dt; p.x+=p.vx; p.y+=p.vy; p.vy+=PU*0.06*dt; p.vx*=0.98; }
+  parts = parts.filter(p=>p.t<p.life);
+  for(const p of pops){ p.t+=dt; p.y-=PU*0.6*dt; }
+  pops = pops.filter(p=>p.t<p.life);
+
+  // HUD
+  score = Math.floor(meters)*1 + pointBank;
+  document.getElementById('score').textContent = score.toLocaleString();
+  document.getElementById('meters').textContent = Math.floor(meters)+' m';
+}
+
+let pointBank=0;
+function addPoints(n){ pointBank += n; }
+
+function onFood(e){
+  combo++; mult = 1+Math.floor(combo/4); mult=Math.min(mult,8);
+  const val = 10*mult;
+  addPoints(val); SFX.chomp();
+  popup(e.x, groundY+ (e.y-groundY) , '+'+val, '#f2e6cf');
+  burst(e.x, e.y, 7, e.kind==='meat'?'#c8452f':'#f2e6cf', 1);
+  if(combo>0 && combo%4===0){ showCombo(); SFX.combo(); }
+}
+function onBonk(e){
+  bonks++; combo++; mult=Math.min(1+Math.floor(combo/4),8);
+  const val=25*mult; addPoints(val); SFX.bonk();
+  popup(e.x, groundY-e.h, '+'+val, '#e8a13a');
+  burst(e.x, groundY-e.h*0.5, 10, e.t==='ptero'?'#8a6ea8':'#7a8b3c', 1.2);
+  shake=reduceMotion?0:6; if(combo%4===0){showCombo();SFX.combo();}
+}
+function onMammoth(e){
+  const val=500*Math.max(1,mult); addPoints(val); bonks++;
+  SFX.mammoth();
+  popup(e.x, groundY-e.h, 'LEGENDARY +'+val, '#ffd24a');
+  for(let i=0;i<26;i++) burst(e.x+(Math.random()-0.5)*e.w, groundY-e.h*Math.random(), 1, i%2?'#ffd24a':'#e8a13a', 1.6);
+  shake=reduceMotion?0:14; flash=0.5; window._mammothSeen=true;
+  toast('🦣 GOLDEN MAMMOTH! Screenshot that.');
+}
+function onHurt(e){
+  hearts--; invuln=1.1; combo=0; mult=1; shake=reduceMotion?0:12; flash=0.7; SFX.hurt();
+  updateHearts();
+  if(e.t==='raptor'||e.t==='ptero') e.dead=true;   // creatures vanish on impact; rocks stay
+  if(hearts<=0) gameOver();
+}
+
+function showCombo(){
+  const c=document.getElementById('combo');
+  c.textContent='COMBO ×'+mult; c.classList.add('on');
+  clearTimeout(c._t); c._t=setTimeout(()=>c.classList.remove('on'),1100);
+}
+
+/* ---------------- Geometry ---------------- */
+function boxOf(e){
+  if(e.t==='food') return {x:e.x-e.w/2, y:e.y-e.h/2 + Math.sin(animT*3+e.bob)*4, w:e.w, h:e.h};
+  if(e.t==='ptero') return {x:e.x-e.w/2, y:(groundY-PU*1.35) - e.h/2 + Math.sin(animT*3+e.bob)*PU*0.12, w:e.w, h:e.h};
+  return {x:e.x-e.w/2, y:groundY-e.h, w:e.w, h:e.h};
+}
+function overlap(a,b){ return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y; }
+
+/* ---------------- Render ---------------- */
+function render(){
+  const b = state==='playing'||state==='over'? biome : biomeAt(meters);
+  ctx.save();
+  if(shake>0){ ctx.translate((Math.random()-0.5)*shake,(Math.random()-0.5)*shake); }
+
+  // sky
+  const g=ctx.createLinearGradient(0,0,0,groundY);
+  g.addColorStop(0,b.sky[0]); g.addColorStop(1,b.sky[1]);
+  ctx.fillStyle=g; ctx.fillRect(-20,-20,W+40,groundY+40);
+
+  // sun/moon disc
+  ctx.fillStyle='rgba(255,255,255,.35)'; ctx.beginPath();
+  ctx.arc(W*0.78, groundY*0.32, PU*0.7, 0, 7); ctx.fill();
+
+  hills(b.far, 0.12, groundY*0.55, PU*0.9, 7);
+  hills(b.mid, 0.35, groundY*0.72, PU*1.3, 5);
+
+  // ground
+  ctx.fillStyle=b.ground; ctx.fillRect(-20,groundY,W+40,H-groundY+20);
+  ctx.fillStyle=b.groundTop; ctx.fillRect(-20,groundY,W+40,PU*0.12);
+  // speckles
+  ctx.fillStyle=b.speck;
+  const off = (dist*0.6)% (PU*1.4);
+  for(let x=-off; x<W+40; x+=PU*1.4){
+    ctx.fillRect(x, groundY+PU*0.4, PU*0.14, PU*0.06);
+    ctx.fillRect(x+PU*0.7, groundY+PU*0.8, PU*0.1, PU*0.05);
+  }
+
+  // entities behind player? draw all, player on top
+  for(const e of ents) drawEnt(e,b);
+  drawPlayer(b);
+
+  // particles
+  for(const p of parts){ ctx.globalAlpha=Math.max(0,1-p.t/p.life); ctx.fillStyle=p.color;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill(); }
+  ctx.globalAlpha=1;
+
+  // popups
+  ctx.textAlign='center'; ctx.font=`700 ${PU*0.34}px Fredoka, sans-serif`;
+  for(const p of pops){ ctx.globalAlpha=Math.max(0,1-p.t/p.life); ctx.fillStyle=p.color;
+    ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.strokeText(p.txt,p.x,p.y); ctx.fillText(p.txt,p.x,p.y); }
+  ctx.globalAlpha=1;
+
+  ctx.restore();
+
+  // damage flash
+  if(flash>0){ ctx.fillStyle=`rgba(200,69,47,${flash*0.4})`; ctx.fillRect(0,0,W,H); }
+}
+
+function hills(color,par,baseY,amp,seed){
+  ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(-20,groundY);
+  const scroll = dist*par;
+  for(let x=-20;x<=W+20;x+=14){
+    const t=(x+scroll)/ (PU*3.2);
+    const y = baseY - (Math.sin(t)*0.5+Math.sin(t*1.7+seed)*0.3+0.5)*amp;
+    ctx.lineTo(x,y);
+  }
+  ctx.lineTo(W+20,groundY); ctx.closePath(); ctx.fill();
+}
+
+function drawPlayer(b){
+  const x=player.px||W*0.24, baseY=groundY+ (state==='playing'?player.y:player.y);
+  const s=player.squash, h=PU*0.92*s, w=PU*0.7;
+  const legPhase=Math.sin(player.run);
+  ctx.save(); ctx.translate(x, baseY);
+  const blink = invuln>0 && Math.floor(animT*14)%2===0;
+  ctx.globalAlpha = blink?0.4:1;
+
+  // legs
+  ctx.fillStyle='#5b3d24';
+  const lift = player.onGround||state!=='playing'? Math.abs(legPhase)*PU*0.12 : PU*0.06;
+  rr(-w*0.22, -PU*0.12, w*0.2, PU*0.2+legPhase*PU*0.06, 4);
+  rr( w*0.04, -PU*0.12, w*0.2, PU*0.2-legPhase*PU*0.06, 4);
+  // body (fur tunic)
+  ctx.fillStyle='#6b4a2f';
+  rr(-w/2, -h, w, h*0.92, PU*0.18);
+  // tunic zigzag hem
+  ctx.fillStyle='#7c5636';
+  ctx.beginPath(); ctx.moveTo(-w/2,-h*0.12);
+  for(let i=0;i<=5;i++){ const px=-w/2+ (w/5)*i; ctx.lineTo(px, -h*0.12 + (i%2?PU*0.1:0)); }
+  ctx.lineTo(w/2,-h*0.12+PU*0.1); ctx.lineTo(w/2,-h*0.02); ctx.lineTo(-w/2,-h*0.02); ctx.fill();
+  // head
+  ctx.fillStyle='#d9a066';
+  ctx.beginPath(); ctx.arc(0,-h-PU*0.02,PU*0.26,0,7); ctx.fill();
+  // hair
+  ctx.fillStyle='#2c1c12';
+  ctx.beginPath(); ctx.arc(0,-h-PU*0.14,PU*0.24,Math.PI,2*Math.PI); ctx.fill();
+  rr(-PU*0.24,-h-PU*0.16,PU*0.1,PU*0.16,3);
+  // eye
+  ctx.fillStyle='#241a12'; ctx.beginPath(); ctx.arc(PU*0.1,-h-PU*0.02,PU*0.035,0,7); ctx.fill();
+
+  // arm + club
+  ctx.save(); ctx.translate(w*0.28,-h*0.62);
+  const swing = player.club>0 ? (1-player.club/0.22) : 0;
+  ctx.rotate(-1.9 + swing*2.6);
+  ctx.fillStyle='#8a5a34'; rr(0,-PU*0.04,PU*0.5,PU*0.12,5);   // handle
+  ctx.fillStyle='#9a9187'; ctx.beginPath(); ctx.arc(PU*0.5,0,PU*0.16,0,7); ctx.fill(); // stone head
+  ctx.fillStyle='#7d746a'; ctx.beginPath(); ctx.arc(PU*0.5,0,PU*0.1,0,7); ctx.fill();
+  ctx.restore();
+
+  ctx.globalAlpha=1; ctx.restore();
+
+  function rr(rx,ry,rw,rh,rad){ roundRect(rx,ry,rw,rh,rad); ctx.fill(); }
+}
+
+function drawEnt(e,b){
+  if(e.dead && e.t!=='mammoth'){ // squished
+    ctx.save(); ctx.globalAlpha=Math.max(0,1-(e.deadT||0)/0.35);
+    ctx.fillStyle=e.t==='ptero'?'#8a6ea8':'#7a8b3c';
+    ctx.beginPath(); ctx.ellipse(e.x,groundY-PU*0.08,e.w*0.6,PU*0.1,0,0,7); ctx.fill();
+    ctx.restore(); return;
+  }
+  if(e.t==='rock'){
+    const y=groundY;
+    if(e.log){ ctx.fillStyle='#6a4a2c'; roundRect(e.x-e.w/2,y-e.h,e.w,e.h,PU*0.1); ctx.fill();
+      ctx.fillStyle='#4d3520'; ctx.beginPath(); ctx.arc(e.x-e.w*0.32,y-e.h*0.5,e.h*0.22,0,7); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.x+e.w*0.32,y-e.h*0.5,e.h*0.18,0,7); ctx.fill();
+    } else {
+      ctx.fillStyle='#7c7268'; ctx.beginPath();
+      ctx.moveTo(e.x-e.w/2,y); ctx.lineTo(e.x-e.w*0.3,y-e.h); ctx.lineTo(e.x+e.w*0.1,y-e.h*0.9);
+      ctx.lineTo(e.x+e.w/2,y); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#5f574e'; ctx.beginPath(); ctx.moveTo(e.x-e.w*0.3,y-e.h); ctx.lineTo(e.x+e.w*0.1,y-e.h*0.9); ctx.lineTo(e.x,y-e.h*0.5); ctx.closePath(); ctx.fill();
+    }
+  }
+  else if(e.t==='raptor'){
+    const y=groundY, c='#6f8a3a';
+    ctx.fillStyle=c;
+    ctx.beginPath(); ctx.ellipse(e.x,y-e.h*0.5,e.w*0.42,e.h*0.34,0,0,7); ctx.fill(); // body
+    // tail
+    ctx.beginPath(); ctx.moveTo(e.x+e.w*0.3,y-e.h*0.5); ctx.lineTo(e.x+e.w*0.7,y-e.h*0.75); ctx.lineTo(e.x+e.w*0.3,y-e.h*0.35); ctx.fill();
+    // head
+    ctx.beginPath(); ctx.ellipse(e.x-e.w*0.4,y-e.h*0.72,e.w*0.24,e.h*0.2,0,0,7); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(e.x-e.w*0.6,y-e.h*0.72); ctx.lineTo(e.x-e.w*0.72,y-e.h*0.66); ctx.lineTo(e.x-e.w*0.58,y-e.h*0.62); ctx.fill();
+    // legs
+    ctx.strokeStyle='#4f6329'; ctx.lineWidth=PU*0.08; ctx.lineCap='round';
+    const lp=Math.sin(e.leg)*e.h*0.18;
+    ctx.beginPath(); ctx.moveTo(e.x-e.w*0.05,y-e.h*0.28); ctx.lineTo(e.x-e.w*0.05+lp,y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(e.x+e.w*0.12,y-e.h*0.28); ctx.lineTo(e.x+e.w*0.12-lp,y); ctx.stroke();
+    // eye
+    ctx.fillStyle='#241a12'; ctx.beginPath(); ctx.arc(e.x-e.w*0.44,y-e.h*0.74,PU*0.03,0,7); ctx.fill();
+  }
+  else if(e.t==='ptero'){
+    const bx=e.x, by=(groundY-PU*1.35)+Math.sin(animT*3+e.bob)*PU*0.12, c='#8a6ea8';
+    const fl=Math.sin(e.flap)*PU*0.2;
+    ctx.fillStyle=c;
+    ctx.beginPath(); ctx.ellipse(bx,by,e.w*0.24,e.h*0.4,0,0,7); ctx.fill(); // body
+    // wings
+    ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(bx-e.w*0.5,by-fl); ctx.lineTo(bx-e.w*0.1,by+e.h*0.1); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(bx+e.w*0.5,by-fl); ctx.lineTo(bx+e.w*0.1,by+e.h*0.1); ctx.fill();
+    // beak
+    ctx.fillStyle='#d98a3a'; ctx.beginPath(); ctx.moveTo(bx-e.w*0.22,by); ctx.lineTo(bx-e.w*0.5,by-e.h*0.05); ctx.lineTo(bx-e.w*0.22,by+e.h*0.12); ctx.fill();
+    ctx.fillStyle='#241a12'; ctx.beginPath(); ctx.arc(bx-e.w*0.14,by-e.h*0.05,PU*0.03,0,7); ctx.fill();
+  }
+  else if(e.t==='food'){
+    const y=e.y + Math.sin(animT*3+e.bob)*4;
+    if(e.kind==='meat'){
+      ctx.fillStyle='#8a4a2c'; ctx.beginPath(); ctx.ellipse(e.x,y,e.w*0.4,e.h*0.34,0.5,0,7); ctx.fill();
+      ctx.fillStyle='#f2e6cf'; roundRect(e.x+e.w*0.2,y-e.h*0.1,e.w*0.35,e.h*0.14,4); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.x+e.w*0.52,y-e.h*0.03,PU*0.06,0,7); ctx.arc(e.x+e.w*0.52,y+e.h*0.1,PU*0.06,0,7); ctx.fill();
+    } else {
+      ctx.fillStyle='#f2e6cf'; ctx.beginPath(); ctx.ellipse(e.x,y,e.w*0.34,e.h*0.42,0,0,7); ctx.fill();
+      ctx.fillStyle='#c9a86a'; [[-.1,-.1],[.12,.05],[-.05,.18]].forEach(d=>{ctx.beginPath();ctx.arc(e.x+e.w*d[0],y+e.h*d[1],PU*0.04,0,7);ctx.fill();});
+    }
+    // sparkle
+    ctx.fillStyle='rgba(255,255,255,.5)'; ctx.beginPath(); ctx.arc(e.x-e.w*0.2,y-e.h*0.22,PU*0.03,0,7); ctx.fill();
+  }
+  else if(e.t==='mammoth'){
+    const y=groundY, c='#e8b64a';
+    ctx.fillStyle=e.hit? '#ffd24a':c;
+    ctx.beginPath(); ctx.ellipse(e.x,y-e.h*0.5,e.w*0.42,e.h*0.42,0,0,7); ctx.fill(); // body
+    ctx.beginPath(); ctx.arc(e.x-e.w*0.42,y-e.h*0.6,e.h*0.3,0,7); ctx.fill(); // head
+    // trunk
+    ctx.strokeStyle=ctx.fillStyle; ctx.lineWidth=PU*0.16; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(e.x-e.w*0.6,y-e.h*0.6); ctx.quadraticCurveTo(e.x-e.w*0.72,y-e.h*0.2,e.x-e.w*0.5,y-PU*0.05); ctx.stroke();
+    // tusk
+    ctx.strokeStyle='#f2e6cf'; ctx.lineWidth=PU*0.08;
+    ctx.beginPath(); ctx.moveTo(e.x-e.w*0.55,y-e.h*0.35); ctx.quadraticCurveTo(e.x-e.w*0.75,y-e.h*0.1,e.x-e.w*0.6,y); ctx.stroke();
+    // legs
+    ctx.fillStyle=c; [-.2,.1,.28].forEach(dx=> ctx.fillRect(e.x+e.w*dx, y-e.h*0.2, e.w*0.1, e.h*0.2));
+    ctx.fillStyle='#241a12'; ctx.beginPath(); ctx.arc(e.x-e.w*0.44,y-e.h*0.66,PU*0.04,0,7); ctx.fill();
+    // shimmer
+    ctx.fillStyle='rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(e.x-e.w*0.1+Math.sin(animT*4)*e.w*0.3,y-e.h*0.7,PU*0.06,0,7); ctx.fill();
+  }
+}
+
+function roundRect(x,y,w,h,r){ r=Math.min(r,w/2,h/2); ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+/* ---------------- Hearts / HUD ---------------- */
+function heartSVG(){ return `<svg class="heart" viewBox="0 0 24 24"><path fill="#c8452f" stroke="#7a2417" stroke-width="1.5" d="M12 21s-7-4.6-9.3-9C.9 8.6 2.5 5 6 5c2 0 3.2 1.2 4 2.4C10.8 6.2 12 5 14 5c3.5 0 5.1 3.6 3.3 7C19 16.4 12 21 12 21z"/></svg>`; }
+function buildHearts(){ const h=document.getElementById('hearts'); h.innerHTML=''; for(let i=0;i<3;i++) h.insertAdjacentHTML('beforeend',heartSVG()); updateHearts(); }
+function updateHearts(){ document.querySelectorAll('#hearts .heart').forEach((el,i)=> el.classList.toggle('lost', i>=hearts)); }
+
+/* ---------------- Toast ---------------- */
+let toastT;
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ---------------- State transitions ---------------- */
+function startOrRetry(){ if(state==='menu'||state==='over') startGame(); }
+function startGame(){
+  AC(); if(actx && actx.state==='suspended') actx.resume();
+  state='playing';
+  dist=0; meters=0; score=0; pointBank=0; bonks=0; hearts=3; combo=0; mult=1;
+  shake=0; flash=0; invuln=0; speed=W*0.30; spawnT=0.6; mammothCooldown=9;
+  ents=[]; parts=[]; pops=[]; window._mammothSeen=false;
+  player.y=0; player.vy=0; player.onGround=true; player.jumps=0; player.club=0; player.clubCd=0; player.squash=1; player.run=0;
+  buildHearts();
+  document.getElementById('menu').classList.remove('show');
+  document.getElementById('gameover').classList.remove('show');
+  document.getElementById('hud').classList.add('show');
+}
+function gameOver(){
+  state='over'; SFX.over();
+  score = Math.floor(meters)+pointBank;
+  bestToday=Math.max(bestToday,score); localStorage.setItem('cg_best',bestToday);
+  document.getElementById('finalScore').textContent=score.toLocaleString();
+  document.getElementById('finalMeters').textContent=Math.floor(meters).toLocaleString();
+  document.getElementById('finalBonks').textContent=bonks;
+  // verdict vs duel
+  const vw=document.getElementById('verdictWrap'); vw.innerHTML='';
+  if(duelTarget>0){
+    const win=score>duelTarget;
+    document.getElementById('goKicker').textContent = win?'Bragging rights: earned':'So close…';
+    vw.innerHTML = `<div class="verdict ${win?'win':'lose'}">${win?`YOU BEAT ${duelFrom.toUpperCase()} 🔥`:`${duelFrom.toUpperCase()} STILL LEADS BY ${(duelTarget-score).toLocaleString()}`}</div>`;
+  } else {
+    document.getElementById('goKicker').textContent = window._mammothSeen? 'Legendary run':'You got clobbered';
+  }
+  // reset lead module view
+  document.getElementById('leadForm').style.display='';
+  document.getElementById('leadSuccess').classList.remove('show');
+  document.getElementById('hud').classList.remove('show');
+  document.getElementById('gameover').classList.add('show');
+}
+document.getElementById('playBtn').onclick=startGame;
+document.getElementById('retryBtn').onclick=startGame;
+document.getElementById('bestLine').textContent = 'Best today: '+bestToday.toLocaleString();
+
+/* ---------------- Viral: challenge a friend ---------------- */
+document.getElementById('challengeBtn').onclick=async ()=>{
+  const url = new URL(location.href.split('?')[0]);
+  url.searchParams.set('beat', score);
+  const text = `I scored ${score.toLocaleString()} in Club & Grub 🦴🦕 Think you can out-bonk me?`;
+  const shareData = {title:'Club & Grub', text, url:url.toString()};
+  try{
+    if(navigator.share){ await navigator.share(shareData); return; }
+  }catch(e){ if(e.name==='AbortError') return; }
+  // clipboard fallback
+  try{
+    await navigator.clipboard.writeText(text+' '+url.toString());
+    toast('Challenge link copied — paste it to a friend!');
+  }catch(e){
+    prompt('Copy your challenge link:', text+' '+url.toString());
+  }
+};
+
+/* ---------------- Lead capture ---------------- */
+const emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRe=/^[+]?[\d\s().-]{7,}$/;
+document.getElementById('leadForm').addEventListener('submit', async (ev)=>{
+  ev.preventDefault();
+  const email=document.getElementById('leadEmail').value.trim();
+  const phone=document.getElementById('leadPhone').value.trim();
+  const consent=document.getElementById('leadConsent').checked;
+  const err=document.getElementById('leadErr');
+  const okEmail=email && emailRe.test(email);
+  const okPhone=phone && phoneRe.test(phone);
+  if(!okEmail && !okPhone){ err.textContent='Enter a valid email or phone number.'; err.classList.add('show'); return; }
+  if(!consent){ err.textContent='Please tick the box so we can send your reward.'; err.classList.add('show'); return; }
+  err.classList.remove('show');
+
+  const btn=document.getElementById('leadSubmit'); btn.textContent='Sending…'; btn.disabled=true;
+  const payload={ email:okEmail?email:'', phone:okPhone?phone:'', score, meters:Math.floor(meters),
+    biome:biome.name, from:duelTarget>0?duelFrom:'', ts:new Date().toISOString(), source:'club-and-grub' };
+
+  const res = await submitLead(payload);
+  btn.disabled=false; btn.textContent='Claim my discount →';
+  document.getElementById('leadForm').style.display='none';
+  document.getElementById('leadSuccess').classList.add('show');
+  const note=document.getElementById('leadNote');
+  note.textContent = res.mode==='endpoint'
+    ? 'We just sent your reward.'
+    : (CONFIG.leadEndpoint ? 'Saved on this device (could not reach the server).' : 'Test mode: lead saved to this browser. Set CONFIG.leadEndpoint to collect for real.');
+});
+
+async function submitLead(payload){
+  if(CONFIG.leadEndpoint){
+    try{
+      const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),6000);
+      const r=await fetch(CONFIG.leadEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload), signal:ctrl.signal});
+      clearTimeout(to);
+      if(r.ok||r.type==='opaque') return {ok:true,mode:'endpoint'};
+    }catch(e){ /* CSP-sandboxed, offline, or blocked — fall through to local */ }
+  }
+  try{ const a=JSON.parse(localStorage.getItem('cg_leads')||'[]'); a.push(payload);
+       localStorage.setItem('cg_leads',JSON.stringify(a)); }catch(e){}
+  return {ok:true, mode:'local'};
+}
+
+/* first paint: build hearts hidden, show a lively attract frame */
+buildHearts();
+biome=BIOMES[0];
+</script>
