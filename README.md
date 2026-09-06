@@ -224,4 +224,8 @@ punkty i ocena szkolna 1–6), gra „Chronologia" (układanie wydarzeń w kolej
 oraz gra „Prawda/fałsz" (daty, kolejność wydarzeń i wieki).
 Analogiczna oś dla klasy VI (1450–1815, od wielkich odkryć do upadku Napoleona):
 `public/os-czasu-historia-6.html` — generowana z tego samego silnika.
+Wersja konkursowa `public/os-czasu-konkurs.html` (trening przed konkursem kuratoryjnym):
+pełna historia Polski 966–2004, ~115 wydarzeń z datami dziennymi, zaostrzona punktacja
+(100 pkt tylko za dokładny rok, chronologia 7 kart z bliskiego przedziału, dystraktory ±1–5 lat),
+wyniki przeliczane na szczeble konkursu (etap rejonowy → wojewódzki → finalista → laureat).
 Filtr pozwala ćwiczyć pojedynczy dział, np. przed sprawdzianem. Bez zależności zewnętrznych.

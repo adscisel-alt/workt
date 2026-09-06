@@ -55,14 +55,14 @@
   .pas-etykieta{position:sticky;left:0;z-index:3;pointer-events:none;width:0;}
   .pas-etykieta b{position:absolute;left:10px;font-size:11px;letter-spacing:.24em;font-weight:900;white-space:nowrap;}
   /* wydarzenia na osi */
-  .wyd{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;
-    align-items:center;background:none;border:none;padding:0;cursor:pointer;color:inherit;font:inherit;}
-  .wyd .kropka{width:13px;height:13px;border-radius:50%;border:2px solid var(--tablica2);
+  .wyd{position:absolute;width:0;background:none;border:none;padding:0;cursor:pointer;color:inherit;font:inherit;}
+  .wyd .kropka{position:absolute;left:-6.5px;width:13px;height:13px;border-radius:50%;border:2px solid var(--tablica2);
     box-shadow:0 0 0 2px rgba(233,228,210,.55);transition:.15s;}
   .wyd.pl .kropka{background:var(--pl);}
   .wyd.sw .kropka{background:var(--sw-jasny);}
-  .wyd .nitka{width:1px;flex:1;background:rgba(233,228,210,.3);}
-  .wyd .metka{font-size:12px;line-height:1.25;max-width:150px;padding:3px 7px;border-radius:5px;
+  .wyd .nitka{position:absolute;left:-.5px;top:0;bottom:0;width:1px;background:rgba(233,228,210,.3);}
+  .wyd .metka{position:absolute;left:0;transform:translateX(-50%);width:max-content;
+    font-size:12px;line-height:1.25;max-width:150px;padding:3px 7px;border-radius:5px;
     color:var(--kreda);background:rgba(28,40,34,.85);border:1px solid rgba(233,228,210,.2);
     text-align:center;transition:.15s;}
   .wyd .metka b{display:block;font-size:11.5px;letter-spacing:.08em;}
@@ -70,8 +70,10 @@
   .wyd.sw .metka b{color:var(--sw-jasny);}
   .wyd:hover .kropka,.wyd.wybrane .kropka{transform:scale(1.45);box-shadow:0 0 0 3px var(--zloto);}
   .wyd:hover .metka,.wyd.wybrane .metka{border-color:var(--zloto);color:#fff;}
-  .wyd.gora{bottom:50%;}   .wyd.gora .metka{order:-1;margin-bottom:4px;}
-  .wyd.dol{top:50%;flex-direction:column;} .wyd.dol .metka{margin-top:4px;}
+  .wyd.gora{bottom:50%;} .wyd.gora .kropka{bottom:-6.5px;} .wyd.gora .metka{bottom:100%;margin-bottom:3px;}
+  .wyd.dol{top:50%;} .wyd.dol .kropka{top:-6.5px;} .wyd.dol .metka{top:100%;margin-top:3px;}
+  .wyd{pointer-events:none;}
+  .wyd .kropka,.wyd .metka{pointer-events:auto;cursor:pointer;}
   /* znacznik zgadywania */
   .znacznik{position:absolute;top:16px;bottom:16px;width:2px;transform:translateX(-50%);pointer-events:none;}
   .znacznik .slup{position:absolute;inset:0;width:2px;background:var(--zloto);}
@@ -443,16 +445,21 @@ function zbudujOs(plotno, { zWydarzeniami, naKlik }) {
     }
   }
   if (zWydarzeniami) {
-    const licznikPasm = { pl: 0, sw: 0 };
     const wysokosci = [58, 118, 178];
+    const pasma = { pl: wysokosci.map(() => -1e9), sw: wysokosci.map(() => -1e9) };
     const zajete = {};                      // rozsuwa wydarzenia z tego samego roku
-    for (const w of pulaZdarzen()) {
+    for (const w of [...pulaZdarzen()].sort((a, b) => a.rok - b.rok)) {
       const klucz = w.rok + w.kat;
       const przesun = (zajete[klucz] = (zajete[klucz] || 0) + 1) - 1;
+      const x = rokDoX(w.rok) + przesun * 14;
+      const rzedy = pasma[w.kat];               // pierwszy rząd, w którym etykieta się zmieści
+      let rzad = rzedy.findIndex(ost => x - ost >= 140);
+      if (rzad < 0) rzad = rzedy.indexOf(Math.min(...rzedy));
+      rzedy[rzad] = x;
       const el = document.createElement('button');
       el.className = `wyd ${w.kat} ${w.kat === 'pl' ? 'gora' : 'dol'}`;
-      el.style.left = rokDoX(w.rok) + przesun * 14 + 'px';
-      el.style.height = wysokosci[licznikPasm[w.kat]++ % 3] + 'px';
+      el.style.left = x + 'px';
+      el.style.height = wysokosci[rzad] + 'px';
       el.dataset.id = w.id;
       el.setAttribute('aria-label', `${w.rok}: ${w.tytul}`);
       el.innerHTML = `<span class="kropka"></span><span class="nitka"></span>

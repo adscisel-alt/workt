@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Oś Czasu 1450–1815</title>
+<title>Oś Czasu — Trening Konkursowy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bona+Nova:ital,wght@0,400;0,700;1,400&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -166,8 +166,8 @@
 <body>
 <header>
   <div class="naglowek-gorny">
-    <h1>Oś Czasu <span class="zakres">1450–1815</span></h1>
-    <div class="podtytul">Historia · klasa VI szkoły podstawowej · od wielkich odkryć geograficznych do upadku Napoleona</div>
+    <h1>Oś Czasu <span class="zakres">966–2004</span></h1>
+    <div class="podtytul">Trening przed konkursem kuratoryjnym z historii · od chrztu Polski do wejścia do Unii Europejskiej</div>
   </div>
   <div class="pasek-trybow" role="tablist" aria-label="Tryby">
     <button class="tryb aktywny" data-widok="os" role="tab" aria-selected="true">Poznawaj oś</button>
@@ -198,7 +198,7 @@
         <span class="duze">Wskaż rok</span>
         <span class="info">Runda <span id="rok-runda" class="punkty">1</span> / <span id="rok-rund">8</span></span>
         <span class="info">Punkty: <span id="rok-punkty" class="punkty">0</span></span>
-        <span class="info">Kliknij na osi rok, w którym wydarzyło się poniższe wydarzenie, i zatwierdź.</span>
+        <span class="info">Kliknij na osi rok wydarzenia. Komplet punktów tylko za dokładny rok!</span>
       </div>
       <div id="rok-karta"></div>
     </div>
@@ -250,12 +250,13 @@
 </main>
 
 <footer>
-  <b>Zgodność z podstawą programową:</b> materiał obejmuje działy historii dla klasy VI szkoły podstawowej —
-  wielkie odkrycia geograficzne; „złoty wiek” w Polsce na tle europejskim; początki Rzeczypospolitej Obojga Narodów;
-  Rzeczpospolita i jej sąsiedzi w XVII wieku; Europa w XVI–XVII wieku; Europa w dobie oświecenia;
-  Rzeczpospolita w dobie stanisławowskiej; walka o utrzymanie niepodległości; rewolucja amerykańska i francuska;
-  epoka napoleońska. Filtr u góry pozwala ćwiczyć jeden dział, np. przed sprawdzianem.
-  Wyniki gier zapisują się tylko w tej przeglądarce.
+  <b>Poziom konkursowy:</b> pełna historia Polski od chrztu Mieszka I do wstąpienia do Unii Europejskiej —
+  ok. 115 wydarzeń z datami dziennymi, w tym wykraczające poza podstawę programową (przywilej koszycki,
+  Sejm Niemy, Manifest PKWN, Czerwiec ’76…). Punktacja jest zaostrzona: w grze „Wskaż rok” komplet punktów
+  daje tylko dokładny rok, w „Chronologii” układasz 7 wydarzeń dobieranych z bliskiego przedziału czasu,
+  a fałszywe daty w „Prawda/fałsz” różnią się od prawdziwych zaledwie o 1–5 lat. Wyniki przeliczane są na
+  szczeble konkursu (etap rejonowy → wojewódzki → finalista → laureat). Pamiętaj, że dokładny zakres
+  i literaturę każdej edycji ogłasza kuratorium — sprawdź regulamin w swoim województwie.
 </footer>
 
 <script>
@@ -265,147 +266,299 @@
    ===================================================================== */
 
 const DZIALY = [
-  'Wielkie odkrycia geograficzne',
-  '„Złoty wiek” w Polsce na tle europejskim',
-  'Początki Rzeczypospolitej Obojga Narodów',
-  'Rzeczpospolita i jej sąsiedzi w XVII wieku',
-  'Europa w XVI–XVII wieku',
-  'Europa w dobie oświecenia',
-  'Rzeczpospolita w dobie stanisławowskiej',
-  'Walka o utrzymanie niepodległości',
-  'Rewolucja amerykańska i francuska',
-  'Epoka napoleońska',
+  'Średniowiecze (X–XV wiek)',
+  'XVI–XVII wiek',
+  'Wiek XVIII i epoka napoleońska',
+  'Wiek XIX (1815–1914)',
+  'Wojny światowe i II Rzeczpospolita (1914–1945)',
+  'Polska po 1945 roku',
 ];
 
 /* rok, data (etykieta), tytuł, kat: pl|sw, dział (indeks), opis */
 const WYDARZENIA = [
-  [1450, 'około 1450', 'Wynalezienie druku', 'sw', 0,
-   'Jan Gutenberg z Moguncji skonstruował prasę drukarską z ruchomą czcionką. Książki staniały, a wiedza i nowe idee zaczęły krążyć po Europie jak nigdy dotąd.'],
+  [966, '966', 'Chrzest Polski', 'pl', 0,
+   'Mieszko I przyjął chrzest za pośrednictwem Czech (małżeństwo z Dobrawą). Państwo Polan weszło do kręgu cywilizacji łacińskiej.'],
+  [972, '24 czerwca 972', 'Bitwa pod Cedynią', 'pl', 0,
+   'Mieszko I z bratem Czciborem pokonał margrabiego Hodona, broniąc ujścia Odry.'],
+  [1000, 'marzec 1000', 'Zjazd gnieźnieński', 'pl', 0,
+   'Otton III pielgrzymował do grobu św. Wojciecha. Utworzono metropolię gnieźnieńską z biskupstwami w Krakowie, Wrocławiu i Kołobrzegu.'],
+  [1025, '1025', 'Koronacja Bolesława Chrobrego', 'pl', 0,
+   'Pierwsza koronacja królewska w Polsce, na krótko przed śmiercią Chrobrego. W tym samym roku koronował się Mieszko II.'],
+  [1054, '1054', 'Wielka schizma wschodnia', 'sw', 0,
+   'Wzajemne ekskomuniki Rzymu i Konstantynopola podzieliły chrześcijaństwo na katolicyzm i prawosławie.'],
+  [1076, '1076', 'Koronacja Bolesława Śmiałego', 'pl', 0,
+   'Bolesław II Szczodry koronował się dzięki poparciu Grzegorza VII w dobie sporu o inwestyturę. Po skazaniu biskupa Stanisława (1079) utracił tron.'],
+  [1096, '1096', 'Początek wypraw krzyżowych', 'sw', 0,
+   'Po synodzie w Clermont (1095) ruszyła I krucjata; w 1099 r. krzyżowcy zdobyli Jerozolimę.'],
+  [1109, '1109', 'Obrona Głogowa', 'pl', 0,
+   'Bolesław Krzywousty odparł wyprawę cesarza Henryka V. Głogowianie nie poddali grodu mimo wystawienia zakładników na machiny oblężnicze.'],
+  [1138, '1138', 'Statut Bolesława Krzywoustego', 'pl', 0,
+   'Podział państwa między synów z zasadą senioratu zapoczątkował prawie dwa wieki rozbicia dzielnicowego.'],
+  [1215, '1215', 'Wielka Karta Swobód', 'sw', 0,
+   'Jan bez Ziemi zagwarantował prawa możnym Anglii — początek ograniczania władzy monarszej i parlamentaryzmu.'],
+  [1226, '1226', 'Sprowadzenie Krzyżaków', 'pl', 0,
+   'Konrad Mazowiecki nadał zakonowi ziemię chełmińską jako bazę do walki z pogańskimi Prusami.'],
+  [1241, '9 kwietnia 1241', 'Bitwa pod Legnicą', 'pl', 0,
+   'W starciu z Mongołami zginął Henryk II Pobożny — kres zjednoczeniowych planów Henryków śląskich.'],
+  [1295, '26 czerwca 1295', 'Koronacja Przemysła II', 'pl', 0,
+   'Pierwsza od 219 lat koronacja królewska (w Gnieźnie). Rok później król został zamordowany w Rogoźnie.'],
+  [1308, '1308', 'Utrata Pomorza Gdańskiego', 'pl', 0,
+   'Krzyżacy, wezwani przeciw Brandenburczykom, opanowali Gdańsk (rzeź mieszczan) i zagarnęli całe Pomorze Gdańskie.'],
+  [1320, '20 stycznia 1320', 'Koronacja Władysława Łokietka', 'pl', 0,
+   'Koronacja w katedrze wawelskiej — symboliczny koniec rozbicia dzielnicowego; odtąd królów koronowano w Krakowie.'],
+  [1331, '27 września 1331', 'Bitwa pod Płowcami', 'pl', 0,
+   'Łokietek starł się z Krzyżakami. Wynik był nierozstrzygnięty, lecz pokazał, że zakon można pokonać.'],
+  [1364, '1364', 'Założenie Akademii Krakowskiej', 'pl', 0,
+   'Kazimierz Wielki ufundował pierwszy polski uniwersytet. W tym samym roku odbył się zjazd monarchów i uczta u Wierzynka.'],
+  [1370, '5 listopada 1370', 'Śmierć Kazimierza Wielkiego', 'pl', 0,
+   'Koniec Piastów na polskim tronie. Rządy objął Ludwik Węgierski z dynastii Andegawenów.'],
+  [1374, '17 września 1374', 'Przywilej koszycki', 'pl', 0,
+   'Ludwik Węgierski, zabiegając o sukcesję córki, obniżył szlachcie poradlne do 2 groszy z łana — pierwszy przywilej generalny.'],
+  [1385, '14 sierpnia 1385', 'Unia w Krewie', 'pl', 0,
+   'Jagiełło zobowiązał się przyjąć chrzest, poślubić Jadwigę i przyłączyć Litwę do Korony. Początek związku polsko-litewskiego.'],
+  [1410, '15 lipca 1410', 'Bitwa pod Grunwaldem', 'pl', 0,
+   'Jagiełło i Witold rozbili armię zakonu; poległ wielki mistrz Ulrich von Jungingen. Wojnę zamknął I pokój toruński (1411).'],
+  [1444, '10 listopada 1444', 'Bitwa pod Warną', 'pl', 0,
+   'Klęska krucjaty antytureckiej; zginął młody król Władysław III, zwany odtąd Warneńczykiem.'],
   [1453, '29 maja 1453', 'Upadek Konstantynopola', 'sw', 0,
-   'Turcy osmańscy zdobyli stolicę cesarstwa bizantyjskiego. Utrudniony handel ze Wschodem skłonił Europejczyków do szukania morskiej drogi do Indii.'],
-  [1492, '12 października 1492', 'Kolumb dopływa do Ameryki', 'sw', 0,
-   'Krzysztof Kolumb, szukając zachodniej drogi do Indii, dotarł do wysp u wybrzeży nowego kontynentu. Zaczęła się epoka wielkich odkryć i podbojów.'],
-  [1498, '1498', 'Vasco da Gama w Indiach', 'sw', 0,
-   'Portugalski żeglarz opłynął Afrykę i dotarł morzem do Indii. Portugalia zbudowała potęgę na handlu korzeniami.'],
-  [1519, '1519–1522', 'Wyprawa Magellana dookoła świata', 'sw', 0,
-   'Wyprawa Ferdynanda Magellana jako pierwsza opłynęła Ziemię, dowodząc jej kulistości. Sam Magellan zginął w drodze na Filipinach.'],
-  [1521, '1521', 'Cortés podbija państwo Azteków', 'sw', 0,
-   'Hiszpańscy konkwistadorzy zdobyli Tenochtitlán. Do Europy popłynęły złoto i srebro, a rdzenna ludność Ameryki ginęła od wojen i chorób.'],
+   'Mehmed II zdobył stolicę Bizancjum. Symboliczny koniec średniowiecza i bodziec do szukania dróg morskich na Wschód.'],
+  [1454, '1454', 'Początek wojny trzynastoletniej', 'pl', 0,
+   'Kazimierz Jagiellończyk inkorporował Prusy na prośbę Związku Pruskiego i nadał szlachcie przywileje cerekwicko-nieszawskie.'],
+  [1466, '19 października 1466', 'II pokój toruński', 'pl', 0,
+   'Polska odzyskała Pomorze Gdańskie (Prusy Królewskie), a Prusy Zakonne stały się lennem Korony.'],
 
+  [1492, '12 października 1492', 'Kolumb dopływa do Ameryki', 'sw', 1,
+   'Początek epoki wielkich odkryć geograficznych. W Polsce w tym samym roku zmarł Kazimierz Jagiellończyk.'],
+  [1505, '1505', 'Konstytucja Nihil novi', 'pl', 1,
+   '„Nic nowego bez zgody obu izb” — sejm walny (król, senat, izba poselska) stał się fundamentem demokracji szlacheckiej.'],
+  [1517, '31 października 1517', 'Wystąpienie Marcina Lutra', 'sw', 1,
+   '95 tez ogłoszonych w Wittenberdze zapoczątkowało reformację i podział zachodniego chrześcijaństwa.'],
   [1525, '10 kwietnia 1525', 'Hołd pruski', 'pl', 1,
-   'Na rynku w Krakowie wielki mistrz Albrecht Hohenzollern złożył hołd lenny królowi Zygmuntowi Staremu. Prusy Zakonne stały się świeckim lennem Polski.'],
+   'Albrecht Hohenzollern złożył Zygmuntowi Staremu hołd lenny na rynku krakowskim. Prusy Zakonne stały się świeckim księstwem.'],
   [1543, '1543', '„O obrotach sfer niebieskich”', 'pl', 1,
-   'Mikołaj Kopernik ogłosił, że to Ziemia krąży wokół Słońca. Dzieło toruńskiego astronoma „wstrzymało Słońce, ruszyło Ziemię”.'],
-  [1564, '1564', 'Odrodzenie kwitnie w Polsce', 'pl', 1,
-   'Czasy Zygmunta Augusta to szczyt złotego wieku: Wawel przebudowany na renesansową rezydencję, tworzą Rej i Kochanowski, działa Akademia Krakowska.'],
+   'Dzieło Mikołaja Kopernika ogłosiło teorię heliocentryczną — przewrót w nauce europejskiej.'],
+  [1569, '1 lipca 1569', 'Unia lubelska', 'pl', 1,
+   'Powstała Rzeczpospolita Obojga Narodów: wspólny sejm, władca i polityka zagraniczna, odrębne urzędy, skarb i wojsko.'],
+  [1573, '28 stycznia 1573', 'Konfederacja warszawska', 'pl', 1,
+   'Gwarancja pokoju religijnego dla szlachty. W tym samym roku pierwsza wolna elekcja (Henryk Walezy) i artykuły henrykowskie.'],
+  [1596, '1596', 'Przeniesienie dworu do Warszawy', 'pl', 1,
+   'Zygmunt III Waza przeniósł rezydencję królewską z Krakowa do położonej centralnie Warszawy.'],
+  [1605, '27 września 1605', 'Bitwa pod Kircholmem', 'pl', 1,
+   'Husaria Jana Karola Chodkiewicza rozbiła trzykrotnie liczniejszą armię szwedzką Karola IX.'],
+  [1610, '4 lipca 1610', 'Bitwa pod Kłuszynem', 'pl', 1,
+   'Hetman Stanisław Żółkiewski pokonał Rosjan; polska załoga zajęła Kreml, a bojarzy obwołali carem królewicza Władysława.'],
+  [1618, '1618–1648', 'Wojna trzydziestoletnia', 'sw', 1,
+   'Religijno-polityczny konflikt spustoszył Rzeszę; zakończył go pokój westfalski.'],
+  [1620, 'wrzesień–październik 1620', 'Klęska pod Cecorą', 'pl', 1,
+   'W wojnie z Turcją zginął hetman Żółkiewski. Rok później Rzeczpospolita obroniła się pod Chocimiem (1621).'],
+  [1648, '1648', 'Powstanie Chmielnickiego', 'pl', 1,
+   'Klęski pod Żółtymi Wodami, Korsuniem i Piławcami wstrząsnęły państwem. Zmarł Władysław IV; królem został Jan Kazimierz.'],
+  [1655, '1655–1660', 'Potop szwedzki', 'pl', 1,
+   'Obrona Jasnej Góry, śluby lwowskie Jana Kazimierza (1656) i wojna szarpana Czarnieckiego; pokój w Oliwie zamknął wojnę.'],
+  [1673, '11 listopada 1673', 'II bitwa pod Chocimiem', 'pl', 1,
+   'Jan Sobieski rozbił armię turecką; rok później wybrano go królem jako Jana III.'],
+  [1683, '12 września 1683', 'Odsiecz wiedeńska', 'pl', 1,
+   'Sobieski na czele wojsk sprzymierzonych pokonał wezyra Kara Mustafę. „Venimus, vidimus, Deus vicit”.'],
+  [1689, '1689', 'Monarchia parlamentarna w Anglii', 'sw', 1,
+   'Po „chwalebnej rewolucji” Deklaracja praw oddała decydujący głos parlamentowi.'],
 
-  [1569, '1 lipca 1569', 'Unia lubelska', 'pl', 2,
-   'Polska i Litwa połączyły się w Rzeczpospolitą Obojga Narodów — ze wspólnym sejmem, królem i polityką, a osobnymi urzędami i wojskiem.'],
-  [1573, '1573', 'Pierwsza wolna elekcja', 'pl', 2,
-   'Po bezpotomnej śmierci Zygmunta Augusta szlachta wybrała króla — Henryka Walezego — na polu elekcyjnym. Konfederacja warszawska zagwarantowała pokój religijny.'],
-  [1596, '1596', 'Przeniesienie stolicy do Warszawy', 'pl', 2,
-   'Zygmunt III Waza przeniósł dwór królewski z Krakowa do Warszawy — bliżej centrum ogromnego państwa.'],
+  [1697, '1697', 'Unia polsko-saska', 'pl', 2,
+   'Elekcja Augusta II Mocnego z dynastii Wettynów związała Rzeczpospolitą z Saksonią na ponad 60 lat.'],
+  [1717, '1 lutego 1717', 'Sejm Niemy', 'pl', 2,
+   'Pod osłoną wojsk rosyjskich, bez dopuszczenia posłów do głosu, ograniczono armię — początek rosyjskiego protektoratu.'],
+  [1740, '1740', 'Collegium Nobilium', 'pl', 2,
+   'Stanisław Konarski założył nowoczesną szkołę pijarską — zwiastun oświeceniowej reformy edukacji.'],
+  [1764, '7 września 1764', 'Elekcja Stanisława Augusta', 'pl', 2,
+   'Ostatni król Rzeczypospolitej; mecenas kultury („obiady czwartkowe”), założyciel Szkoły Rycerskiej (1765).'],
+  [1768, '1768–1772', 'Konfederacja barska', 'pl', 2,
+   'Zbrojny ruch szlachty przeciw kurateli Rosji i królowi; jego klęska stała się pretekstem do I rozbioru.'],
+  [1772, '5 sierpnia 1772', 'I rozbiór Polski', 'pl', 2,
+   'Rosja, Prusy i Austria zagarnęły ok. 30% terytorium. Przeciw zatwierdzeniu rozbioru protestował Tadeusz Rejtan.'],
+  [1773, '14 października 1773', 'Komisja Edukacji Narodowej', 'pl', 2,
+   'Pierwsze w Europie ministerstwo oświaty, finansowane z majątków skasowanego zakonu jezuitów.'],
+  [1776, '4 lipca 1776', 'Deklaracja niepodległości USA', 'sw', 2,
+   'Trzynaście kolonii zerwało z Wielką Brytanią. W wojnie wsławili się Kościuszko (fortyfikator West Point) i Pułaski.'],
+  [1788, '1788–1792', 'Sejm Wielki', 'pl', 2,
+   'Sejm Czteroletni uchwalił aukcję wojska do 100 tys. i prawo o miastach; dzieło zwieńczyła konstytucja.'],
+  [1789, '14 lipca 1789', 'Zdobycie Bastylii', 'sw', 2,
+   'Wybuch rewolucji francuskiej; wkrótce Deklaracja praw człowieka i obywatela.'],
+  [1791, '3 maja 1791', 'Konstytucja 3 maja', 'pl', 2,
+   'Pierwsza w Europie spisana konstytucja: zniesienie liberum veto i wolnej elekcji, trójpodział władzy, sukcesja tronu.'],
+  [1792, '1792', 'Targowica i wojna z Rosją', 'pl', 2,
+   'Po zwycięstwie pod Zieleńcami ustanowiono order Virtuti Militari, lecz przystąpienie króla do targowicy przekreśliło reformy.'],
+  [1793, '1793', 'II rozbiór Polski', 'pl', 2,
+   'Rosja i Prusy wymusiły na sejmie grodzieńskim zatwierdzenie drugiego rozbioru.'],
+  [1794, '24 marca 1794', 'Insurekcja kościuszkowska', 'pl', 2,
+   'Przysięga Kościuszki na rynku w Krakowie; Racławice (4 IV), uniwersał połaniecki (7 V), klęska pod Maciejowicami (10 X).'],
+  [1795, '24 października 1795', 'III rozbiór Polski', 'pl', 2,
+   'Rzeczpospolita zniknęła z mapy; 25 XI abdykował Stanisław August.'],
+  [1797, 'styczeń 1797', 'Legiony Dąbrowskiego', 'pl', 2,
+   'We Włoszech powstały Legiony Polskie; dla nich Wybicki napisał „Mazurka Dąbrowskiego”.'],
+  [1807, '7 lipca 1807', 'Księstwo Warszawskie', 'pl', 2,
+   'Utworzone pokojem w Tylży; 22 VII nadano mu konstytucję, wprowadzono Kodeks Napoleona.'],
+  [1809, '19 kwietnia 1809', 'Bitwa pod Raszynem', 'pl', 2,
+   'Wojsko ks. Józefa Poniatowskiego zatrzymało Austriaków; po wojnie Księstwo powiększono o ziemie z Krakowem.'],
+  [1812, '1812', 'Wyprawa na Moskwę', 'sw', 2,
+   '„Druga wojna polska” Napoleona z udziałem ok. 100 tys. Polaków zakończyła się katastrofą Wielkiej Armii.'],
+  [1815, '9 czerwca 1815', 'Kongres wiedeński', 'sw', 2,
+   'Nowy ład Europy; z ziem polskich utworzono Królestwo Polskie, Wielkie Księstwo Poznańskie i Rzeczpospolitą Krakowską.'],
 
-  [1605, '27 września 1605', 'Bitwa pod Kircholmem', 'pl', 3,
-   'Husaria hetmana Chodkiewicza rozbiła trzykrotnie liczniejszą armię szwedzką. Jedno z największych zwycięstw polskiej jazdy.'],
-  [1610, '1610', 'Kłuszyn i Polacy na Kremlu', 'pl', 3,
-   'Hetman Żółkiewski pokonał Rosjan pod Kłuszynem, a polska załoga zajęła Kreml. Królewicz Władysław został obwołany carem, lecz planów nie zrealizowano.'],
-  [1621, '1621', 'Obrona Chocimia', 'pl', 3,
-   'Wojska Rzeczypospolitej z hetmanem Chodkiewiczem powstrzymały ogromną armię turecką. Granica na Dniestrze została obroniona.'],
-  [1648, '1648', 'Powstanie Chmielnickiego', 'pl', 3,
-   'Na Ukrainie wybuchło wielkie powstanie Kozaków pod wodzą Bohdana Chmielnickiego. Klęski pod Żółtymi Wodami i Korsuniem wstrząsnęły państwem.'],
-  [1655, '1655', 'Potop szwedzki i obrona Jasnej Góry', 'pl', 3,
-   'Szwedzi zalali niemal całą Rzeczpospolitą. Punktem zwrotnym stała się obrona klasztoru na Jasnej Górze; wojnę zakończył pokój w Oliwie (1660).'],
-  [1683, '12 września 1683', 'Odsiecz wiedeńska', 'pl', 3,
-   'Jan III Sobieski na czele wojsk sprzymierzonych rozgromił armię turecką pod Wiedniem. Husaria przeprowadziła słynną szarżę spod Kahlenbergu.'],
+  [1830, '29/30 listopada 1830', 'Noc Listopadowa', 'pl', 3,
+   'Spisek podchorążych Piotra Wysockiego rozpoczął powstanie listopadowe; w styczniu 1831 sejm zdetronizował Mikołaja I.'],
+  [1831, '25 lutego 1831', 'Olszynka Grochowska', 'pl', 3,
+   'Krwawa bitwa w obronie Warszawy; po Ostrołęce (26 V) i szturmie stolicy powstanie upadło w październiku 1831.'],
+  [1846, 'luty 1846', 'Powstanie krakowskie', 'pl', 3,
+   'Krótki zryw z Edwardem Dembowskim; równolegle rabacja galicyjska Jakuba Szeli. Rzeczpospolitą Krakowską zlikwidowano.'],
+  [1848, '1848–1849', 'Wiosna Ludów', 'sw', 3,
+   'Fala rewolucji w Europie; na ziemiach polskich powstanie wielkopolskie i zniesienie pańszczyzny w Galicji.'],
+  [1853, '1853–1856', 'Wojna krymska', 'sw', 3,
+   'Klęska Rosji w starciu z Turcją, Francją i Anglią ożywiła polskie nadzieje i poprzedziła odwilż posewastopolską.'],
+  [1861, '1861', 'Manifestacje patriotyczne', 'pl', 3,
+   'Krwawo tłumione demonstracje w Warszawie; stan wojenny i narastanie nastrojów powstańczych.'],
+  [1863, '22 stycznia 1863', 'Wybuch powstania styczniowego', 'pl', 3,
+   'Branka Wielopolskiego przyspieszyła wybuch. Wojna partyzancka (ok. 1200 potyczek); od października dyktatorem Traugutt.'],
+  [1864, '2 marca 1864', 'Uwłaszczenie w Królestwie', 'pl', 3,
+   'Ukaz carski nadał chłopom ziemię, by odciąć powstanie od wsi; w sierpniu stracono Traugutta na stokach Cytadeli.'],
+  [1867, '1867', 'Autonomia Galicji', 'pl', 3,
+   'Sejm Krajowy we Lwowie, polszczyzna w szkołach i urzędach; polskie uniwersytety w Krakowie i Lwowie.'],
+  [1871, '18 stycznia 1871', 'Zjednoczenie Niemiec', 'sw', 3,
+   'Proklamacja cesarstwa w Wersalu. W zaborze pruskim Bismarck rozpoczął kulturkampf i germanizację.'],
+  [1882, '1882', 'Wielki Proletariat', 'pl', 3,
+   'Ludwik Waryński założył pierwszą polską partię robotniczą.'],
+  [1892, '1892', 'Powstanie PPS', 'pl', 3,
+   'Zjazd paryski połączył socjalizm z hasłem niepodległości; rok później powstała SDKP Róży Luksemburg.'],
+  [1895, '1895', 'Stronnictwo Ludowe', 'pl', 3,
+   'W Rzeszowie powstała pierwsza partia chłopska; ruch narodowy zorganizował się w 1897 r. (endecja Dmowskiego).'],
+  [1901, '1901', 'Strajk dzieci we Wrześni', 'pl', 3,
+   'Protest przeciw nauce religii po niemiecku; symbol oporu wobec germanizacji (wóz Drzymały — 1904).'],
+  [1903, '1903', 'Nobel Marii Skłodowskiej-Curie', 'pl', 3,
+   'Nagroda z fizyki za badania promieniotwórczości; druga (z chemii) w 1911 r.'],
+  [1905, '1905–1907', 'Rewolucja w Królestwie Polskim', 'pl', 3,
+   'Strajki robotnicze i szkolne; Łódź na barykadach (VI 1905), walka o polską szkołę.'],
 
-  [1517, '31 października 1517', 'Wystąpienie Marcina Lutra', 'sw', 4,
-   'Ogłoszenie 95 tez przeciw odpustom w Wittenberdze zapoczątkowało reformację i podział zachodniego chrześcijaństwa.'],
-  [1545, '1545–1563', 'Sobór trydencki', 'sw', 4,
-   'Kościół katolicki odpowiedział na reformację odnową religijną — uporządkowano naukę i obyczaje duchownych, rozwinęło się szkolnictwo jezuickie.'],
-  [1618, '1618–1648', 'Wojna trzydziestoletnia', 'sw', 4,
-   'Konflikt religijno-polityczny spustoszył Rzeszę Niemiecką i wciągnął niemal całą Europę. Zakończył go pokój westfalski.'],
-  [1661, 'od 1661', 'Absolutyzm Ludwika XIV', 'sw', 4,
-   '„Król Słońce” rządził Francją samodzielnie, bez oglądania się na stany — symbolem jego potęgi stał się pałac w Wersalu.'],
-  [1689, '1689', 'Monarchia parlamentarna w Anglii', 'sw', 4,
-   'Po „chwalebnej rewolucji” uchwalono Deklarację praw. Odtąd to parlament, a nie król, miał decydujący głos w państwie.'],
+  [1914, '28 czerwca 1914', 'Zamach w Sarajewie', 'sw', 4,
+   'Śmierć arcyksięcia Franciszka Ferdynanda uruchomiła lawinę, która doprowadziła do wybuchu Wielkiej Wojny.'],
+  [1914, '6 sierpnia 1914', 'Wymarsz I Kompanii Kadrowej', 'pl', 4,
+   'Strzelcy Piłsudskiego wyruszyli z Oleandrów; 16 VIII powstały Legiony Polskie.'],
+  [1916, '5 listopada 1916', 'Akt 5 listopada', 'pl', 4,
+   'Dwaj cesarze zapowiedzieli Królestwo Polskie — umiędzynarodowienie sprawy polskiej; potem kryzys przysięgowy (VII 1917).'],
+  [1917, '1917', 'Rewolucje w Rosji', 'sw', 4,
+   'Obalenie caratu (III) i przewrót bolszewicki (XI). USA przystąpiły do wojny; we Francji powstała Armia Błękitna.'],
+  [1918, '11 listopada 1918', 'Odzyskanie niepodległości', 'pl', 4,
+   'Rada Regencyjna przekazała Piłsudskiemu władzę wojskową (10 XI wrócił z Magdeburga); rozbrajanie okupantów.'],
+  [1918, '27 grudnia 1918', 'Powstanie wielkopolskie', 'pl', 4,
+   'Zwycięski zryw po przyjeździe Paderewskiego do Poznania; front zamknął rozejm w Trewirze (16 II 1919).'],
+  [1919, '28 czerwca 1919', 'Traktat wersalski', 'sw', 4,
+   'Polsce przyznano Wielkopolskę i Pomorze Gdańskie; Gdańsk Wolnym Miastem, plebiscyty na Warmii, Mazurach i Górnym Śląsku.'],
+  [1920, '15 sierpnia 1920', 'Bitwa Warszawska', 'pl', 4,
+   'Kontruderzenie znad Wieprza rozbiło front Tuchaczewskiego; zwycięstwo przypieczętowała bitwa nad Niemnem (IX 1920).'],
+  [1921, '17 marca 1921', 'Konstytucja marcowa', 'pl', 4,
+   'Republika parlamentarna z silnym sejmem; dzień później podpisano pokój ryski wytyczający granicę wschodnią.'],
+  [1921, '2/3 maja 1921', 'III powstanie śląskie', 'pl', 4,
+   'Po plebiscycie wybuchło największe powstanie (Góra św. Anny); Polsce przypadła część Górnego Śląska z Katowicami.'],
+  [1922, '16 grudnia 1922', 'Zabójstwo Narutowicza', 'pl', 4,
+   'Pierwszy prezydent RP zginął w Zachęcie pięć dni po zaprzysiężeniu; wcześniej (X 1920) Żeligowski zajął Wilno.'],
+  [1924, '1924', 'Reforma Grabskiego', 'pl', 4,
+   'Zdławienie hiperinflacji, złoty i Bank Polski; w 1924 r. ruszyła też budowa portu w Gdyni na pełną skalę.'],
+  [1926, '12–15 maja 1926', 'Przewrót majowy', 'pl', 4,
+   'Zamach stanu Piłsudskiego (ok. 380 poległych); nowela sierpniowa wzmocniła prezydenta — rządy sanacji.'],
+  [1929, '24 października 1929', 'Wielki kryzys', 'sw', 4,
+   '„Czarny czwartek” na Wall Street; kryzys uderzył też w Polskę, odpowiedzią był m.in. COP (od 1936, Kwiatkowski).'],
+  [1933, '30 stycznia 1933', 'Hitler kanclerzem', 'sw', 4,
+   'Legalne przejęcie władzy i błyskawiczna budowa totalitarnej III Rzeszy.'],
+  [1935, '23 kwietnia 1935', 'Konstytucja kwietniowa', 'pl', 4,
+   'Prezydent „odpowiedzialny przed Bogiem i historią”; 12 V zmarł Józef Piłsudski.'],
+  [1938, '30 września 1938', 'Konferencja monachijska', 'sw', 4,
+   'Mocarstwa oddały Niemcom Sudety; Polska zajęła Zaolzie (X 1938). Szczyt polityki appeasementu.'],
+  [1939, '23 sierpnia 1939', 'Pakt Ribbentrop–Mołotow', 'sw', 4,
+   'Tajny protokół podzielił Europę Środkową na strefy wpływów Niemiec i ZSRS.'],
+  [1939, '1 września 1939', 'Wybuch II wojny światowej', 'pl', 4,
+   'Westerplatte, Wieluń, Mokra; 3 IX wojnę Niemcom wypowiedziały Wielka Brytania i Francja.'],
+  [1939, '17 września 1939', 'Agresja ZSRS na Polskę', 'pl', 4,
+   'Cios w plecy walczącej Polski; władze RP przekroczyły granicę rumuńską, powstał rząd na uchodźstwie (Sikorski).'],
+  [1940, 'kwiecień–maj 1940', 'Zbrodnia katyńska', 'pl', 4,
+   'NKWD zamordowało ok. 22 tys. polskich jeńców i więźniów (Katyń, Charków, Miednoje) na mocy decyzji z 5 III 1940.'],
+  [1941, '30 lipca 1941', 'Układ Sikorski–Majski', 'pl', 4,
+   'Przywrócenie stosunków z ZSRS po agresji Niemiec; „amnestia” dla Polaków i armia gen. Andersa.'],
+  [1942, '14 lutego 1942', 'Powstanie Armii Krajowej', 'pl', 4,
+   'Przemianowanie ZWZ na AK — zbrojne ramię Polskiego Państwa Podziemnego (akcja „Burza” od 1944).'],
+  [1943, '19 kwietnia 1943', 'Powstanie w getcie warszawskim', 'pl', 4,
+   'Zryw ŻOB i ŻZW pod wodzą Anielewicza; w tym samym miesiącu Niemcy ujawnili Katyń, a ZSRS zerwał stosunki z rządem RP.'],
+  [1943, '28 listopada – 1 grudnia 1943', 'Konferencja teherańska', 'sw', 4,
+   'Wielka Trójka wstępnie przesądziła granicę na linii Curzona — bez wiedzy Polaków.'],
+  [1944, '22 lipca 1944', 'Manifest PKWN', 'pl', 4,
+   'Komunistyczny Polski Komitet Wyzwolenia Narodowego ogłosił się władzą — początek Polski Lubelskiej.'],
+  [1944, '1 sierpnia 1944', 'Powstanie warszawskie', 'pl', 4,
+   'Godzina „W”. 63 dni walki; kapitulacja 2 X, potem planowe burzenie miasta przez Niemców.'],
+  [1945, '4–11 lutego 1945', 'Konferencja jałtańska', 'sw', 4,
+   'Wielka Trójka uznała linię Curzona i zapowiedziała „wolne wybory” — Polska w strefie wpływów ZSRS.'],
+  [1945, '8/9 maja 1945', 'Koniec wojny w Europie', 'sw', 4,
+   'Kapitulacja III Rzeszy; latem konferencja poczdamska przyznała Polsce granicę na Odrze i Nysie Łużyckiej.'],
 
-  [1687, '1687', 'Newton ogłasza prawo grawitacji', 'sw', 5,
-   'Isaac Newton opisał matematycznie ruch ciał i przyciąganie ziemskie. Nauka oparta na rozumie i doświadczeniu stała się fundamentem oświecenia.'],
-  [1751, 'od 1751', 'Wielka Encyklopedia Francuska', 'sw', 5,
-   'Diderot i d’Alembert zaczęli wydawać dzieło zbierające całą ówczesną wiedzę. Hasła encyklopedystów szerzyły idee rozumu, tolerancji i krytyki absolutyzmu.'],
-  [1769, '1769', 'Udoskonalenie maszyny parowej', 'sw', 5,
-   'James Watt opatentował ulepszoną maszynę parową — wynalazek, który wkrótce napędzi fabryki i rozpocznie rewolucję przemysłową.'],
-
-  [1764, '1764', 'Elekcja Stanisława Augusta Poniatowskiego', 'pl', 6,
-   'Ostatni król Polski był mecenasem kultury — słynne „obiady czwartkowe” gromadziły poetów i uczonych polskiego oświecenia.'],
-  [1765, '1765', 'Szkoła Rycerska', 'pl', 6,
-   'Król założył w Warszawie nowoczesną szkołę dla przyszłych oficerów. Jej wychowankiem był m.in. Tadeusz Kościuszko.'],
-  [1773, '1773', 'Komisja Edukacji Narodowej', 'pl', 6,
-   'Powstało pierwsze na świecie ministerstwo oświaty. Z majątku skasowanego zakonu jezuitów zreformowano szkoły w całej Rzeczypospolitej.'],
-  [1788, '1788–1792', 'Sejm Wielki', 'pl', 6,
-   'Sejm Czteroletni podjął dzieło naprawy państwa: powiększenie armii, prawa dla mieszczan i przygotowanie konstytucji.'],
-  [1791, '3 maja 1791', 'Konstytucja 3 maja', 'pl', 6,
-   'Pierwsza w Europie i druga na świecie spisana konstytucja. Znosiła liberum veto i wolną elekcję, wzmacniała władzę wykonawczą.'],
-
-  [1768, '1768–1772', 'Konfederacja barska', 'pl', 7,
-   'Szlachta chwyciła za broń przeciw ingerencji Rosji w sprawy Rzeczypospolitej. Walki stały się pretekstem do pierwszego rozbioru.'],
-  [1772, '1772', 'I rozbiór Polski', 'pl', 7,
-   'Rosja, Prusy i Austria zagarnęły część ziem Rzeczypospolitej. Sejm, otoczony wojskiem, musiał rozbiór zatwierdzić — protestował Tadeusz Rejtan.'],
-  [1792, '1792', 'Targowica i wojna w obronie konstytucji', 'pl', 7,
-   'Przeciwnicy Konstytucji 3 maja wezwali na pomoc Rosję. Mimo zwycięstwa pod Zieleńcami król przystąpił do targowicy — reformy upadły.'],
-  [1793, '1793', 'II rozbiór Polski', 'pl', 7,
-   'Rosja i Prusy dokonały drugiego rozbioru. Okrojona Rzeczpospolita straciła Wielkopolskę i Ukrainę naddnieprzańską.'],
-  [1794, '24 marca 1794', 'Insurekcja kościuszkowska', 'pl', 7,
-   'Tadeusz Kościuszko złożył przysięgę na rynku w Krakowie. Kosynierzy zdobyli armaty pod Racławicami, lecz powstanie upadło po klęsce pod Maciejowicami.'],
-  [1795, '1795', 'III rozbiór — upadek Rzeczypospolitej', 'pl', 7,
-   'Rosja, Prusy i Austria podzieliły resztę państwa. Polska zniknęła z mapy Europy na 123 lata.'],
-  [1797, '1797', 'Legiony Polskie we Włoszech', 'pl', 7,
-   'U boku Francji gen. Jan Henryk Dąbrowski utworzył Legiony. Dla nich Józef Wybicki napisał „Mazurka Dąbrowskiego” — dzisiejszy hymn Polski.'],
-
-  [1776, '4 lipca 1776', 'Deklaracja niepodległości USA', 'sw', 8,
-   'Trzynaście kolonii ogłosiło niezależność od Wielkiej Brytanii. W wojnie o niepodległość wsławili się Kościuszko i Pułaski.'],
-  [1787, '1787', 'Konstytucja Stanów Zjednoczonych', 'sw', 8,
-   'Pierwsza na świecie spisana konstytucja wprowadziła trójpodział władzy i urząd prezydenta — został nim Jerzy Waszyngton.'],
-  [1789, '14 lipca 1789', 'Zdobycie Bastylii', 'sw', 8,
-   'Paryżanie zdobyli królewską twierdzę — symbol absolutyzmu. Rewolucja francuska ogłosiła Deklarację praw człowieka i obywatela.'],
-  [1793, '21 stycznia 1793', 'Ścięcie Ludwika XVI', 'sw', 8,
-   'Francja stała się republiką, a król zginął na gilotynie. Nastały rządy terroru jakobinów Robespierre’a.'],
-
-  [1799, '1799', 'Napoleon przejmuje władzę', 'sw', 9,
-   'Generał Napoleon Bonaparte dokonał zamachu stanu i został pierwszym konsulem Francji, a w 1804 r. — cesarzem.'],
-  [1804, '1804', 'Kodeks Napoleona', 'sw', 9,
-   'Nowoczesny zbiór prawa cywilnego wprowadził równość obywateli wobec prawa. Obowiązywał także w Księstwie Warszawskim.'],
-  [1805, '2 grudnia 1805', 'Bitwa pod Austerlitz', 'sw', 9,
-   '„Bitwa trzech cesarzy” — Napoleon rozgromił wojska Austrii i Rosji w swoim najświetniejszym zwycięstwie.'],
-  [1807, '1807', 'Utworzenie Księstwa Warszawskiego', 'pl', 9,
-   'Na mocy pokoju w Tylży Napoleon utworzył namiastkę państwa polskiego. Księstwo otrzymało konstytucję i Kodeks Napoleona.'],
-  [1809, '1809', 'Raszyn i powiększenie Księstwa', 'pl', 9,
-   'Po wojnie z Austrią i bitwie pod Raszynem do Księstwa Warszawskiego przyłączono ziemie trzeciego zaboru austriackiego z Krakowem.'],
-  [1812, '1812', 'Wyprawa Napoleona na Moskwę', 'sw', 9,
-   'Wielka Armia ruszyła na Rosję z udziałem ok. 100 tys. Polaków. Odwrót w mrozie zamienił się w katastrofę — potęga cesarza załamała się.'],
-  [1813, '19 października 1813', 'Śmierć księcia Józefa Poniatowskiego', 'pl', 9,
-   'W „bitwie narodów” pod Lipskiem osłaniający odwrót Francuzów książę Józef utonął w Elsterze. Klęska Napoleona przesądziła o losie Księstwa.'],
-  [1815, '9 czerwca 1815', 'Kongres wiedeński kończy epokę', 'sw', 9,
-   'Zwycięskie mocarstwa ustaliły nowy ład Europy, a ziemie polskie podzielono na nowo. Pokonany pod Waterloo Napoleon trafił na Wyspę Świętej Heleny.'],
+  [1946, '30 czerwca 1946', 'Referendum „3 × TAK”', 'pl', 5,
+   'Sfałszowane przez komunistów głosowanie ludowe — próba generalna przed wyborami.'],
+  [1947, '19 stycznia 1947', 'Sfałszowane wybory do sejmu', 'pl', 5,
+   '„Zwycięstwo” bloku komunistycznego; Mikołajczyk zbiegł z kraju, PSL rozbite.'],
+  [1948, '15 grudnia 1948', 'Powstanie PZPR', 'pl', 5,
+   'Wchłonięcie PPS przez PPR na tzw. kongresie zjednoczeniowym; apogeum stalinizmu (Bierut).'],
+  [1952, '22 lipca 1952', 'Konstytucja PRL', 'pl', 5,
+   'Państwo przyjęło nazwę Polska Rzeczpospolita Ludowa; konstytucję osobiście poprawiał Stalin.'],
+  [1955, '14 maja 1955', 'Układ Warszawski', 'sw', 5,
+   'Sojusz wojskowy bloku wschodniego pod komendą ZSRS — odpowiedź na przyjęcie RFN do NATO.'],
+  [1956, '28 czerwca 1956', 'Poznański Czerwiec', 'pl', 5,
+   'Robotnicze powstanie „o chleb i wolność” krwawo stłumione przez wojsko (kilkadziesiąt ofiar, m.in. Romek Strzałkowski).'],
+  [1956, 'październik 1956', 'Odwilż październikowa', 'pl', 5,
+   'Gomułka I sekretarzem; uwolnienie prymasa Wyszyńskiego, krótka liberalizacja po XX zjeździe KPZR.'],
+  [1966, '1966', 'Milenium chrztu Polski', 'pl', 5,
+   'Kościelne obchody tysiąclecia (po Wielkiej Nowennie) rywalizowały z partyjnym „Tysiącleciem Państwa Polskiego”.'],
+  [1968, 'marzec 1968', 'Marzec ’68', 'pl', 5,
+   'Protesty studenckie po zdjęciu „Dziadów”; brutalne pałowania i antysemicka kampania — emigracja ok. 15 tys. osób.'],
+  [1970, '14–22 grudnia 1970', 'Grudzień ’70', 'pl', 5,
+   'Masakra robotników Wybrzeża (Gdynia — „Ballada o Janku Wiśniewskim”); Gierek zastąpił Gomułkę.'],
+  [1976, 'czerwiec 1976', 'Czerwiec ’76 i KOR', 'pl', 5,
+   'Protesty w Radomiu, Ursusie i Płocku; represje zrodziły Komitet Obrony Robotników — początek zorganizowanej opozycji.'],
+  [1978, '16 października 1978', 'Wybór Jana Pawła II', 'pl', 5,
+   'Karol Wojtyła papieżem; podczas I pielgrzymki (VI 1979): „Niech zstąpi Duch Twój i odnowi oblicze ziemi. Tej ziemi!”.'],
+  [1980, '31 sierpnia 1980', 'Porozumienia sierpniowe', 'pl', 5,
+   'Strajk w Stoczni Gdańskiej (MKS, 21 postulatów) wywalczył niezależne związki — powstała „Solidarność” z Wałęsą.'],
+  [1981, '13 grudnia 1981', 'Stan wojenny', 'pl', 5,
+   'WRON gen. Jaruzelskiego internowała tysiące działaczy; 16 XII pacyfikacja kopalni „Wujek” (9 ofiar).'],
+  [1984, '19 października 1984', 'Zabójstwo ks. Popiełuszki', 'pl', 5,
+   'Kapelan „Solidarności” zamordowany przez funkcjonariuszy SB; pogrzeb stał się wielką manifestacją.'],
+  [1989, '6 lutego – 5 kwietnia 1989', 'Okrągły Stół', 'pl', 5,
+   'Negocjacje władzy z opozycją: relegalizacja „Solidarności”, kontrakt wyborczy, urząd prezydenta i senat.'],
+  [1989, '4 czerwca 1989', 'Wybory czerwcowe', 'pl', 5,
+   'Miażdżące zwycięstwo „Solidarności”; we wrześniu powstał rząd Tadeusza Mazowieckiego.'],
+  [1990, '9 grudnia 1990', 'Wałęsa prezydentem', 'pl', 5,
+   'Pierwsze powszechne wybory prezydenckie; od stycznia 1990 r. gospodarkę przebudowywał plan Balcerowicza.'],
+  [1997, '2 kwietnia 1997', 'Konstytucja RP', 'pl', 5,
+   'Obowiązująca ustawa zasadnicza III Rzeczypospolitej, zatwierdzona w referendum (25 V).'],
+  [1999, '12 marca 1999', 'Polska w NATO', 'pl', 5,
+   'Wraz z Czechami i Węgrami; dokumenty przyjęto w Independence w USA.'],
+  [2004, '1 maja 2004', 'Polska w Unii Europejskiej', 'pl', 5,
+   'Finał akcesji po referendum z czerwca 2003 r. — zwieńczenie przemian rozpoczętych w 1989 roku.'],
 ].map((w, i) => ({ id: i, rok: w[0], data: w[1], tytul: w[2], kat: w[3], dzial: w[4], opis: w[5] }));
 
 /* ---------------- ustawienia osi ---------------- */
-const ROK_START = 1450, ROK_KONIEC = 1815, ROK_SRODEK = 1630, PX = 30, KROK_SKOKU = 50, PREFIKS = 'os6-';
+const ROK_START = 966, ROK_KONIEC = 2004, ROK_SRODEK = 1500, PX = 26, KROK_SKOKU = 100, PREFIKS = 'osk-';
 const ROK_MIN = ROK_START - 2, ROK_MAX = ROK_KONIEC + 2, PAD = 60;
 const ERY = [
-  [1450, 1572, 'POLSKA OSTATNICH JAGIELLONÓW'],
-  [1572, 1764, 'RZECZPOSPOLITA OBOJGA NARODÓW — WOLNE ELEKCJE'],
-  [1764, 1795, 'CZASY STANISŁAWOWSKIE I ROZBIORY'],
-  [1795, 1815, 'EPOKA NAPOLEOŃSKA'],
+  [966, 1370, 'POLSKA PIASTÓW'],
+  [1385, 1572, 'JAGIELLONOWIE'],
+  [1572, 1795, 'RZECZPOSPOLITA SZLACHECKA'],
+  [1795, 1918, 'POD ZABORAMI'],
+  [1918, 1939, 'II RP'],
+  [1939, 1945, 'II WOJNA ŚWIATOWA'],
+  [1945, 1989, 'POLSKA LUDOWA'],
+  [1989, 2004, 'III RZECZPOSPOLITA'],
 ];
 const rokDoX = r => PAD + (r - ROK_MIN) * PX;
 const xDoRok = x => Math.round((x - PAD) / PX) + ROK_MIN;
 
 /* ---------------- filtr działów ---------------- */
 const wyborDzialu = document.getElementById('wybor-dzialu');
-wyborDzialu.innerHTML = '<option value="-1">Cała klasa VI (wszystkie działy)</option>' +
-  DZIALY.map((d, i) => `<option value="${i}">Dział: ${d}</option>`).join('');
+wyborDzialu.innerHTML = '<option value="-1">Cały zakres konkursowy (966–2004)</option>' +
+  DZIALY.map((d, i) => `<option value="${i}">Epoka: ${d}</option>`).join('');
 let filtrDzialu = -1;
 const pulaZdarzen = () => WYDARZENIA.filter(w => filtrDzialu < 0 || w.dzial === filtrDzialu);
 
@@ -423,7 +576,7 @@ function zbudujOs(plotno, { zWydarzeniami, naKlik }) {
   }
   plotno.insertAdjacentHTML('beforeend', '<div class="os-linia"></div>');
   for (let r = ROK_MIN + 2; r <= ROK_MAX - 2; r++) {
-    const dekada = r % 50 === 0;
+    const dekada = r % 10 === 0;
     const k = document.createElement('div');
     k.className = 'kreska' + (dekada ? ' dekada' : '');
     k.style.left = rokDoX(r) + 'px';
@@ -499,12 +652,11 @@ function rekord(klucz, wynik) {
   } catch (e) { return { naj: wynik, nowy: false }; }
 }
 function ocenaSzkolna(procent) {
-  if (procent >= 90) return ['6', 'CELUJĄCY'];
-  if (procent >= 75) return ['5', 'BARDZO DOBRY'];
-  if (procent >= 60) return ['4', 'DOBRY'];
-  if (procent >= 45) return ['3', 'DOSTATECZNY'];
-  if (procent >= 30) return ['2', 'DOPUSZCZAJĄCY'];
-  return ['1', 'SPRÓBUJ JESZCZE RAZ'];
+  if (procent >= 90) return ['🏆', 'LAUREAT KONKURSU'];
+  if (procent >= 80) return ['🥇', 'FINALISTA'];
+  if (procent >= 65) return ['✔', 'AWANS DO ETAPU WOJEWÓDZKIEGO'];
+  if (procent >= 50) return ['✔', 'AWANS DO ETAPU REJONOWEGO'];
+  return ['📚', 'TRENUJ DALEJ'];
 }
 function kartaHTML(w, { bezDaty } = {}) {
   return `<div class="karta ${w.kat}"><div class="pasek"></div><div class="srodek">
@@ -543,7 +695,7 @@ function rysujOsNauki() {
 
 /* ---------------- widok 2: wskaż rok ---------------- */
 const graRok = { pula: [], nr: 0, punkty: 0, strzal: null, rozstrzygnieta: false };
-const RUNDY_ROK = 8;
+const RUNDY_ROK = 10;
 const elRok = {
   karta: document.getElementById('rok-karta'), runda: document.getElementById('rok-runda'),
   rund: document.getElementById('rok-rund'), punkty: document.getElementById('rok-punkty'),
@@ -587,7 +739,7 @@ elRok.zatwierdz.addEventListener('click', () => {
   graRok.rozstrzygnieta = true;
   const w = graRok.pula[graRok.nr];
   const roznica = Math.abs(graRok.strzal - w.rok);
-  const pkt = roznica <= 1 ? 100 : roznica <= 3 ? 80 : roznica <= 6 ? 60 : roznica <= 10 ? 40 : roznica <= 15 ? 20 : 5;
+  const pkt = roznica === 0 ? 100 : roznica <= 1 ? 75 : roznica <= 3 ? 50 : roznica <= 5 ? 25 : roznica <= 10 ? 10 : 0;
   graRok.punkty += pkt;
   elRok.punkty.textContent = graRok.punkty;
   elRok.plotno.insertAdjacentHTML('beforeend',
@@ -629,14 +781,17 @@ const elChrono = {
   sprawdz: document.getElementById('chrono-sprawdz'), dalej: document.getElementById('chrono-dalej'),
   podsum: document.getElementById('chrono-podsumowanie'),
 };
-const ILE_KART = 5, RUNDY_CHRONO = 3;
+const ILE_KART = 7, RUNDY_CHRONO = 3;
 function startGryChrono() {
   graChrono.runda = 0; graChrono.punkty = 0; graChrono.max = 0;
   elChrono.podsum.hidden = true;
   rundaChrono();
 }
 function rundaChrono() {
-  const pula = pulaZdarzen();
+  const cala = pulaZdarzen();
+  const kotwica = cala[Math.random() * cala.length | 0];   // wydarzenia z bliskiego przedziału — trudniej!
+  const bliskie = cala.filter(w => Math.abs(w.rok - kotwica.rok) <= 60);
+  const pula = bliskie.length >= ILE_KART ? bliskie : cala;
   let dobor;
   do { dobor = losuj(pula, Math.min(ILE_KART, pula.length)); }
   while (new Set(dobor.map(w => w.rok)).size < dobor.length && pula.length > ILE_KART);
@@ -713,7 +868,7 @@ elChrono.dalej.addEventListener('click', () => {
 });
 
 /* ---------------- widok 4: prawda / fałsz ---------------- */
-const RZYM = { 14: 'XIV', 15: 'XV', 16: 'XVI', 17: 'XVII', 18: 'XVIII', 19: 'XIX', 20: 'XX' };
+const RZYM = { 10: 'X', 11: 'XI', 12: 'XII', 13: 'XIII', 14: 'XIV', 15: 'XV', 16: 'XVI', 17: 'XVII', 18: 'XVIII', 19: 'XIX', 20: 'XX', 21: 'XXI' };
 const wiekRoku = r => Math.floor((r - 1) / 100) + 1;
 const RUNDY_PF = 10;
 const graPF = { nr: 0, punkty: 0, zdanie: null, rozstrzygnieta: false };
@@ -733,7 +888,7 @@ function losujZdaniePF() {
   if (typ === 0) {                                   // zgadywanie roku
     let rok = w.rok;
     if (!maBycPrawda) {
-      const przes = (2 + Math.random() * 10 | 0) * (Math.random() < .5 ? -1 : 1);
+      const przes = (1 + Math.random() * 5 | 0) * (Math.random() < .5 ? -1 : 1);
       rok = Math.max(ROK_START, Math.min(ROK_KONIEC, w.rok + przes));
       if (rok === w.rok) rok = w.rok - 3;
     }
@@ -742,7 +897,9 @@ function losujZdaniePF() {
       wyjasnienie: `${w.tytul}: <b>${w.data}</b>. ${w.opis}` };
   }
   if (typ === 1) {                                   // kolejność dwóch wydarzeń
-    let b; do { b = pula[Math.random() * pula.length | 0]; } while (b.rok === w.rok);
+    const sasiedzi = pula.filter(z => z.rok !== w.rok && Math.abs(z.rok - w.rok) <= 40);
+    const zbior = sasiedzi.length ? sasiedzi : pula.filter(z => z.rok !== w.rok);
+    const b = zbior[Math.random() * zbior.length | 0];
     const [wczesniej, pozniej] = w.rok < b.rok ? [w, b] : [b, w];
     const [pierwsze, drugie] = maBycPrawda ? [wczesniej, pozniej] : [pozniej, wczesniej];
     return { kat: pierwsze.kat, prawda: maBycPrawda,
