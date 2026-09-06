@@ -196,3 +196,21 @@ npm test          # test e2e (Playwright): pełny przepływ + walidacja pliku .d
 - Zdjęcia i dane są przechowywane **wyłącznie lokalnie** w przeglądarce danego urządzenia.
   Po wyczyszczeniu danych przeglądarki zostaną usunięte — eksportuj protokół do `.docx`,
   aby zachować kopię.
+
+## 🏛️ Bonus: Forum Romanum — wirtualny spacer (gra)
+
+W repozytorium znajduje się też samodzielna gra 3D wygenerowana z jednego promptu
+(„wirtualny spacer po rzymskim forum, hiperreality"): `public/forum-romanum.html`.
+
+- Spacer pierwszoosobowy po Forum Romanum (WSAD + mysz, na telefonie joystick dotykowy),
+  z kolizjami, odgłosami kroków, wiatru i ptaków (dźwięk proceduralny, Web Audio).
+- Klawisz **H** — „hiperrealność": podróż w czasie między ruinami (rok 2026)
+  a pełną rekonstrukcją Forum z roku 320 n.e. (posągi, ogień w brazierach, obywatele w togach).
+- Klawisz **T** — pora dnia: południe, zachód słońca, noc pod gwiazdami.
+- 11 monumentów z opisami po polsku (Łuk Tytusa, Świątynia Saturna, Kuria, Rostra…) —
+  karty informacyjne pojawiają się po podejściu.
+- Zero zależności sieciowych w czasie gry: three.js jest dołączony lokalnie
+  (`public/vendor/`, kopiowany z pakietu `three` — devDependency).
+
+Uruchomienie: `npm run dev`, potem otwórz `http://localhost:5173/forum-romanum.html`
+(po `npm run build` plik jest też kopiowany do `dist/`).

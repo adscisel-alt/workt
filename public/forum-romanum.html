@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Forum Romanum — wirtualny spacer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#c9a55c; --ink:#f3ead7;
+  }
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0b0e14;
+    font-family:'Spectral',Georgia,serif;color:var(--ink);}
+  #scena{position:fixed;inset:0;display:block;}
+  .winieta{position:fixed;inset:0;pointer-events:none;z-index:3;
+    background:radial-gradient(ellipse at center, transparent 55%, rgba(5,8,14,.55) 100%);}
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;top:14px;left:16px;z-index:5;pointer-events:none;user-select:none;}
+  #hud h1{font-family:'Cinzel',serif;font-size:clamp(15px,2.2vw,22px);letter-spacing:.24em;
+    margin:0;color:var(--gold);text-shadow:0 1px 8px rgba(0,0,0,.8);}
+  #epoka{font-size:clamp(11px,1.6vw,14px);letter-spacing:.14em;margin-top:4px;opacity:.92;
+    text-shadow:0 1px 6px rgba(0,0,0,.9);}
+  #pora{font-size:clamp(10px,1.4vw,12px);letter-spacing:.14em;opacity:.7;margin-top:2px;
+    text-shadow:0 1px 6px rgba(0,0,0,.9);}
+  #celownik{position:fixed;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
+    border-radius:50%;background:rgba(243,234,215,.85);z-index:5;pointer-events:none;
+    box-shadow:0 0 6px rgba(0,0,0,.7);}
+  #karta{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(12px);
+    max-width:min(560px,86vw);z-index:5;pointer-events:none;text-align:center;
+    background:linear-gradient(180deg, rgba(16,14,10,.82), rgba(10,9,6,.88));
+    border:1px solid rgba(201,165,92,.5);border-radius:6px;padding:12px 22px 14px;
+    opacity:0;transition:opacity .35s ease, transform .35s ease;
+    box-shadow:0 8px 30px rgba(0,0,0,.5);}
+  #karta.aktywna{opacity:1;transform:translateX(-50%) translateY(0);}
+  #karta h2{font-family:'Cinzel',serif;margin:0 0 5px;font-size:17px;letter-spacing:.12em;color:var(--gold);}
+  #karta p{margin:0;font-size:14px;line-height:1.45;opacity:.94;}
+  #podpowiedz{position:fixed;right:16px;bottom:12px;z-index:5;pointer-events:none;
+    font-size:11.5px;letter-spacing:.06em;opacity:.55;text-align:right;line-height:1.6;
+    text-shadow:0 1px 5px rgba(0,0,0,.9);}
+  /* ---------- ekran startowy ---------- */
+  #start{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 35%, rgba(34,28,18,.92), rgba(7,6,4,.97));
+    cursor:pointer;transition:opacity .6s ease;}
+  #start.ukryty{opacity:0;pointer-events:none;}
+  #start .panel{max-width:min(640px,88vw);text-align:center;padding:20px;}
+  #start .laur{color:var(--gold);font-size:26px;letter-spacing:.5em;margin-bottom:6px;}
+  #start h1{font-family:'Cinzel',serif;font-weight:700;font-size:clamp(30px,6.5vw,54px);
+    letter-spacing:.18em;margin:0;color:var(--ink);}
+  #start h1 span{color:var(--gold);}
+  #start .sub{font-style:italic;font-size:clamp(13px,2.2vw,17px);opacity:.85;margin:10px 0 26px;}
+  #start .instrukcje{display:inline-block;text-align:left;font-size:clamp(12px,1.9vw,14.5px);
+    line-height:2;opacity:.9;border-top:1px solid rgba(201,165,92,.4);
+    border-bottom:1px solid rgba(201,165,92,.4);padding:14px 26px;}
+  #start .instrukcje b{color:var(--gold);font-family:'Cinzel',serif;font-size:.92em;letter-spacing:.06em;}
+  #start .wejdz{margin-top:28px;font-family:'Cinzel',serif;letter-spacing:.3em;
+    font-size:clamp(13px,2.4vw,17px);color:var(--gold);animation:puls 2.2s ease-in-out infinite;}
+  @keyframes puls{0%,100%{opacity:.55}50%{opacity:1}}
+  /* ---------- sterowanie dotykowe ---------- */
+  #dotyk{position:fixed;inset:0;z-index:4;display:none;pointer-events:none;}
+  body.dotykowy #dotyk{display:block;}
+  body.dotykowy #podpowiedz{display:none;}
+  #joystick{position:absolute;width:110px;height:110px;border-radius:50%;
+    border:2px solid rgba(243,234,215,.35);background:rgba(20,18,12,.25);display:none;}
+  #joystick .galka{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;
+    border-radius:50%;background:rgba(201,165,92,.55);}
+  #przyciski{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:8px;pointer-events:auto;}
+  #przyciski button{font-family:'Cinzel',serif;font-size:12px;letter-spacing:.08em;color:var(--ink);
+    background:rgba(16,14,10,.7);border:1px solid rgba(201,165,92,.55);border-radius:5px;
+    padding:9px 12px;min-width:96px;}
+</style>
+</head>
+<body>
+<canvas id="scena"></canvas>
+<div class="winieta"></div>
+
+<div id="hud">
+  <h1>FORVM ROMANVM</h1>
+  <div id="epoka"></div>
+  <div id="pora"></div>
+</div>
+<div id="celownik"></div>
+<div id="karta"><h2 id="karta-tytul"></h2><p id="karta-opis"></p></div>
+<div id="podpowiedz">
+  W&#8202;S&#8202;A&#8202;D — spacer &nbsp;·&nbsp; Shift — bieg &nbsp;·&nbsp; mysz — rozglądanie<br>
+  H — epoka (ruiny / hiperrealność) &nbsp;·&nbsp; T — pora dnia &nbsp;·&nbsp; M — dźwięk
+</div>
+
+<div id="dotyk">
+  <div id="joystick"><div class="galka"></div></div>
+  <div id="przyciski">
+    <button id="btn-epoka">EPOKA</button>
+    <button id="btn-pora">PORA DNIA</button>
+    <button id="btn-dzwiek">DŹWIĘK</button>
+  </div>
+</div>
+
+<div id="start">
+  <div class="panel">
+    <div class="laur">⚜</div>
+    <h1>FORVM <span>ROMANVM</span></h1>
+    <div class="sub">Wirtualny spacer po rzymskim Forum · hiperrealna rekonstrukcja roku 320 n.e.</div>
+    <div class="instrukcje">
+      <b>W S A D</b> — spacer po Świętej Drodze &nbsp;·&nbsp; <b>SHIFT</b> — bieg<br>
+      <b>MYSZ</b> — rozglądanie się &nbsp;·&nbsp; <b>H</b> — podróż w czasie: ruiny ↔ rok 320 n.e.<br>
+      <b>T</b> — pora dnia (południe · zachód · noc) &nbsp;·&nbsp; <b>M</b> — dźwięk<br>
+      Podejdź do monumentu, aby poznać jego historię.
+    </div>
+    <div class="wejdz">— KLIKNIJ, ABY WEJŚĆ NA FORUM —</div>
+  </div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"./vendor/three.module.min.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { mergeGeometries } from './vendor/BufferGeometryUtils.js';
+
+/* =================================================================
+   FORUM ROMANUM — wirtualny spacer (gra z jednego promptu)
+   Dwie epoki: ruiny (2026) i hiperrealna rekonstrukcja (320 n.e.)
+   ================================================================= */
+
+const JEST_DOTYK = matchMedia('(pointer: coarse)').matches;
+if (JEST_DOTYK) document.body.classList.add('dotykowy');
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scena'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = !JEST_DOTYK;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+
+const scena = new THREE.Scene();
+const kamera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 900);
+
+addEventListener('resize', () => {
+  kamera.aspect = innerWidth / innerHeight;
+  kamera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* ---------------- tekstury proceduralne (canvas) ---------------- */
+function teksturaCanvas(rys, rozmiar = 512, wysokosc = 0) {
+  const c = document.createElement('canvas');
+  c.width = rozmiar; c.height = wysokosc || rozmiar;
+  rys(c.getContext('2d'), rozmiar);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+function nakrap(g, s, n, kolory, rMax = 3) {
+  for (let i = 0; i < n; i++) {
+    g.fillStyle = kolory[(Math.random() * kolory.length) | 0];
+    g.globalAlpha = 0.06 + Math.random() * 0.12;
+    const r = 0.5 + Math.random() * rMax;
+    g.beginPath(); g.arc(Math.random() * s, Math.random() * s, r, 0, 7); g.fill();
+  }
+  g.globalAlpha = 1;
+}
+const texBruk = teksturaCanvas((g, s) => {         // trawertynowe płyty Via Sacra
+  g.fillStyle = '#cfc3ab'; g.fillRect(0, 0, s, s);
+  nakrap(g, s, 2600, ['#b9ac92', '#8f846c', '#e0d6bf', '#a3987f'], 2.5);
+  g.strokeStyle = 'rgba(90,80,62,.55)'; g.lineWidth = 3;
+  const rz = 5; let y = 0;
+  for (let r = 0; r < rz; r++) {
+    const h = s / rz; let x = (r % 2) * -40;
+    g.beginPath(); g.moveTo(0, y); g.lineTo(s, y); g.stroke();
+    while (x < s) {
+      const w = 90 + Math.random() * 110;
+      g.beginPath(); g.moveTo(x + w, y); g.lineTo(x + w, y + h); g.stroke();
+      x += w;
+    }
+    y += h;
+  }
+});
+const texZiemia = teksturaCanvas((g, s) => {
+  g.fillStyle = '#8b7a58'; g.fillRect(0, 0, s, s);
+  nakrap(g, s, 3600, ['#6d5f42', '#9c8a63', '#77804d', '#5d6a3e', '#a4906b'], 4);
+});
+const texMarmurStary = teksturaCanvas((g, s) => {
+  g.fillStyle = '#d9d2c2'; g.fillRect(0, 0, s, s);
+  nakrap(g, s, 2000, ['#b8b0a0', '#c9c0ae', '#a09884', '#e6e0d2'], 3);
+  g.strokeStyle = 'rgba(120,112,96,.25)';
+  for (let i = 0; i < 14; i++) {
+    g.lineWidth = 0.6 + Math.random() * 1.4;
+    g.beginPath(); g.moveTo(Math.random() * s, 0);
+    g.bezierCurveTo(Math.random() * s, s * .3, Math.random() * s, s * .7, Math.random() * s, s);
+    g.stroke();
+  }
+});
+const texMarmurNowy = teksturaCanvas((g, s) => {
+  g.fillStyle = '#efe9dc'; g.fillRect(0, 0, s, s);
+  nakrap(g, s, 900, ['#e2dbcb', '#f7f3e8', '#d8d2c2'], 2.5);
+  g.strokeStyle = 'rgba(150,140,120,.14)';
+  for (let i = 0; i < 8; i++) {
+    g.lineWidth = 0.8;
+    g.beginPath(); g.moveTo(Math.random() * s, 0);
+    g.bezierCurveTo(Math.random() * s, s * .4, Math.random() * s, s * .6, Math.random() * s, s);
+    g.stroke();
+  }
+});
+const texKanel = teksturaCanvas((g, s) => {         // kanelowany trzon kolumny
+  g.fillStyle = '#eae4d5'; g.fillRect(0, 0, s, s);
+  const n = 22, w = s / n;
+  for (let i = 0; i < n; i++) {
+    const x = i * w;
+    const gr = g.createLinearGradient(x, 0, x + w, 0);
+    gr.addColorStop(0, '#c9c2b1'); gr.addColorStop(.25, '#f2ecdd');
+    gr.addColorStop(.6, '#ddd6c5'); gr.addColorStop(1, '#b3ac9a');
+    g.fillStyle = gr; g.fillRect(x, 0, w, s);
+  }
+  nakrap(g, s, 700, ['#b8b0a0', '#efe9da'], 2);
+});
+const texCegla = teksturaCanvas((g, s) => {
+  g.fillStyle = '#c2ac91'; g.fillRect(0, 0, s, s);
+  const rh = s / 16;
+  for (let r = 0; r < 16; r++) {
+    let x = (r % 2) * -30;
+    while (x < s) {
+      const w = 54 + Math.random() * 26;
+      g.fillStyle = ['#a5613f', '#9c5a3a', '#af6a46', '#8f5236'][(Math.random() * 4) | 0];
+      g.fillRect(x + 2, r * rh + 2, w - 4, rh - 4);
+      x += w;
+    }
+  }
+  nakrap(g, s, 1200, ['#7a462c', '#c58a64'], 2);
+});
+const texDachowka = teksturaCanvas((g, s) => {
+  g.fillStyle = '#a34f2c'; g.fillRect(0, 0, s, s);
+  const n = 12, w = s / n;
+  for (let i = 0; i < n; i++) {
+    const gr = g.createLinearGradient(i * w, 0, i * w + w, 0);
+    gr.addColorStop(0, '#7e3a20'); gr.addColorStop(.5, '#b95f37'); gr.addColorStop(1, '#8a4325');
+    g.fillStyle = gr; g.fillRect(i * w, 0, w, s);
+  }
+  for (let y = 0; y < s; y += s / 8) {
+    g.fillStyle = 'rgba(70,32,16,.4)'; g.fillRect(0, y, s, 3);
+  }
+});
+function texNapis(linie) {                          // inskrypcja SPQR na attyce łuku
+  return teksturaCanvas((g, s) => {
+    const h = 160;
+    g.fillStyle = '#ded6c4'; g.fillRect(0, 0, s, h);
+    g.fillStyle = '#4a3c26'; g.textAlign = 'center';
+    const lh = h / (linie.length + .4);
+    linie.forEach((l, i) => {
+      g.font = `bold ${Math.min(s * 1.6 / l.length, lh * 0.72)}px Georgia, serif`;
+      g.fillText(l, s / 2, lh * (i + 0.9));
+    });
+  }, 640, 160);
+}
+
+/* ---------------- materiały ---------------- */
+function mat(opts) { return new THREE.MeshStandardMaterial(Object.assign({ roughness: .93, metalness: 0 }, opts)); }
+const M = {
+  bruk:        mat({ map: texBruk }),
+  ziemia:      mat({ map: texZiemia }),
+  marmurStary: mat({ map: texMarmurStary }),
+  marmurNowy:  mat({ map: texMarmurNowy }),
+  kanelStary:  mat({ map: texKanel, color: 0xcfc8ba }),
+  kanelNowy:   mat({ map: texKanel }),
+  cegla:       mat({ map: texCegla }),
+  dach:        mat({ map: texDachowka, roughness: .8 }),
+  fryzCzerwony:mat({ color: 0x8e2f23, roughness: .85 }),
+  zloto:       mat({ color: 0xd4a93c, roughness: .35, metalness: .85 }),
+  braz:        mat({ color: 0x54452c, roughness: .5, metalness: .7 }),
+  brazCiemny:  mat({ color: 0x2e2a1e, roughness: .6, metalness: .5 }),
+  pienTrawa:   mat({ color: 0x5c4a30 }),
+  cyprys:      mat({ color: 0x25401f, roughness: 1 }),
+  pinia:       mat({ color: 0x3d5c2a, roughness: 1 }),
+  gruzy:       mat({ map: texMarmurStary, color: 0xbfb8a8 }),
+  toga:        mat({ color: 0xeee6d4, roughness: 1 }),
+  skora:       mat({ color: 0xb98a62, roughness: 1 }),
+};
+texBruk.repeat.set(3, 3);
+
+/* ---------------- pomocnicy geometrii ---------------- */
+const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler();
+function przenies(geo, x, y, z, ry = 0, sx = 1, sy = 1, sz = 1) {
+  const g = geo.clone();
+  _q.setFromEuler(_e.set(0, ry, 0));
+  g.applyMatrix4(_m4.compose(new THREE.Vector3(x, y, z), _q, new THREE.Vector3(sx, sy, sz)));
+  return g;
+}
+const GEO = {
+  box: new THREE.BoxGeometry(1, 1, 1),
+  cyl: new THREE.CylinderGeometry(1, 1, 1, 18),
+  trzon: new THREE.CylinderGeometry(.84, 1, 1, 20),
+  stozek: new THREE.ConeGeometry(1, 1, 14),
+  kula: new THREE.SphereGeometry(1, 14, 10),
+};
+const cacheKolumn = {};
+function geoKolumny(h, r) {                          // pełna kolumna: baza + trzon + kapitel
+  const klucz = h.toFixed(2) + '_' + r.toFixed(2);
+  if (cacheKolumn[klucz]) return cacheKolumn[klucz];
+  const czesci = [];
+  czesci.push(przenies(GEO.box, 0, .2 * r, 0, 0, 2.4 * r, .4 * r, 2.4 * r));
+  const ht = h - 1.1 * r;
+  czesci.push(przenies(GEO.trzon, 0, .4 * r + ht / 2, 0, 0, r, ht, r));
+  czesci.push(przenies(GEO.cyl, 0, h - .5 * r, 0, 0, 1.18 * r, .38 * r, 1.18 * r));
+  czesci.push(przenies(GEO.box, 0, h - .17 * r, 0, 0, 2.15 * r, .34 * r, 2.15 * r));
+  return (cacheKolumn[klucz] = mergeGeometries(czesci));
+}
+function kolumnada(pozycje, h, r, material, cien = true) {  // jedna siatka = wiele kolumn
+  const geo = mergeGeometries(pozycje.map(p => przenies(geoKolumny(h, r), p[0], p[1] || 0, p[2])));
+  const m = new THREE.Mesh(geo, material);
+  m.castShadow = cien; m.receiveShadow = true;
+  return m;
+}
+function zlamaneKolumny(pozycje, hMax, r, material) {        // kikuty o losowej wysokości
+  const czesci = [];
+  for (const p of pozycje) {
+    const h = hMax * (.12 + Math.random() * .38);
+    czesci.push(przenies(GEO.box, p[0], .2 * r, p[2], 0, 2.4 * r, .4 * r, 2.4 * r));
+    czesci.push(przenies(GEO.trzon, p[0], .4 * r + h / 2, p[2], Math.random() * 6, r, h, r));
+  }
+  const m = new THREE.Mesh(mergeGeometries(czesci), material);
+  m.castShadow = m.receiveShadow = true;
+  return m;
+}
+function pryzma(w, h, d, matSzczyt, matPolac) {              // dach dwuspadowy + tympanony
+  const s = new THREE.Shape();
+  s.moveTo(-w / 2, 0); s.lineTo(w / 2, 0); s.lineTo(0, h); s.closePath();
+  const g = new THREE.ExtrudeGeometry(s, { depth: d, bevelEnabled: false });
+  g.translate(0, 0, -d / 2);
+  const m = new THREE.Mesh(g, [matSzczyt, matPolac]);
+  m.castShadow = m.receiveShadow = true;
+  return m;
+}
+function pudlo(material, x, y, z, sx, sy, sz, ry = 0) {
+  const m = new THREE.Mesh(GEO.box, material);
+  m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.rotation.y = ry;
+  m.castShadow = m.receiveShadow = true;
+  return m;
+}
+function walec(material, x, y, z, r, h, ry = 0, rz = 0) {
+  const m = new THREE.Mesh(GEO.cyl, material);
+  m.position.set(x, y, z); m.scale.set(r, h, r); m.rotation.set(0, ry, rz);
+  m.castShadow = m.receiveShadow = true;
+  return m;
+}
+function siatkaPerystylu(nx, nz, w, d) {                     // obwód prostokąta kolumn
+  const pts = [];
+  for (let i = 0; i < nx; i++) {
+    const x = -w / 2 + i * w / (nx - 1);
+    pts.push([x, 0, d / 2], [x, 0, -d / 2]);
+  }
+  for (let j = 1; j < nz - 1; j++) {
+    const z = -d / 2 + j * d / (nz - 1);
+    pts.push([-w / 2, 0, z], [w / 2, 0, z]);
+  }
+  return pts;
+}
+function rzadFrontu(n, w, z) {
+  const pts = [];
+  for (let i = 0; i < n; i++) pts.push([-w / 2 + i * w / (n - 1), 0, z]);
+  return pts;
+}
+
+/* ---------------- kolizje ---------------- */
+const kolizje = [];   // {typ:'kolo',x,z,r} | {typ:'box',x1,x2,z1,z2}
+const PROMIEN_GRACZA = 0.55;
+function kolKolo(x, z, r) { kolizje.push({ typ: 'kolo', x, z, r }); }
+function kolBox(cx, cz, w, d) { kolizje.push({ typ: 'box', x1: cx - w / 2, x2: cx + w / 2, z1: cz - d / 2, z2: cz + d / 2 }); }
+function kolBoxObrot(cx, cz, w, d, ry) {             // ry wielokrotność 90° — zamiana boków
+  const k = Math.round(ry / (Math.PI / 2)) & 1;
+  kolBox(cx, cz, k ? d : w, k ? w : d);
+}
+
+/* ---------------- grupy epok ---------------- */
+const wspolne = new THREE.Group();      // stoi w obu epokach
+const ruiny = new THREE.Group();        // rok 2026
+const rekonstrukcja = new THREE.Group();// rok 320 n.e. — hiperrealność
+scena.add(wspolne, ruiny, rekonstrukcja);
+
+/* ---------------- teren ---------------- */
+{
+  const ziemia = new THREE.Mesh(new THREE.PlaneGeometry(240, 260), M.ziemia);
+  M.ziemia.map.repeat.set(24, 26);
+  ziemia.rotation.x = -Math.PI / 2; ziemia.receiveShadow = true;
+  wspolne.add(ziemia);
+  const plyty = (x, z, w, d) => {
+    const t = texBruk.clone(); t.needsUpdate = true; t.repeat.set(w / 7, d / 7);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat({ map: t }));
+    m.rotation.x = -Math.PI / 2; m.position.set(x, .02, z); m.receiveShadow = true;
+    wspolne.add(m);
+  };
+  plyty(0, 0, 10, 190);         // Via Sacra
+  plyty(0, -16, 34, 62);        // główny plac Forum
+  plyty(-24, -56, 30, 42);      // plac zachodni (Saturn, Kuria)
+}
+
+/* ---------------- świątynia prostokątna ---------------- */
+function swiatynia(cfg) {
+  const {
+    x, z, ry, w, d, hPodium, hKol, rKol, nFront, nBok,
+    ruina, nazwa,
+  } = cfg;
+  const entH = hKol * .14;
+
+  const bazowa = (grupa, matMarmur, matKanel) => {
+    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry;
+    g.add(pudlo(matMarmur, 0, hPodium / 2, 0, w, hPodium, d));
+    const N = 7, sh = hPodium / N, sd = .55;         // schody frontowe
+    for (let i = 0; i < N; i++)
+      g.add(pudlo(matMarmur, 0, (i + 1) * sh / 2, d / 2 + (N - i - .5) * sd, w * .62, (i + 1) * sh, sd));
+    grupa.add(g);
+    return g;
+  };
+
+  /* — rekonstrukcja: pełny perystyl, belkowanie, dach — */
+  const gN = bazowa(rekonstrukcja, M.marmurNowy, M.kanelNowy);
+  const wewn = w - 2.2 * rKol, glebW = d - 2.2 * rKol;
+  const pozycje = nBok > 0 ? siatkaPerystylu(nFront, nBok, wewn, glebW)
+                           : rzadFrontu(nFront, wewn, glebW / 2);
+  const kol = kolumnada(pozycje, hKol, rKol, M.kanelNowy);
+  kol.position.y = hPodium; gN.add(kol);
+  if (nBok === 0) {           // prostylos — druga linia kolumn portyku
+    const kol2 = kolumnada(rzadFrontu(nFront, wewn, glebW / 2 - 2.6), hKol, rKol, M.kanelNowy);
+    kol2.position.y = hPodium; gN.add(kol2);
+  }
+  gN.add(pudlo(M.marmurNowy, 0, hPodium + hKol + entH * .3, 0, w + .8, entH * .6, d + .8));
+  gN.add(pudlo(M.fryzCzerwony, 0, hPodium + hKol + entH * .8, 0, w + .6, entH * .4, d + .6));
+  const dach = pryzma(w + 1.6, w * .16, d + 1.8, M.marmurNowy, M.dach);
+  dach.position.y = hPodium + hKol + entH; gN.add(dach);
+  gN.add(pudlo(nBok > 0 ? M.marmurNowy : M.cegla, 0, hPodium + hKol * .44, -d * .08, w * .62, hKol * .88, d * .58));
+  const akroterion = new THREE.Mesh(GEO.kula, M.zloto);
+  akroterion.scale.setScalar(.5);
+  akroterion.position.set(0, hPodium + hKol + entH + w * .16 + .4, (d + 1.8) / 2 - .3);
+  gN.add(akroterion);
+
+  /* — ruina — */
+  const gR = bazowa(ruiny, M.marmurStary, M.kanelStary);
+  const stoja = [], lezy = [];
+  pozycje.forEach((p, i) => (ruina.stoja.includes(i) ? stoja : lezy).push(p));
+  if (stoja.length) {
+    const ks = kolumnada(stoja, hKol, rKol, M.kanelStary);
+    ks.position.y = hPodium; gR.add(ks);
+    if (ruina.belka) {          // zachowany fragment belkowania nad stojącymi
+      const xs = stoja.map(p => p[0]), zs = stoja.map(p => p[2]);
+      const bx = (Math.min(...xs) + Math.max(...xs)) / 2, bz = (Math.min(...zs) + Math.max(...zs)) / 2;
+      const bw = Math.max(...xs) - Math.min(...xs) + 2.4 * rKol;
+      const bd = Math.max(...zs) - Math.min(...zs) + 2.4 * rKol;
+      gR.add(pudlo(M.marmurStary, bx, hPodium + hKol + entH * .35, bz, bw, entH * .7, bd));
+    }
+  }
+  if (lezy.length) { const kz = zlamaneKolumny(lezy, hKol, rKol, M.kanelStary); kz.position.y = hPodium; gR.add(kz); }
+  if (ruina.cella) gR.add(pudlo(M.cegla, 0, hPodium + hKol * .4, -d * .08, w * .6, hKol * .8, d * .56));
+
+  kolBoxObrot(x, z, w + 1.5, d + 5, ry);   // podium + schody
+  dodajHotspot(x, z, Math.max(w, d) / 2 + 9, nazwa.tytul, nazwa.opis);
+}
+
+/* ---------------- monumenty ---------------- */
+const hotspoty = [];
+function dodajHotspot(x, z, r, tytul, opis) { hotspoty.push({ x, z, r, tytul, opis }); }
+
+/* Świątynia Saturna — słynny stojący front */
+swiatynia({
+  x: -28, z: -52, ry: Math.PI / 2, w: 15, d: 24, hPodium: 4, hKol: 11, rKol: .52,
+  nFront: 8, nBok: 0,
+  ruina: { stoja: [0, 1, 2, 3, 4, 5, 6, 7], belka: true, cella: false },
+  nazwa: {
+    tytul: 'ŚWIĄTYNIA SATURNA',
+    opis: 'Jedna z najstarszych świątyń Rzymu (497 r. p.n.e.). W jej podziemiach mieściło się aerarium — skarbiec państwa rzymskiego. Osiem kolumn frontowych stoi do dziś.',
+  },
+});
+
+/* Świątynia Kastora i Polluksa — trzy słynne kolumny */
+swiatynia({
+  x: 24, z: 30, ry: -Math.PI / 2, w: 14, d: 26, hPodium: 5.5, hKol: 12, rKol: .55,
+  nFront: 6, nBok: 8,
+  ruina: { stoja: [1, 3, 5], belka: true, cella: false },
+  nazwa: {
+    tytul: 'ŚWIĄTYNIA KASTORA I POLLUKSA',
+    opis: 'Poświęcona boskim bliźniakom po bitwie nad jeziorem Regillus (484 r. p.n.e.). Trzy ocalałe kolumny korynckie są jednym z symboli Forum.',
+  },
+});
+
+/* Świątynia Antonina i Faustyny — przetrwała jako kościół */
+swiatynia({
+  x: 18, z: 2, ry: -Math.PI / 2, w: 13, d: 20, hPodium: 3.5, hKol: 10, rKol: .5,
+  nFront: 6, nBok: 0,
+  ruina: { stoja: [0, 1, 2, 3, 4, 5], belka: true, cella: true },
+  nazwa: {
+    tytul: 'ŚWIĄTYNIA ANTONINA I FAUSTYNY',
+    opis: 'Wzniesiona w 141 r. n.e. przez cesarza Antonina Piusa dla zmarłej żony Faustyny. Przetrwała wieki, bo w średniowieczu zamieniono ją na kościół San Lorenzo in Miranda.',
+  },
+});
+
+/* Świątynia Westy — okrągła */
+{
+  const x = 16, z = 60, R = 6.2;
+  const krag = n => { const p = []; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; p.push([Math.cos(a) * R, 0, Math.sin(a) * R]); } return p; };
+  const podium = grupa => {
+    const g = new THREE.Group(); g.position.set(x, 0, z);
+    g.add(walec(grupa === rekonstrukcja ? M.marmurNowy : M.marmurStary, 0, .5, 0, R + 2.4, 1));
+    g.add(walec(grupa === rekonstrukcja ? M.marmurNowy : M.marmurStary, 0, 1.2, 0, R + 1.5, .8));
+    grupa.add(g); return g;
+  };
+  const gN = podium(rekonstrukcja);
+  const k = kolumnada(krag(16), 7.5, .36, M.kanelNowy); k.position.y = 1.6; gN.add(k);
+  const pierscien = new THREE.Mesh(new THREE.TorusGeometry(R + .3, .55, 8, 40), M.marmurNowy);
+  pierscien.rotation.x = Math.PI / 2; pierscien.position.y = 9.4; pierscien.castShadow = true; gN.add(pierscien);
+  const stozek = new THREE.Mesh(GEO.stozek, M.dach);
+  stozek.scale.set(R + 1.6, 3.4, R + 1.6); stozek.position.y = 11.2; stozek.castShadow = true; gN.add(stozek);
+  const zn = new THREE.Mesh(GEO.kula, M.zloto); zn.scale.setScalar(.45); zn.position.y = 13.2; gN.add(zn);
+  gN.add(walec(M.marmurNowy, 0, 1.6 + 2.5, 0, R * .6, 5));        // cella
+  const gR = podium(ruiny);
+  const kr = kolumnada(krag(16).slice(0, 5), 7.5, .36, M.kanelStary); kr.position.y = 1.6; gR.add(kr);
+  const zl = zlamaneKolumny(krag(16).slice(8, 13), 7.5, .36, M.kanelStary); zl.position.y = 1.6; gR.add(zl);
+  kolKolo(x, z, R + 2.8);
+  dodajHotspot(x, z, R + 10, 'ŚWIĄTYNIA WESTY',
+    'Okrągła świątynia bogini ogniska domowego. Kapłanki westalki strzegły tu wiecznego ognia — jego wygaśnięcie wróżyło Rzymowi katastrofę.');
+}
+
+/* Bazylika Julijska — wielka hala sądowa */
+{
+  const x = -24, z = 30, w = 24, d = 46, hK = 7;
+  const gN = new THREE.Group(); gN.position.set(x, 0, z); rekonstrukcja.add(gN);
+  gN.add(pudlo(M.marmurNowy, 0, .6, 0, w, 1.2, d));
+  gN.add(pudlo(M.marmurNowy, 0, 1.5, 0, w - 1.6, .6, d - 1.6));
+  const p1 = kolumnada(siatkaPerystylu(6, 11, w - 3, d - 3), hK, .42, M.kanelNowy); p1.position.y = 1.8; gN.add(p1);
+  gN.add(pudlo(M.marmurNowy, 0, 1.8 + hK + .5, 0, w - 1.4, 1, d - 1.4));
+  const p2 = kolumnada(siatkaPerystylu(6, 11, w - 3, d - 3), 5, .36, M.kanelNowy); p2.position.y = 1.8 + hK + 1; gN.add(p2);
+  gN.add(pudlo(M.marmurNowy, 0, 1.8 + hK + 1 + 5 + .5, 0, w - 1.4, 1, d - 1.4));
+  const dach = pryzma(w, 2.6, d, M.marmurNowy, M.dach);
+  dach.position.y = 1.8 + hK + 1 + 5 + 1; gN.add(dach);
+  const gR = new THREE.Group(); gR.position.set(x, 0, z); ruiny.add(gR);
+  gR.add(pudlo(M.marmurStary, 0, .6, 0, w, 1.2, d));
+  const kikuty = [];
+  for (let i = 0; i < 5; i++) for (let j = 0; j < 9; j++)
+    kikuty.push([-w / 2 + 2.5 + i * (w - 5) / 4, 0, -d / 2 + 3 + j * (d - 6) / 8]);
+  const kz = zlamaneKolumny(kikuty, 4, .42, M.kanelStary); kz.position.y = 1.2; gR.add(kz);
+  kolBox(x, z, w + 1, d + 1);
+  dodajHotspot(x + w / 2, z, 16, 'BAZYLIKA JULIJSKA',
+    'Ogromna hala rozpoczęta przez Juliusza Cezara w 54 r. p.n.e. Toczyły się tu procesy cywilne przed trybunałem centumwirów — stu sędziów. Dziś pozostała szachownica fundamentów.');
+}
+
+/* Kuria Julijska — siedziba senatu (stoi w obu epokach) */
+{
+  const x = -14, z = -76, w = 13, h = 15, d = 16;
+  const g = new THREE.Group(); g.position.set(x, 0, z); wspolne.add(g);
+  g.add(pudlo(M.cegla, 0, h / 2, 0, w, h, d));
+  const dach = pryzma(w + .8, 3.2, d + .8, M.cegla, M.dach); dach.position.y = h; g.add(dach);
+  g.add(pudlo(M.brazCiemny, 0, 3.4, d / 2 + .06, 3.4, 6.8, .3));            // drzwi z brązu
+  for (const dx of [-3.6, 0, 3.6]) g.add(pudlo(M.brazCiemny, dx, h - 3, d / 2 + .06, 2, 2.6, .2));
+  for (let i = 0; i < 4; i++) g.add(pudlo(M.marmurStary, 0, (i + 1) * .18, d / 2 + (4 - i) * .5, 6, (i + 1) * .36, .5));
+  kolBox(x, z, w + 1, d + 3);
+  dodajHotspot(x, z + d / 2, 14, 'KURIA JULIJSKA',
+    'Siedziba senatu rzymskiego, ukończona przez Oktawiana Augusta w 29 r. p.n.e. Budynek przetrwał do dziś niemal nietknięty — w VII wieku zamieniono go na kościół.');
+}
+
+/* Rostra — mównica */
+{
+  const x = -19, z = -36, w = 6, d = 16;
+  const gR = new THREE.Group(); gR.position.set(x, 0, z); ruiny.add(gR);
+  gR.add(pudlo(M.cegla, 0, 1.4, 0, w, 2.8, d));
+  const gN = new THREE.Group(); gN.position.set(x, 0, z); rekonstrukcja.add(gN);
+  gN.add(pudlo(M.marmurNowy, 0, 1.5, 0, w, 3, d));
+  gN.add(pudlo(M.marmurNowy, 0, 3.15, 0, w + .5, .3, d + .5));
+  for (let i = 0; i < 6; i++) {                       // dzioby okrętów
+    const dziob = new THREE.Mesh(GEO.stozek, M.braz);
+    dziob.scale.set(.4, 1.3, .4); dziob.rotation.z = -Math.PI / 2;
+    dziob.position.set(w / 2 + .6, 1.6, -d / 2 + 1.6 + i * (d - 3.2) / 5);
+    dziob.castShadow = true; gN.add(dziob);
+  }
+  kolBox(x, z, w + .8, d + .8);
+  dodajHotspot(x + 4, z, 12, 'ROSTRA',
+    'Mównica ozdobiona dziobami (rostra) okrętów zdobytych pod Antium. Przemawiali z niej Cyceron, Juliusz Cezar i Marek Antoniusz nad ciałem Cezara.');
+}
+
+/* Kolumna Fokasa */
+{
+  const x = -7, z = -24;
+  const g = new THREE.Group(); g.position.set(x, 0, z); wspolne.add(g);
+  for (let i = 0; i < 3; i++) g.add(pudlo(M.marmurStary, 0, i * .5 + .25, 0, 5.5 - i * 1.2, .5, 5.5 - i * 1.2));
+  const k = kolumnada([[0, 0, 0]], 13, .55, M.kanelStary); k.position.y = 1.5; g.add(k);
+  const posag = new THREE.Mesh(new THREE.CapsuleGeometry(.45, 1.4, 4, 10), M.zloto);
+  posag.position.set(x, 15.6, z); posag.castShadow = true; rekonstrukcja.add(posag);
+  kolKolo(x, z, 3.2);
+  dodajHotspot(x, z, 9, 'KOLUMNA FOKASA',
+    'Ostatni monument wzniesiony na Forum Romanum — w 608 r. n.e., ku czci cesarza bizantyjskiego Fokasa. Na szczycie stał jego pozłacany posąg.');
+}
+
+/* ---------------- łuki triumfalne ---------------- */
+function luk(cfg) {
+  const { x, z, w, h, d, otwory, attykaH, napis, kolumny, nazwa } = cfg;
+  const s = new THREE.Shape();
+  s.moveTo(-w / 2, 0); s.lineTo(w / 2, 0); s.lineTo(w / 2, h); s.lineTo(-w / 2, h); s.closePath();
+  for (const o of otwory) {
+    const p = new THREE.Path();
+    const r = o.w / 2, yl = o.h - r;
+    p.moveTo(o.x - r, 0); p.lineTo(o.x - r, yl);
+    p.absarc(o.x, yl, r, Math.PI, 0, true);
+    p.lineTo(o.x + r, 0); p.closePath();
+    s.holes.push(p);
+  }
+  const geo = new THREE.ExtrudeGeometry(s, { depth: d, bevelEnabled: false });
+  geo.translate(0, 0, -d / 2);
+  const g = new THREE.Group(); g.position.set(x, 0, z); wspolne.add(g);
+  const bryla = new THREE.Mesh(geo, M.marmurStary);
+  bryla.castShadow = bryla.receiveShadow = true; g.add(bryla);
+  g.add(pudlo(M.marmurStary, 0, h + attykaH / 2, 0, w + .4, attykaH, d + .4));
+  const tex = texNapis(napis);
+  for (const kier of [1, -1]) {
+    const plansza = new THREE.Mesh(new THREE.PlaneGeometry(w * .8, attykaH * .8), mat({ map: tex }));
+    plansza.position.set(0, h + attykaH / 2, kier * (d / 2 + .21 + .01));
+    plansza.rotation.y = kier === 1 ? 0 : Math.PI;
+    g.add(plansza);
+  }
+  if (kolumny) {
+    for (const kier of [1, -1]) {
+      const kol = kolumnada(kolumny.map(kx => [kx, 0, kier * (d / 2 + .8)]), h * .78, .42, M.kanelStary);
+      kol.position.y = 0; g.add(kol);
+      for (const kx of kolumny) kolKolo(x + kx, z + kier * (d / 2 + .8), .85);
+    }
+  }
+  const kw = new THREE.Mesh(GEO.kula, M.zloto);                 // złocona kwadryga (symbolicznie)
+  kw.scale.set(1.1, .8, .8); kw.position.set(x, h + attykaH + .8, z); rekonstrukcja.add(kw);
+  const krawedzie = [];
+  let ost = -w / 2;
+  const otworySort = [...otwory].sort((a, b) => a.x - b.x);
+  for (const o of otworySort) { krawedzie.push([ost, o.x - o.w / 2]); ost = o.x + o.w / 2; }
+  krawedzie.push([ost, w / 2]);
+  for (const [a, b] of krawedzie) kolBox(x + (a + b) / 2, z, b - a, d + .6);
+  dodajHotspot(x, z, 13, nazwa.tytul, nazwa.opis);
+}
+luk({
+  x: 0, z: 82, w: 12, h: 12.5, d: 4.2, attykaH: 3,
+  otwory: [{ x: 0, w: 4.8, h: 9 }],
+  napis: ['SENATVS', 'POPVLVSQVE·ROMANVS', 'DIVO·TITO·DIVI·VESPASIANI·F', 'VESPASIANO·AVGVSTO'],
+  kolumny: [-4.6, 4.6],
+  nazwa: {
+    tytul: 'ŁUK TYTUSA',
+    opis: 'Wzniesiony ok. 81 r. n.e. dla upamiętnienia zdobycia Jerozolimy. Reliefy wewnątrz przejścia ukazują pochód triumfalny z łupami ze Świątyni Jerozolimskiej — w tym siedmioramienną menorę.',
+  },
+});
+luk({
+  x: 0, z: -58, w: 22, h: 15, d: 4.6, attykaH: 3.6,
+  otwory: [{ x: 0, w: 6, h: 10.5 }, { x: -7.2, w: 3.4, h: 7 }, { x: 7.2, w: 3.4, h: 7 }],
+  napis: ['IMP·CAES·LVCIO·SEPTIMIO·SEVERO', 'PIO·PERTINACI·AVG·PATRI·PATRIAE', 'PARTHICO·ARABICO·ET', 'PARTHICO·ADIABENICO'],
+  kolumny: [-9.85, -4.15, 4.15, 9.85],
+  nazwa: {
+    tytul: 'ŁUK SEPTYMIUSZA SEWERA',
+    opis: 'Potrójny łuk triumfalny z 203 r. n.e., upamiętniający zwycięstwa cesarza Septymiusza Sewera nad Partami. Na szczycie stała pozłacana kwadryga z posągiem cesarza.',
+  },
+});
+dodajHotspot(0, 48, 8, 'VIA SACRA',
+  'Święta Droga — najstarsza i najważniejsza ulica Rzymu. Tędy szły procesje triumfalne: od Łuku Tytusa, przez Forum, aż na Kapitol.');
+
+/* ---------------- zieleń, gruzy, dodatki epok ---------------- */
+function cyprys(grupa, x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z);
+  g.add(walec(M.pienTrawa, 0, .8, 0, .18, 1.6));
+  const kor = new THREE.Mesh(GEO.stozek, M.cyprys);
+  const h = 6 + Math.random() * 3;
+  kor.scale.set(1.1, h, 1.1); kor.position.y = 1.2 + h / 2; kor.castShadow = true;
+  g.add(kor); grupa.add(g); kolKolo(x, z, .8);
+}
+function pinia(grupa, x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z);
+  const h = 5 + Math.random() * 2;
+  g.add(walec(M.pienTrawa, 0, h / 2, 0, .3, h));
+  const kor = new THREE.Mesh(GEO.kula, M.pinia);
+  kor.scale.set(3.4, 1.5, 3.4); kor.position.y = h + .8; kor.castShadow = true;
+  g.add(kor); grupa.add(g); kolKolo(x, z, .9);
+}
+for (const [x, z] of [[-42, 62], [-45, 40], [-44, -10], [-46, -30], [42, 68], [44, 46], [42, -8], [44, -40],
+                      [-30, 84], [30, 88], [-20, 92], [20, -88], [-16, -90], [38, -66]]) cyprys(wspolne, x, z);
+for (const [x, z] of [[-40, 10], [34, 16], [-38, -66], [30, -30], [36, 52]]) pinia(ruiny, x, z);
+
+{ /* rozrzucone gruzy — tylko epoka ruin */
+  const czesci = [];
+  let ziarno = 7;
+  const los = () => (ziarno = (ziarno * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 34; i++) {
+    const x = (los() - .5) * 70, z = (los() - .5) * 150;
+    if (Math.abs(x) < 6 && Math.abs(z) < 88) continue;       // nie na samej drodze
+    if (los() < .5) {
+      const r = .35 + los() * .3, len = 1.2 + los() * 2.2;
+      czesci.push(przenies(GEO.cyl, 0, 0, 0, 0, r, len, r)
+        .applyMatrix4(new THREE.Matrix4().compose(
+          new THREE.Vector3(x, r, z),
+          new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, los() * 6, 0)),
+          new THREE.Vector3(1, 1, 1))));
+    } else {
+      czesci.push(przenies(GEO.box, x, .3 + los() * .2, z, los() * 6, .8 + los(), .6 + los() * .5, .8 + los()));
+    }
+  }
+  const m = new THREE.Mesh(mergeGeometries(czesci), M.gruzy);
+  m.castShadow = m.receiveShadow = true; ruiny.add(m);
+}
+
+/* posągi wzdłuż placu — tylko rekonstrukcja */
+function posag(x, z, ry) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry;
+  g.add(pudlo(M.marmurNowy, 0, .9, 0, 1.5, 1.8, 1.5));
+  const cialo = new THREE.Mesh(new THREE.CapsuleGeometry(.42, 1.5, 4, 10), M.zloto);
+  cialo.position.y = 3; cialo.castShadow = true; g.add(cialo);
+  const glowa = new THREE.Mesh(GEO.kula, M.zloto);
+  glowa.scale.setScalar(.3); glowa.position.y = 4.35; g.add(glowa);
+  rekonstrukcja.add(g); kolKolo(x, z, 1.2);
+}
+for (const [x, z] of [[-14, 8], [14, 14], [-14, -14], [14, -26], [-12, -44], [10, -52]]) posag(x, z, Math.atan2(-x, 0));
+
+/* braziery z ogniem — rekonstrukcja */
+const plomienie = [];
+const texPlomien = teksturaCanvas((g, s) => {
+  const gr = g.createRadialGradient(s / 2, s / 2, 4, s / 2, s / 2, s / 2);
+  gr.addColorStop(0, 'rgba(255,236,170,1)'); gr.addColorStop(.4, 'rgba(255,150,50,.85)');
+  gr.addColorStop(1, 'rgba(255,80,10,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, s, s);
+}, 128);
+function brazier(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); rekonstrukcja.add(g);
+  g.add(walec(M.braz, 0, .7, 0, .16, 1.4));
+  g.add(walec(M.braz, 0, 1.5, 0, .65, .35));
+  const p = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: texPlomien, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  p.position.y = 2; p.scale.set(1.4, 1.8, 1);
+  g.add(p);
+  const sw = new THREE.PointLight(0xff9a3c, 0, 22, 2);
+  sw.position.y = 2.1; g.add(sw);
+  plomienie.push({ sprite: p, swiatlo: sw, faza: Math.random() * 9 });
+  kolKolo(x, z, .8);
+}
+for (const [x, z] of [[-6, 66], [6, 60], [-7, 14], [6, -8], [-6, -30], [6, -40], [-6, -66], [6, -70]]) brazier(x, z);
+
+/* obywatele Rzymu — rekonstrukcja */
+const obywatele = [];
+{
+  const kolory = [0xeee6d4, 0xe3d7bd, 0xd9cdd8, 0xb43b2e, 0xeee6d4, 0x8e6fa8];
+  for (let i = 0; i < 10; i++) {
+    const g = new THREE.Group();
+    const toga = mat({ color: kolory[i % kolory.length], roughness: 1 });
+    const cialo = new THREE.Mesh(new THREE.CapsuleGeometry(.32, 1, 4, 10), toga);
+    cialo.position.y = .95; cialo.castShadow = true; g.add(cialo);
+    const glowa = new THREE.Mesh(GEO.kula, M.skora);
+    glowa.scale.setScalar(.21); glowa.position.y = 1.78; g.add(glowa);
+    g.position.set((Math.random() - .5) * 26, 0, -40 + Math.random() * 60);
+    rekonstrukcja.add(g);
+    obywatele.push({ g, cel: new THREE.Vector3(), czekaj: Math.random() * 4, szyb: .8 + Math.random() * .5 });
+    nowyCel(obywatele[obywatele.length - 1]);
+  }
+}
+function nowyCel(o) {
+  o.cel.set((Math.random() - .5) * 28, 0, -44 + Math.random() * 64);
+  o.czekaj = 1 + Math.random() * 5;
+}
+
+/* ---------------- niebo, słońce, gwiazdy ---------------- */
+const nieboMat = new THREE.ShaderMaterial({
+  uniforms: { gora: { value: new THREE.Color() }, dol: { value: new THREE.Color() } },
+  vertexShader: 'varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+  fragmentShader: `varying vec3 vP; uniform vec3 gora,dol;
+    void main(){ float h=normalize(vP).y*0.5+0.5;
+      gl_FragColor=vec4(mix(dol,gora,pow(max(h,0.0),0.65)),1.0); }`,
+  side: THREE.BackSide, depthWrite: false,
+});
+scena.add(new THREE.Mesh(new THREE.SphereGeometry(700, 24, 14), nieboMat));
+
+const texTarcza = teksturaCanvas((g, s) => {
+  const gr = g.createRadialGradient(s / 2, s / 2, 6, s / 2, s / 2, s / 2);
+  gr.addColorStop(0, 'rgba(255,250,230,1)'); gr.addColorStop(.25, 'rgba(255,235,190,.85)');
+  gr.addColorStop(1, 'rgba(255,220,160,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, s, s);
+}, 128);
+const tarczaSlonca = new THREE.Sprite(new THREE.SpriteMaterial({ map: texTarcza, transparent: true, depthWrite: false, fog: false }));
+tarczaSlonca.scale.setScalar(120); scena.add(tarczaSlonca);
+
+const gwiazdy = (() => {
+  const n = 900, poz = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, b = Math.acos(Math.random() * .95);
+    const r = 650;
+    poz[i * 3] = r * Math.sin(b) * Math.cos(a);
+    poz[i * 3 + 1] = r * Math.cos(b) + 20;
+    poz[i * 3 + 2] = r * Math.sin(b) * Math.sin(a);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(poz, 3));
+  const p = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xcdd8ff, size: 1.6, sizeAttenuation: false, transparent: true, opacity: .9, fog: false }));
+  scena.add(p); return p;
+})();
+
+/* ---------------- oświetlenie i pory dnia ---------------- */
+const slonce = new THREE.DirectionalLight(0xffffff, 2.6);
+slonce.castShadow = !JEST_DOTYK;
+slonce.shadow.mapSize.set(2048, 2048);
+Object.assign(slonce.shadow.camera, { left: -90, right: 90, top: 110, bottom: -110, near: 10, far: 420 });
+slonce.shadow.camera.updateProjectionMatrix();
+slonce.shadow.bias = -0.0006;
+scena.add(slonce, slonce.target);
+const hemi = new THREE.HemisphereLight(0xbdd3ec, 0x8a7a58, .9);
+scena.add(hemi);
+
+const PORY = [
+  { nazwa: 'POŁUDNIE', poz: [90, 150, 60], kolor: 0xfff2dc, moc: 2.8, hemi: .85,
+    gora: '#3d78c4', dol: '#cfe2ee', mgla: '#c9dcea', eksp: 1.05, tarcza: 1 },
+  { nazwa: 'ZACHÓD SŁOŃCA', poz: [-160, 26, 55], kolor: 0xff8b42, moc: 2.4, hemi: .38,
+    gora: '#54689f', dol: '#f0a35c', mgla: '#dfa473', eksp: 1.0, tarcza: 1 },
+  { nazwa: 'NOC', poz: [-70, 110, -90], kolor: 0x8fa8dd, moc: .45, hemi: .1,
+    gora: '#070c22', dol: '#1a2547', mgla: '#0d1328', eksp: 1.15, tarcza: .35 },
+];
+let poraIdx = 0;
+scena.fog = new THREE.Fog(0xc9dcea, 70, 520);
+
+function zastosujPore() {
+  const p = PORY[poraIdx];
+  slonce.position.set(...p.poz);
+  slonce.color.set(p.kolor); slonce.intensity = p.moc;
+  hemi.intensity = p.hemi;
+  nieboMat.uniforms.gora.value.set(p.gora);
+  nieboMat.uniforms.dol.value.set(p.dol);
+  scena.fog.color.set(p.mgla);
+  renderer.toneMappingExposure = p.eksp;
+  tarczaSlonca.position.copy(slonce.position).normalize().multiplyScalar(660);
+  tarczaSlonca.material.opacity = p.tarcza;
+  tarczaSlonca.scale.setScalar(poraIdx === 2 ? 55 : 120);
+  gwiazdy.visible = poraIdx === 2;
+  const noc = poraIdx === 2 && rekonstrukcja.visible;
+  for (const f of plomienie) f.swiatlo.intensity = noc ? 14 : 0;
+  document.getElementById('pora').textContent = p.nazwa;
+}
+
+/* ---------------- epoki ---------------- */
+let hiperrealnosc = true;                  // start w roku 320 n.e.
+function zastosujEpoke() {
+  rekonstrukcja.visible = hiperrealnosc;
+  ruiny.visible = !hiperrealnosc;
+  document.getElementById('epoka').textContent = hiperrealnosc
+    ? 'ROK 320 N.E. · HIPERREALNOŚĆ' : 'ROK 2026 · RUINY';
+  zastosujPore();
+}
+
+/* ---------------- dźwięk (Web Audio, proceduralny) ---------------- */
+const Dzwiek = {
+  ctx: null, master: null, wyciszony: false, wiatr: null,
+  start() {
+    if (this.ctx) return;
+    const ctx = this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.master = ctx.createGain(); this.master.gain.value = .5;
+    this.master.connect(ctx.destination);
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    this.szum = buf;
+    const zr = ctx.createBufferSource(); zr.buffer = buf; zr.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 380; f.Q.value = .35;
+    this.wiatr = ctx.createGain(); this.wiatr.gain.value = .1;
+    zr.connect(f); f.connect(this.wiatr); this.wiatr.connect(this.master);
+    zr.start();
+    setInterval(() => {
+      if (!this.ctx) return;
+      this.wiatr.gain.linearRampToValueAtTime(.04 + Math.random() * .14, ctx.currentTime + 2.4);
+    }, 2600);
+    this.planujPtaki();
+  },
+  ton(freq, czas, dl, glo, typ = 'sine') {
+    const ctx = this.ctx, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = typ; o.frequency.setValueAtTime(freq, czas);
+    o.frequency.exponentialRampToValueAtTime(freq * .72, czas + dl);
+    g.gain.setValueAtTime(0, czas);
+    g.gain.linearRampToValueAtTime(glo, czas + dl * .2);
+    g.gain.exponentialRampToValueAtTime(.001, czas + dl);
+    o.connect(g); g.connect(this.master);
+    o.start(czas); o.stop(czas + dl + .05);
+  },
+  planujPtaki() {
+    setTimeout(() => {
+      if (this.ctx && !this.wyciszony) {
+        const t = this.ctx.currentTime;
+        if (poraIdx !== 2) {                                    // ptaki za dnia
+          const n = 2 + (Math.random() * 4 | 0);
+          for (let i = 0; i < n; i++)
+            this.ton(2200 + Math.random() * 1600, t + i * .16 + Math.random() * .05, .12, .05);
+        } else {                                                // świerszcze nocą
+          for (let i = 0; i < 8; i++) this.ton(4300, t + i * .09, .05, .025, 'triangle');
+        }
+      }
+      this.planujPtaki();
+    }, 2400 + Math.random() * 5200);
+  },
+  krok() {
+    if (!this.ctx || this.wyciszony) return;
+    const ctx = this.ctx, t = ctx.currentTime;
+    const zr = ctx.createBufferSource(); zr.buffer = this.szum;
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass';
+    f.frequency.value = 420 + Math.random() * 260;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(.22, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + .09);
+    zr.connect(f); f.connect(g); g.connect(this.master);
+    zr.start(t, Math.random()); zr.stop(t + .1);
+  },
+  przelacz() {
+    this.wyciszony = !this.wyciszony;
+    if (this.master) this.master.gain.value = this.wyciszony ? 0 : .5;
+    pokazToast(this.wyciszony ? 'Dźwięk wyłączony' : 'Dźwięk włączony');
+  },
+};
+
+/* ---------------- gracz i sterowanie ---------------- */
+const gracz = {
+  poz: new THREE.Vector3(0, 0, 92), yaw: 0, pitch: 0,
+  predkosc: new THREE.Vector3(), bob: 0, ostatniKrok: 0,
+};
+const klawisze = {};
+addEventListener('keydown', e => {
+  klawisze[e.code] = true;
+  if (e.code === 'KeyH') { hiperrealnosc = !hiperrealnosc; zastosujEpoke(); }
+  if (e.code === 'KeyT') { poraIdx = (poraIdx + 1) % PORY.length; zastosujPore(); }
+  if (e.code === 'KeyM') Dzwiek.przelacz();
+});
+addEventListener('keyup', e => { klawisze[e.code] = false; });
+
+const start = document.getElementById('start');
+let wGrze = false;
+function wejdz() {
+  start.classList.add('ukryty');
+  wGrze = true;
+  Dzwiek.start();
+  if (!JEST_DOTYK && document.pointerLockElement !== renderer.domElement)
+    renderer.domElement.requestPointerLock?.();
+}
+start.addEventListener('click', wejdz);
+renderer.domElement.addEventListener('click', () => { if (wGrze && !JEST_DOTYK) renderer.domElement.requestPointerLock?.(); });
+document.addEventListener('pointerlockchange', () => {
+  if (!document.pointerLockElement && wGrze && !JEST_DOTYK) { /* pauza miękka — overlay zostaje ukryty */ }
+});
+addEventListener('mousemove', e => {
+  if (document.pointerLockElement === renderer.domElement) {
+    gracz.yaw -= e.movementX * .0022;
+    gracz.pitch = Math.max(-1.45, Math.min(1.45, gracz.pitch - e.movementY * .0022));
+  }
+});
+/* awaryjne rozglądanie przeciąganiem (gdy pointer lock niedostępny) */
+let przeciaganie = null;
+renderer.domElement.addEventListener('mousedown', e => {
+  if (!document.pointerLockElement && wGrze && !JEST_DOTYK) przeciaganie = { x: e.clientX, y: e.clientY };
+});
+addEventListener('mouseup', () => przeciaganie = null);
+addEventListener('mousemove', e => {
+  if (przeciaganie) {
+    gracz.yaw -= (e.clientX - przeciaganie.x) * .004;
+    gracz.pitch = Math.max(-1.45, Math.min(1.45, gracz.pitch - (e.clientY - przeciaganie.y) * .004));
+    przeciaganie = { x: e.clientX, y: e.clientY };
+  }
+});
+
+/* — dotyk: joystick + rozglądanie — */
+const joyEl = document.getElementById('joystick');
+const galka = joyEl.querySelector('.galka');
+let joy = null, patrz = null;
+addEventListener('touchstart', e => {
+  if (!wGrze) { wejdz(); return; }
+  for (const t of e.changedTouches) {
+    if (t.target.closest('#przyciski')) continue;
+    if (t.clientX < innerWidth / 2 && !joy) {
+      joy = { id: t.identifier, x0: t.clientX, y0: t.clientY, dx: 0, dy: 0 };
+      joyEl.style.display = 'block';
+      joyEl.style.left = (t.clientX - 55) + 'px'; joyEl.style.top = (t.clientY - 55) + 'px';
+    } else if (!patrz) {
+      patrz = { id: t.identifier, x: t.clientX, y: t.clientY };
+    }
+  }
+}, { passive: true });
+addEventListener('touchmove', e => {
+  for (const t of e.changedTouches) {
+    if (joy && t.identifier === joy.id) {
+      const dx = t.clientX - joy.x0, dy = t.clientY - joy.y0;
+      const dl = Math.hypot(dx, dy), max = 44;
+      const k = dl > max ? max / dl : 1;
+      joy.dx = dx * k / max; joy.dy = dy * k / max;
+      galka.style.transform = `translate(${dx * k}px,${dy * k}px)`;
+    }
+    if (patrz && t.identifier === patrz.id) {
+      gracz.yaw -= (t.clientX - patrz.x) * .005;
+      gracz.pitch = Math.max(-1.45, Math.min(1.45, gracz.pitch - (t.clientY - patrz.y) * .005));
+      patrz.x = t.clientX; patrz.y = t.clientY;
+    }
+  }
+}, { passive: true });
+addEventListener('touchend', e => {
+  for (const t of e.changedTouches) {
+    if (joy && t.identifier === joy.id) { joy = null; joyEl.style.display = 'none'; galka.style.transform = ''; }
+    if (patrz && t.identifier === patrz.id) patrz = null;
+  }
+});
+document.getElementById('btn-epoka').addEventListener('click', () => { hiperrealnosc = !hiperrealnosc; zastosujEpoke(); });
+document.getElementById('btn-pora').addEventListener('click', () => { poraIdx = (poraIdx + 1) % PORY.length; zastosujPore(); });
+document.getElementById('btn-dzwiek').addEventListener('click', () => Dzwiek.przelacz());
+
+function pokazToast(txt) {
+  const el = document.getElementById('pora');
+  const stary = PORY[poraIdx].nazwa;
+  el.textContent = txt;
+  setTimeout(() => { el.textContent = PORY[poraIdx].nazwa; }, 1400);
+}
+
+/* ---------------- kolizje gracza ---------------- */
+function rozwiazKolizje(p) {
+  for (const k of kolizje) {
+    if (k.typ === 'kolo') {
+      const dx = p.x - k.x, dz = p.z - k.z;
+      const d = Math.hypot(dx, dz), min = k.r + PROMIEN_GRACZA;
+      if (d < min && d > 1e-4) { p.x = k.x + dx / d * min; p.z = k.z + dz / d * min; }
+    } else {
+      const x1 = k.x1 - PROMIEN_GRACZA, x2 = k.x2 + PROMIEN_GRACZA;
+      const z1 = k.z1 - PROMIEN_GRACZA, z2 = k.z2 + PROMIEN_GRACZA;
+      if (p.x > x1 && p.x < x2 && p.z > z1 && p.z < z2) {
+        const wyj = [p.x - x1, x2 - p.x, p.z - z1, z2 - p.z];
+        const i = wyj.indexOf(Math.min(...wyj));
+        if (i === 0) p.x = x1; else if (i === 1) p.x = x2;
+        else if (i === 2) p.z = z1; else p.z = z2;
+      }
+    }
+  }
+  p.x = Math.max(-56, Math.min(56, p.x));
+  p.z = Math.max(-92, Math.min(94, p.z));
+}
+
+/* ---------------- hotspoty ---------------- */
+const karta = document.getElementById('karta');
+const kartaTytul = document.getElementById('karta-tytul');
+const kartaOpis = document.getElementById('karta-opis');
+let aktywnyHotspot = null;
+function aktualizujHotspoty() {
+  let najblizszy = null, najD = 1e9;
+  for (const h of hotspoty) {
+    const d = Math.hypot(gracz.poz.x - h.x, gracz.poz.z - h.z);
+    if (d < h.r && d < najD) { najD = d; najblizszy = h; }
+  }
+  if (najblizszy !== aktywnyHotspot) {
+    aktywnyHotspot = najblizszy;
+    if (najblizszy) {
+      kartaTytul.textContent = najblizszy.tytul;
+      kartaOpis.textContent = najblizszy.opis;
+      karta.classList.add('aktywna');
+    } else karta.classList.remove('aktywna');
+  }
+}
+
+/* ---------------- pętla gry ---------------- */
+const zegar = new THREE.Clock();
+const WYS_OCZU = 1.75;
+zastosujEpoke();
+
+function animuj() {
+  requestAnimationFrame(animuj);
+  const dt = Math.min(zegar.getDelta(), .05);
+  const czas = zegar.elapsedTime;
+
+  /* ruch */
+  let mx = 0, mz = 0;
+  if (klawisze.KeyW || klawisze.ArrowUp) mz -= 1;
+  if (klawisze.KeyS || klawisze.ArrowDown) mz += 1;
+  if (klawisze.KeyA || klawisze.ArrowLeft) mx -= 1;
+  if (klawisze.KeyD || klawisze.ArrowRight) mx += 1;
+  if (joy) { mx += joy.dx; mz += joy.dy; }
+  const dl = Math.hypot(mx, mz);
+  const bieg = klawisze.ShiftLeft || klawisze.ShiftRight;
+  const szybkosc = bieg ? 8.5 : 4.2;
+  if (dl > .01 && wGrze) {
+    mx /= Math.max(dl, 1); mz /= Math.max(dl, 1);
+    const sin = Math.sin(gracz.yaw), cos = Math.cos(gracz.yaw);
+    gracz.poz.x += (mx * cos + mz * sin) * szybkosc * dt;
+    gracz.poz.z += (-mx * sin + mz * cos) * szybkosc * dt;
+    rozwiazKolizje(gracz.poz);
+    gracz.bob += dt * (bieg ? 11 : 7.2);
+    if (gracz.bob - gracz.ostatniKrok > Math.PI) { gracz.ostatniKrok = gracz.bob; Dzwiek.krok(); }
+  }
+
+  kamera.position.set(gracz.poz.x, WYS_OCZU + Math.sin(gracz.bob) * .05, gracz.poz.z);
+  kamera.rotation.set(0, 0, 0);
+  kamera.rotateY(gracz.yaw);
+  kamera.rotateX(gracz.pitch);
+
+  /* ogień */
+  if (rekonstrukcja.visible) {
+    for (const f of plomienie) {
+      const s = 1.2 + Math.sin(czas * 11 + f.faza) * .16 + Math.sin(czas * 23 + f.faza * 2) * .08;
+      f.sprite.scale.set(1.4 * s, 1.8 * s, 1);
+      if (poraIdx === 2) f.swiatlo.intensity = 12 + Math.sin(czas * 13 + f.faza) * 3.5;
+    }
+    /* obywatele */
+    for (const o of obywatele) {
+      const d = o.g.position.distanceTo(o.cel);
+      if (d < .4) { o.czekaj -= dt; if (o.czekaj <= 0) nowyCel(o); }
+      else {
+        const kier = o.cel.clone().sub(o.g.position).normalize();
+        o.g.position.addScaledVector(kier, o.szyb * dt);
+        o.g.rotation.y = Math.atan2(kier.x, kier.z);
+        o.g.position.y = Math.abs(Math.sin(czas * 8 + o.szyb * 20)) * .03;
+      }
+    }
+  }
+
+  aktualizujHotspoty();
+  renderer.render(scena, kamera);
+}
+animuj();
+</script>
+</body>
+</html>
