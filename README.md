@@ -220,5 +220,8 @@ Uruchomienie: `npm run dev`, potem otwórz `http://localhost:5173/forum-romanum.
 `public/os-czasu-historia-7.html` — grywalna oś czasu 1815–1939 zgodna z podstawą programową
 historii dla klasy VII SP (od kongresu wiedeńskiego do wybuchu II wojny światowej):
 tryb nauki (interaktywna oś z kartami ~55 wydarzeń), gra „Wskaż rok" (wskazywanie dat na osi,
-punkty i ocena szkolna 1–6) oraz gra „Chronologia" (układanie wydarzeń w kolejności).
+punkty i ocena szkolna 1–6), gra „Chronologia" (układanie wydarzeń w kolejności)
+oraz gra „Prawda/fałsz" (daty, kolejność wydarzeń i wieki).
+Analogiczna oś dla klasy VI (1450–1815, od wielkich odkryć do upadku Napoleona):
+`public/os-czasu-historia-6.html` — generowana z tego samego silnika.
 Filtr pozwala ćwiczyć pojedynczy dział, np. przed sprawdzianem. Bez zależności zewnętrznych.
