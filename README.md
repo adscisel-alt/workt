@@ -214,3 +214,11 @@ W repozytorium znajduje się też samodzielna gra 3D wygenerowana z jednego prom
 
 Uruchomienie: `npm run dev`, potem otwórz `http://localhost:5173/forum-romanum.html`
 (po `npm run build` plik jest też kopiowany do `dist/`).
+
+### 🕰️ Oś czasu — historia klasy VII (gra edukacyjna)
+
+`public/os-czasu-historia-7.html` — grywalna oś czasu 1815–1939 zgodna z podstawą programową
+historii dla klasy VII SP (od kongresu wiedeńskiego do wybuchu II wojny światowej):
+tryb nauki (interaktywna oś z kartami ~55 wydarzeń), gra „Wskaż rok" (wskazywanie dat na osi,
+punkty i ocena szkolna 1–6) oraz gra „Chronologia" (układanie wydarzeń w kolejności).
+Filtr pozwala ćwiczyć pojedynczy dział, np. przed sprawdzianem. Bez zależności zewnętrznych.
