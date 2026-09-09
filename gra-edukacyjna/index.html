@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akademia Odkrywców — gra edukacyjna</title>
+<style>
+  /* ============================================================
+     AKADEMIA ODKRYWCÓW — style
+     Zasada: duże, czytelne elementy, żywe kolory, wyraźna
+     informacja zwrotna (animacje poprawnej / błędnej odpowiedzi).
+     ============================================================ */
+  :root{
+    --tlo1:#1b2a4a; --tlo2:#2d1b4a;
+    --karta:#ffffff; --tekst:#22293b; --tekst-slaby:#66708a;
+    --akcent:#4f6df5; --akcent2:#8b5cf6;
+    --ok:#22c55e; --blad:#ef4444; --zloto:#f59e0b;
+    --cien:0 10px 30px rgba(0,0,0,.25);
+    --radius:18px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:linear-gradient(135deg,var(--tlo1),var(--tlo2)) fixed;
+    color:var(--tekst); min-height:100vh;
+  }
+  #gwiazdy{position:fixed; inset:0; z-index:0; pointer-events:none;}
+  #aplikacja{position:relative; z-index:1; max-width:760px; margin:0 auto; padding:16px; padding-bottom:90px;}
+
+  .ekran{display:none; animation:wjazd .35s ease;}
+  .ekran.aktywny{display:block;}
+  @keyframes wjazd{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;}}
+
+  h1,h2,h3{margin:.3em 0;}
+  .naglowek-gry{text-align:center; color:#fff; margin:18px 0 6px;}
+  .naglowek-gry h1{font-size:clamp(1.6rem,5vw,2.4rem); letter-spacing:.5px;}
+  .podtytul{color:#c9d4ff; margin-top:0;}
+
+  .karta{background:var(--karta); border-radius:var(--radius); box-shadow:var(--cien); padding:18px; margin:14px 0;}
+
+  .przycisk{
+    display:inline-block; border:0; cursor:pointer; font:inherit; font-weight:700;
+    background:linear-gradient(135deg,var(--akcent),var(--akcent2)); color:#fff;
+    padding:13px 22px; border-radius:14px; box-shadow:0 4px 14px rgba(79,109,245,.4);
+    transition:transform .12s, box-shadow .12s; text-align:center;
+  }
+  .przycisk:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(79,109,245,.5);}
+  .przycisk:active{transform:translateY(1px);}
+  .przycisk.drugi{background:#eef1fb; color:var(--akcent); box-shadow:none;}
+  .przycisk.maly{padding:8px 14px; font-size:.9rem; border-radius:10px;}
+  .przycisk:disabled{opacity:.45; cursor:not-allowed; transform:none;}
+  .przycisk.szeroki{display:block; width:100%;}
+
+  /* --- pasek gracza --- */
+  .pasek-gracza{display:flex; align-items:center; gap:12px; background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.18); border-radius:16px; padding:10px 14px; color:#fff; backdrop-filter:blur(6px);}
+  .pasek-gracza .awatar{font-size:2rem;}
+  .pasek-gracza .info{flex:1; min-width:0;}
+  .pasek-gracza .imie{font-weight:800;}
+  .pasek-xp{height:9px; background:rgba(255,255,255,.2); border-radius:99px; overflow:hidden; margin-top:5px;}
+  .pasek-xp>div{height:100%; background:linear-gradient(90deg,#fbbf24,#f59e0b); border-radius:99px; transition:width .6s ease;}
+  .odznaki-paska{display:flex; gap:10px; font-weight:800; white-space:nowrap;}
+
+  /* --- mapa przedmiotów --- */
+  .siatka-przedmiotow{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px;}
+  .kafel-przedmiot{border:0; cursor:pointer; font:inherit; text-align:left; border-radius:var(--radius);
+    padding:18px; color:#fff; box-shadow:var(--cien); transition:transform .15s;}
+  .kafel-przedmiot:hover{transform:translateY(-4px) scale(1.02);}
+  .kafel-przedmiot .ikona{font-size:2.3rem;}
+  .kafel-przedmiot h3{margin:.35em 0 .15em; font-size:1.15rem;}
+  .kafel-przedmiot .postep-mini{font-size:.85rem; opacity:.9;}
+
+  .siatka-trybow{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-top:10px;}
+  .kafel-tryb{border:2px solid #e5e9f6; background:#fff; border-radius:14px; padding:14px; cursor:pointer;
+    font:inherit; text-align:center; transition:border-color .15s, transform .15s;}
+  .kafel-tryb:hover{border-color:var(--akcent); transform:translateY(-2px);}
+  .kafel-tryb .ikona{font-size:1.8rem;}
+  .kafel-tryb b{display:block; margin-top:4px;}
+  .kafel-tryb small{color:var(--tekst-slaby);}
+
+  /* --- poziomy --- */
+  .lista-poziomow{display:grid; gap:10px;}
+  .rzad-poziomu{display:flex; align-items:center; gap:14px; border:2px solid #e5e9f6; border-radius:14px;
+    padding:12px 16px; background:#fff; cursor:pointer; font:inherit; text-align:left; width:100%;}
+  .rzad-poziomu:hover:not(:disabled){border-color:var(--akcent);}
+  .rzad-poziomu:disabled{opacity:.5; cursor:not-allowed;}
+  .rzad-poziomu .nr{font-size:1.5rem;}
+  .rzad-poziomu .gwiazdki{margin-left:auto; font-size:1.1rem; letter-spacing:2px;}
+
+  /* --- rozgrywka --- */
+  .pasek-sesji{display:flex; align-items:center; gap:12px; color:#fff; margin-bottom:10px;}
+  .pasek-postepu{flex:1; height:12px; background:rgba(255,255,255,.2); border-radius:99px; overflow:hidden;}
+  .pasek-postepu>div{height:100%; background:linear-gradient(90deg,#34d399,#22c55e); transition:width .4s;}
+  .zycia{font-size:1.15rem; letter-spacing:2px;}
+  .licznik-czasu{font-weight:800; min-width:46px; text-align:center;}
+
+  .pytanie-tekst{font-size:1.25rem; font-weight:700; line-height:1.45;}
+  .siatka-odpowiedzi{display:grid; gap:10px; margin-top:16px;}
+  @media(min-width:560px){.siatka-odpowiedzi{grid-template-columns:1fr 1fr;}}
+  .odpowiedz{border:2px solid #e5e9f6; background:#fff; border-radius:14px; padding:14px 16px;
+    cursor:pointer; font:inherit; font-size:1.05rem; text-align:left; transition:all .15s;}
+  .odpowiedz:hover:not(:disabled){border-color:var(--akcent); background:#f5f7ff;}
+  .odpowiedz.dobra{border-color:var(--ok); background:#ecfdf5; animation:puls .4s;}
+  .odpowiedz.zla{border-color:var(--blad); background:#fef2f2; animation:trzesienie .4s;}
+  .odpowiedz.wygaszona{opacity:.35;}
+  @keyframes puls{50%{transform:scale(1.04);}}
+  @keyframes trzesienie{20%,60%{transform:translateX(-6px);}40%,80%{transform:translateX(6px);}}
+
+  .wyjasnienie{margin-top:14px; border-radius:12px; padding:13px 15px; font-size:.98rem; line-height:1.5; display:none;}
+  .wyjasnienie.ok{display:block; background:#ecfdf5; border:1px solid #a7f3d0;}
+  .wyjasnienie.blad{display:block; background:#fef2f2; border:1px solid #fecaca;}
+
+  .pasek-akcji{display:flex; gap:10px; margin-top:14px; align-items:center; flex-wrap:wrap;}
+
+  /* --- sprint --- */
+  .sprint-dzialanie{font-size:2.4rem; font-weight:800; text-align:center; margin:18px 0;}
+  .sprint-wpis{display:flex; gap:10px; justify-content:center;}
+  .sprint-wpis input{font-size:1.5rem; width:150px; padding:10px 14px; border:2px solid #e5e9f6;
+    border-radius:12px; text-align:center; font-weight:700;}
+  .sprint-wpis input:focus{outline:none; border-color:var(--akcent);}
+
+  /* --- memory --- */
+  .siatka-memory{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:12px;}
+  .karta-memory{aspect-ratio:1; border:0; border-radius:12px; cursor:pointer; font:inherit; font-weight:700;
+    font-size:clamp(.7rem,2.6vw,.98rem); padding:4px; perspective:600px; background:transparent;}
+  .karta-memory .srodek{position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .4s;}
+  .karta-memory.odkryta .srodek{transform:rotateY(180deg);}
+  .karta-memory .przod,.karta-memory .tyl{position:absolute; inset:0; border-radius:12px; display:flex;
+    align-items:center; justify-content:center; text-align:center; padding:6px; backface-visibility:hidden;}
+  .karta-memory .przod{background:linear-gradient(135deg,var(--akcent),var(--akcent2)); color:#fff; font-size:1.6rem;}
+  .karta-memory .tyl{background:#fff; border:2px solid #e5e9f6; transform:rotateY(180deg); overflow-wrap:anywhere;}
+  .karta-memory.trafiona .tyl{background:#ecfdf5; border-color:var(--ok);}
+
+  /* --- wyniki / osiągnięcia --- */
+  .wynik-gwiazdy{font-size:3rem; text-align:center; letter-spacing:8px; margin:10px 0;}
+  .wynik-liczby{display:flex; justify-content:center; gap:26px; margin:14px 0; text-align:center;}
+  .wynik-liczby b{display:block; font-size:1.6rem;}
+  .wynik-liczby span{color:var(--tekst-slaby); font-size:.88rem;}
+
+  .lista-osiagniec{display:grid; gap:10px;}
+  .osiagniecie{display:flex; gap:14px; align-items:center; border:2px solid #e5e9f6; border-radius:14px; padding:12px 14px;}
+  .osiagniecie.zdobyte{border-color:var(--zloto); background:#fffbeb;}
+  .osiagniecie .ikona{font-size:1.9rem; filter:grayscale(1); opacity:.5;}
+  .osiagniecie.zdobyte .ikona{filter:none; opacity:1;}
+  .osiagniecie small{color:var(--tekst-slaby);}
+
+  /* --- statystyki --- */
+  .rzad-stat{margin:10px 0;}
+  .rzad-stat .etykieta{display:flex; justify-content:space-between; font-size:.92rem; margin-bottom:4px;}
+  .pasek-stat{height:12px; background:#eef1fb; border-radius:99px; overflow:hidden;}
+  .pasek-stat>div{height:100%; background:linear-gradient(90deg,#34d399,#22c55e);}
+
+  /* --- nawigacja dolna --- */
+  .nawigacja{position:fixed; bottom:0; left:0; right:0; z-index:5; display:flex; justify-content:center; gap:4px;
+    background:rgba(20,26,48,.92); backdrop-filter:blur(8px); padding:8px 6px calc(8px + env(safe-area-inset-bottom));}
+  .nawigacja button{flex:1; max-width:150px; border:0; background:none; color:#aab4d4; font:inherit; font-size:.72rem;
+    cursor:pointer; padding:6px 2px; border-radius:10px;}
+  .nawigacja button .ikona{display:block; font-size:1.35rem; margin-bottom:2px;}
+  .nawigacja button.aktywna{color:#fff; background:rgba(255,255,255,.12);}
+
+  /* --- awatary / toast / konfetti --- */
+  .wybor-awatara{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0;}
+  .wybor-awatara button{font-size:1.7rem; padding:8px; border-radius:12px; border:2px solid #e5e9f6; background:#fff; cursor:pointer;}
+  .wybor-awatara button.wybrany{border-color:var(--akcent); background:#f5f7ff;}
+  .pole-tekst{width:100%; font:inherit; font-size:1.05rem; padding:12px 14px; border:2px solid #e5e9f6; border-radius:12px;}
+  .pole-tekst:focus{outline:none; border-color:var(--akcent);}
+
+  #toast{position:fixed; top:14px; left:50%; transform:translateX(-50%) translateY(-120%); z-index:20;
+    background:#111827; color:#fff; padding:12px 20px; border-radius:14px; box-shadow:var(--cien);
+    transition:transform .35s ease; max-width:92vw; text-align:center;}
+  #toast.widoczny{transform:translateX(-50%) translateY(0);}
+  #konfetti{position:fixed; inset:0; z-index:15; pointer-events:none;}
+
+  .tekst-bialy{color:#fff;}
+  .tekst-slaby{color:var(--tekst-slaby);}
+  .srodek{text-align:center;}
+  table.tabela-stat{width:100%; border-collapse:collapse; font-size:.92rem;}
+  table.tabela-stat th, table.tabela-stat td{padding:7px 6px; border-bottom:1px solid #eef1fb; text-align:left;}
+</style>
+</head>
+<body>
+<canvas id="gwiazdy"></canvas>
+<canvas id="konfetti"></canvas>
+<div id="toast"></div>
+
+<div id="aplikacja">
+
+  <!-- ===================== EKRAN: POWITANIE / PROFIL ===================== -->
+  <section class="ekran" id="ekran-profil">
+    <div class="naglowek-gry">
+      <h1>🚀 Akademia Odkrywców</h1>
+      <p class="podtytul">Ucz się, zdobywaj gwiazdki i zostań Mistrzem Wiedzy!</p>
+    </div>
+    <div class="karta">
+      <h2>Stwórz swojego odkrywcę</h2>
+      <label for="pole-imie"><b>Jak masz na imię?</b></label>
+      <p style="margin:8px 0"><input id="pole-imie" class="pole-tekst" maxlength="20" placeholder="np. Zosia" autocomplete="off"></p>
+      <b>Wybierz awatar:</b>
+      <div class="wybor-awatara" id="wybor-awatara"></div>
+      <button class="przycisk szeroki" id="przycisk-start">Rozpocznij przygodę! 🎒</button>
+    </div>
+  </section>
+
+  <!-- ===================== EKRAN: MAPA ===================== -->
+  <section class="ekran" id="ekran-mapa">
+    <div class="pasek-gracza" id="pasek-gracza"></div>
+    <h2 class="tekst-bialy" style="margin-top:18px">🗺️ Wyspy wiedzy</h2>
+    <div class="siatka-przedmiotow" id="siatka-przedmiotow"></div>
+    <h2 class="tekst-bialy" style="margin-top:20px">🎮 Tryby specjalne</h2>
+    <div class="karta"><div class="siatka-trybow" id="siatka-trybow"></div></div>
+  </section>
+
+  <!-- ===================== EKRAN: POZIOMY ===================== -->
+  <section class="ekran" id="ekran-poziomy">
+    <div class="pasek-gracza" id="pasek-gracza-2"></div>
+    <div class="karta">
+      <button class="przycisk drugi maly" data-cel="mapa">← Mapa</button>
+      <h2 id="tytul-przedmiotu"></h2>
+      <p class="tekst-slaby" id="opis-przedmiotu"></p>
+      <div class="lista-poziomow" id="lista-poziomow"></div>
+    </div>
+  </section>
+
+  <!-- ===================== EKRAN: QUIZ ===================== -->
+  <section class="ekran" id="ekran-quiz">
+    <div class="pasek-sesji">
+      <button class="przycisk drugi maly" id="quiz-wyjscie">✕</button>
+      <div class="pasek-postepu"><div id="quiz-postep"></div></div>
+      <span class="zycia" id="quiz-zycia"></span>
+      <span class="licznik-czasu" id="quiz-czas"></span>
+    </div>
+    <div class="karta">
+      <p class="tekst-slaby" id="quiz-kategoria" style="margin:0 0 6px"></p>
+      <p class="pytanie-tekst" id="quiz-pytanie"></p>
+      <div class="siatka-odpowiedzi" id="quiz-odpowiedzi"></div>
+      <div class="wyjasnienie" id="quiz-wyjasnienie"></div>
+      <div class="pasek-akcji">
+        <button class="przycisk drugi maly" id="quiz-podpowiedz">💡 50 / 50 (20 🪙)</button>
+        <button class="przycisk maly" id="quiz-dalej" style="margin-left:auto; display:none">Dalej →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== EKRAN: SPRINT ===================== -->
+  <section class="ekran" id="ekran-sprint">
+    <div class="pasek-sesji">
+      <button class="przycisk drugi maly" id="sprint-wyjscie">✕</button>
+      <div class="pasek-postepu"><div id="sprint-postep" style="background:linear-gradient(90deg,#fbbf24,#f59e0b)"></div></div>
+      <span class="licznik-czasu" id="sprint-czas">60</span>
+    </div>
+    <div class="karta srodek">
+      <p class="tekst-slaby" style="margin:0">Rozwiąż jak najwięcej działań w 60 sekund!</p>
+      <p style="margin:6px 0">Wynik: <b id="sprint-wynik">0</b> &nbsp;•&nbsp; Rekord: <b id="sprint-rekord">0</b></p>
+      <div class="sprint-dzialanie" id="sprint-dzialanie"></div>
+      <div class="sprint-wpis">
+        <input id="sprint-pole" type="number" inputmode="numeric" autocomplete="off" placeholder="wynik">
+        <button class="przycisk" id="sprint-ok">OK</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== EKRAN: MEMORY ===================== -->
+  <section class="ekran" id="ekran-memory">
+    <div class="pasek-sesji">
+      <button class="przycisk drugi maly" id="memory-wyjscie">✕</button>
+      <span class="tekst-bialy" style="margin-left:auto">Ruchy: <b id="memory-ruchy">0</b></span>
+    </div>
+    <div class="karta">
+      <p class="tekst-slaby srodek" style="margin:0 0 6px">Połącz słówka angielskie z polskimi znaczeniami 🇬🇧↔🇵🇱</p>
+      <div class="siatka-memory" id="siatka-memory"></div>
+    </div>
+  </section>
+
+  <!-- ===================== EKRAN: WYNIK ===================== -->
+  <section class="ekran" id="ekran-wynik">
+    <div class="karta srodek">
+      <h2 id="wynik-tytul"></h2>
+      <div class="wynik-gwiazdy" id="wynik-gwiazdy"></div>
+      <div class="wynik-liczby" id="wynik-liczby"></div>
+      <p id="wynik-komentarz" class="tekst-slaby"></p>
+      <div class="pasek-akcji" style="justify-content:center">
+        <button class="przycisk drugi" id="wynik-powtorz">🔄 Jeszcze raz</button>
+        <button class="przycisk" data-cel="mapa">🗺️ Mapa</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== EKRAN: OSIĄGNIĘCIA ===================== -->
+  <section class="ekran" id="ekran-osiagniecia">
+    <div class="karta">
+      <h2>🏅 Osiągnięcia</h2>
+      <p class="tekst-slaby" id="osiagniecia-licznik"></p>
+      <div class="lista-osiagniec" id="lista-osiagniec"></div>
+    </div>
+  </section>
+
+  <!-- ===================== EKRAN: STATYSTYKI ===================== -->
+  <section class="ekran" id="ekran-statystyki">
+    <div class="karta">
+      <h2>📊 Twoje postępy</h2>
+      <p class="tekst-slaby">Ten panel pokaże Tobie (i nauczycielowi), co już umiesz, a co warto powtórzyć.</p>
+      <div id="statystyki-ogolne"></div>
+      <h3>Skuteczność według przedmiotu</h3>
+      <div id="statystyki-kategorie"></div>
+      <h3>Szczegóły</h3>
+      <div style="overflow-x:auto"><table class="tabela-stat" id="tabela-stat"></table></div>
+      <div class="pasek-akcji">
+        <button class="przycisk drugi maly" id="eksport-csv">⬇️ Pobierz wyniki (CSV)</button>
+        <button class="przycisk drugi maly" id="reset-postepu" style="color:var(--blad)">🗑️ Zacznij od nowa</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ===================== NAWIGACJA ===================== -->
+<nav class="nawigacja" id="nawigacja" style="display:none">
+  <button data-cel="mapa" class="aktywna"><span class="ikona">🗺️</span>Mapa</button>
+  <button data-cel="powtorki"><span class="ikona">🔁</span>Powtórki</button>
+  <button data-cel="wyzwanie"><span class="ikona">⭐</span>Wyzwanie</button>
+  <button data-cel="osiagniecia"><span class="ikona">🏅</span>Osiągnięcia</button>
+  <button data-cel="statystyki"><span class="ikona">📊</span>Postępy</button>
+</nav>
+
+<script>
+'use strict';
+/* =====================================================================
+   AKADEMIA ODKRYWCÓW — gra edukacyjna (bez zależności, jeden plik)
+
+   Filary projektu (dlaczego gra uczy, a nie tylko bawi):
+   1. Natychmiastowa informacja zwrotna + WYJAŚNIENIE przy każdym pytaniu.
+   2. Powtórki rozłożone w czasie: błędne odpowiedzi wracają w trybie 🔁.
+   3. Stopniowanie trudności: poziomy odblokowywane po opanowaniu niższych.
+   4. Motywacja: XP, monety, serie, gwiazdki, osiągnięcia, wyzwanie dnia.
+   5. Panel postępów dla ucznia i nauczyciela (+ eksport CSV).
+   ===================================================================== */
+
+// ---------------------------------------------------------------------
+// Narzędzia
+// ---------------------------------------------------------------------
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const los = n => Math.floor(Math.random() * n);
+function tasuj(tablica, rng){
+  const t = [...tablica], r = rng || Math.random;
+  for(let i = t.length - 1; i > 0; i--){
+    const j = Math.floor(r() * (i + 1));
+    [t[i], t[j]] = [t[j], t[i]];
+  }
+  return t;
+}
+// Deterministyczny generator liczb (do wyzwania dnia — ten sam zestaw dla całej klasy)
+function rngZiarno(ziarno){
+  let s = ziarno >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+function dzisiaj(){ return new Date().toISOString().slice(0, 10); }
+
+// ---------------------------------------------------------------------
+// Dźwięki (Web Audio — bez plików)
+// ---------------------------------------------------------------------
+let audioCtx = null;
+function ton(czest, start, dlugosc, typ, glosnosc){
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = typ || 'sine'; o.frequency.value = czest;
+  g.gain.setValueAtTime(glosnosc || .12, audioCtx.currentTime + start);
+  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + start + dlugosc);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(audioCtx.currentTime + start); o.stop(audioCtx.currentTime + start + dlugosc + .05);
+}
+function dzwiek(nazwa){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    if(nazwa === 'ok'){ ton(523, 0, .12); ton(659, .1, .12); ton(784, .2, .2); }
+    else if(nazwa === 'blad'){ ton(196, 0, .25, 'sawtooth', .08); ton(147, .12, .3, 'sawtooth', .08); }
+    else if(nazwa === 'klik'){ ton(660, 0, .06, 'square', .05); }
+    else if(nazwa === 'fanfary'){ [523,659,784,1047].forEach((f,i)=>ton(f, i*.13, .22)); }
+    else if(nazwa === 'odznaka'){ [784,988,1175].forEach((f,i)=>ton(f, i*.1, .3, 'triangle')); }
+  }catch(e){ /* dźwięk nie jest niezbędny do gry */ }
+}
+
+// ---------------------------------------------------------------------
+// Stan gry (localStorage)
+// ---------------------------------------------------------------------
+const KLUCZ = 'akademia-odkrywcow-v1';
+const STAN_DOMYSLNY = {
+  profil: null,                       // {imie, awatar}
+  xp: 0, monety: 50,
+  postep: {},                         // postep[przedmiot][poziom] = gwiazdki (1-3)
+  statystyki: {},                     // statystyki[przedmiot] = {dobre, wszystkie}
+  odpowiedziRazem: 0, dobreRazem: 0,
+  najlepszaSeria: 0, rekordSprintu: 0,
+  osiagniecia: [],                    // identyfikatory zdobytych
+  powtorki: [],                       // pytania do powtórki (błędne odpowiedzi)
+  wyzwanieData: null,                 // data ostatniego ukończonego wyzwania dnia
+  wygranePoziomy: 0, sesjeMemory: 0, sesjePowtorek: 0,
+};
+let S;
+try{ S = Object.assign({}, STAN_DOMYSLNY, JSON.parse(localStorage.getItem(KLUCZ) || 'null') || {}); }
+catch(e){ S = {...STAN_DOMYSLNY}; }
+function zapisz(){ try{ localStorage.setItem(KLUCZ, JSON.stringify(S)); }catch(e){} }
+
+function poziomGracza(){ return Math.floor(Math.sqrt(S.xp / 60)) + 1; }
+function xpDoNastepnego(){
+  const p = poziomGracza();
+  const prog = 60 * p * p;            // XP wymagane na kolejny poziom
+  const poprzedni = 60 * (p - 1) * (p - 1);
+  return {procent: Math.min(100, Math.round(100 * (S.xp - poprzedni) / (prog - poprzedni))), prog};
+}
+
+// ---------------------------------------------------------------------
+// BAZA WIEDZY
+// Format pytania: {p: treść, o: [4 odpowiedzi], ok: indeks dobrej, w: wyjaśnienie}
+// Każde pytanie MA wyjaśnienie — uczeń dowiaduje się "dlaczego",
+// nie tylko "czy dobrze".
+// ---------------------------------------------------------------------
+const PRZEDMIOTY = {
+  matematyka: {nazwa:'Matematyka', ikona:'🔢', kolor:'linear-gradient(135deg,#f97316,#ef4444)',
+    opis:'Działania, ułamki i procenty — zadania losowane za każdym razem inne!', poziomy:['Dodawanie i odejmowanie','Mnożenie i dzielenie','Ułamki i procenty']},
+  polski: {nazwa:'Język polski', ikona:'📚', kolor:'linear-gradient(135deg,#ec4899,#8b5cf6)',
+    opis:'Ortografia, gramatyka i lektury.', poziomy:['Ortografia I','Gramatyka','Mistrz słowa']},
+  przyroda: {nazwa:'Przyroda', ikona:'🌍', kolor:'linear-gradient(135deg,#22c55e,#0ea5e9)',
+    opis:'Świat roślin, zwierząt, kosmos i ciało człowieka.', poziomy:['Świat wokół nas','Ciało i natura','Nauka na tropie']},
+  angielski: {nazwa:'Angielski', ikona:'🇬🇧', kolor:'linear-gradient(135deg,#0ea5e9,#6366f1)',
+    opis:'Słówka i proste zdania po angielsku.', poziomy:['Pierwsze słówka','Zdania i pytania','Word master']},
+  historia: {nazwa:'Historia', ikona:'🏰', kolor:'linear-gradient(135deg,#a16207,#d97706)',
+    opis:'Władcy, daty i wielkie wydarzenia Polski i świata.', poziomy:['Legendy i początki','Królowie i bitwy','Wiek XX']},
+};
+
+const BANK = {
+polski: [
+  [ // Poziom 1 — ortografia
+    {p:'Jak zapiszemy poprawnie: „g...ra”?', o:['góra','gura','ghura','góhra'], ok:0, w:'Piszemy „góra” przez „ó”, bo wymienia się na „o” — np. górka → pagorek? Nie! Zapamiętaj wyraz: góra, bo w innych formach słychać „o”: gór → g-o-r w „gorzysty” (dawna forma). To wyraz do zapamiętania.'},
+    {p:'Które zdanie jest zapisane poprawnie?', o:['Ala ma pieska burka.','ala ma pieska Burka.','Ala ma pieska Burka.','Ala Ma Pieska Burka.'], ok:2, w:'Zdanie zaczynamy wielką literą, a imiona zwierząt (Burek) też piszemy wielką literą.'},
+    {p:'„...leb” — jaką literą zaczyna się ten wyraz (pieczywo)?', o:['h','ch','sz','rz'], ok:1, w:'„Chleb” piszemy przez „ch”. Podpowiedź: „ch” piszemy m.in. wtedy, gdy wymienia się na „sz” — chleb → chlebuszek… tu po prostu warto zapamiętać!'},
+    {p:'Jak piszemy: „w ogóle”?', o:['wogóle','w ogóle','w ogule','wogule'], ok:1, w:'„W ogóle” to DWA wyrazy, a „ogóle” piszemy przez „ó”. To jeden z najczęstszych błędów w internecie!'},
+    {p:'Który wyraz jest napisany błędnie?', o:['rzeka','żaba','morze','ktury'], ok:3, w:'Poprawnie piszemy „który” — przez „ó”. Rzeka, żaba i morze są napisane dobrze.'},
+    {p:'„Ó” piszemy, gdy wymienia się na…', o:['a lub ę','o, e lub a','u lub i','nigdy się nie wymienia'], ok:1, w:'„Ó” piszemy m.in. wtedy, gdy w innych formach wyrazu słychać „o”, „e” lub „a”: stół → stoły, wiózł → wiezie.'},
+    {p:'Jak zapiszemy: „za...ka” (miejsce z drzewami przy domu)?', o:['zagrótka','zagrudka','zagródka','zagrutka'], ok:2, w:'„Zagródka” — bo wymienia się na „o”: zagroda. Gdy słyszysz „u”, sprawdź inne formy wyrazu!'},
+    {p:'Które zdanie kończy się właściwym znakiem?', o:['Gdzie mieszkasz.','Gdzie mieszkasz?','Gdzie mieszkasz!','Gdzie mieszkasz,'], ok:1, w:'Pytania kończymy pytajnikiem „?”. Wyraz „gdzie” na początku to sygnał, że zdanie jest pytające.'},
+  ],
+  [ // Poziom 2 — gramatyka
+    {p:'Który wyraz to czasownik?', o:['szybki','biegać','pies','wesoło'], ok:1, w:'Czasownik odpowiada na pytania „co robi? co się dzieje?” — biegać. Szybki to przymiotnik, pies to rzeczownik, wesoło to przysłówek.'},
+    {p:'Ile sylab ma wyraz „matematyka”?', o:['3','4','5','6'], ok:2, w:'Ma-te-ma-ty-ka — 5 sylab. Sylaby najłatwiej policzyć, wyklaskując wyraz.'},
+    {p:'„Piękny” to jaka część mowy?', o:['rzeczownik','czasownik','przymiotnik','liczebnik'], ok:2, w:'Przymiotnik opisuje cechę i odpowiada na pytanie „jaki? jaka? jakie?” — piękny dom, piękna pogoda.'},
+    {p:'Które zdanie jest rozkazujące?', o:['Czy posprzątasz pokój?','Posprzątaj pokój!','Pokój jest posprzątany.','Chyba posprzątam pokój.'], ok:1, w:'Zdanie rozkazujące wyraża polecenie lub prośbę: „Posprzątaj pokój!”. Często kończy się wykrzyknikiem.'},
+    {p:'Liczba mnoga od „dziecko” to…', o:['dziecki','dzieci','dziecka','dzieckowie'], ok:1, w:'„Dziecko — dzieci” to odmiana nieregularna, trzeba ją zapamiętać (podobnie jak „człowiek — ludzie”).'},
+    {p:'W zdaniu „Kasia czyta ciekawą książkę” podmiotem jest…', o:['czyta','ciekawą','książkę','Kasia'], ok:3, w:'Podmiot to wykonawca czynności — pytamy „kto czyta?” → Kasia.'},
+    {p:'Który wyraz jest zdrobnieniem?', o:['kot','kotek','kocisko','koci'], ok:1, w:'„Kotek” to zdrobnienie (mały, miły kot). „Kocisko” to zgrubienie, a „koci” to przymiotnik.'},
+    {p:'Przeciwieństwo (antonim) słowa „odważny” to…', o:['dzielny','śmiały','tchórzliwy','mocny'], ok:2, w:'Antonim to wyraz o przeciwnym znaczeniu: odważny ↔ tchórzliwy. Dzielny i śmiały to synonimy odważnego.'},
+  ],
+  [ // Poziom 3 — mistrz słowa
+    {p:'Związek frazeologiczny „mieć muchy w nosie” oznacza…', o:['być przeziębionym','być w złym humorze','mieć katar sienny','kłamać'], ok:1, w:'„Mieć muchy w nosie” to być rozdrażnionym, w złym humorze. Frazeologizmów nie rozumiemy dosłownie!'},
+    {p:'Kto napisał „Pana Tadeusza”?', o:['Henryk Sienkiewicz','Adam Mickiewicz','Juliusz Słowacki','Bolesław Prus'], ok:1, w:'„Pan Tadeusz” to epopeja narodowa Adama Mickiewicza z 1834 roku, zaczynająca się słowami „Litwo! Ojczyzno moja!”.'},
+    {p:'Rym to…', o:['powtórzenie tego samego wyrazu','podobne brzmienie zakończeń wersów','tytuł wiersza','rytm czytania'], ok:1, w:'Rym to zgodność brzmienia końcówek wersów, np. „kotek — płotek”. Dzięki rymom wiersze łatwiej zapamiętać.'},
+    {p:'„Zbić z tropu” znaczy…', o:['pokonać w zawodach','zgubić drogę','zdezorientować kogoś','uderzyć'], ok:2, w:'„Zbić z tropu” = sprawić, że ktoś traci pewność, jest zdezorientowany. Trop to ślad — ktoś „gubi ślad” rozmowy.'},
+    {p:'Który zapis dialogu jest poprawny?', o:['— Cześć! — powiedziała Ania.','"Cześć" powiedziała Ania','(Cześć) powiedziała Ania.','Cześć powiedziała Ania'], ok:0, w:'W polskich książkach dialogi zapisujemy od myślnika (pauzy): „— Cześć! — powiedziała Ania.”'},
+    {p:'Narrator to…', o:['główny bohater','autor okładki','ten, kto opowiada historię','czytelnik'], ok:2, w:'Narrator to „głos”, który opowiada wydarzenia w książce. Nie zawsze jest nim autor ani bohater!'},
+    {p:'Synonim wyrazu „dom” to…', o:['mieszkanie','szkoła','ulica','ogród'], ok:0, w:'Synonimy to wyrazy bliskoznaczne. „Dom” i „mieszkanie” znaczą podobnie; pozostałe to zupełnie inne miejsca.'},
+    {p:'„Nie” z czasownikami piszemy…', o:['zawsze razem','zawsze osobno','czasem razem, czasem osobno','tylko wielką literą'], ok:1, w:'„Nie” z czasownikami piszemy osobno: nie mam, nie wiem, nie lubię. (Wyjątki jak „nienawidzić” to czasowniki, które bez „nie” nie istnieją).'},
+  ],
+],
+przyroda: [
+  [
+    {p:'Która planeta jest najbliżej Słońca?', o:['Ziemia','Mars','Merkury','Wenus'], ok:2, w:'Kolejność od Słońca: Merkury, Wenus, Ziemia, Mars… Merkury jest najbliżej i ma najkrótszy rok — tylko 88 dni!'},
+    {p:'Ile nóg ma pająk?', o:['6','8','10','4'], ok:1, w:'Pająki mają 8 nóg i NIE są owadami (owady mają 6 nóg). To pajęczaki.'},
+    {p:'Woda zamarza w temperaturze…', o:['0°C','10°C','-20°C','100°C'], ok:0, w:'Woda zamarza w 0°C, a wrze w 100°C. Te dwie temperatury wyznaczają skalę Celsjusza.'},
+    {p:'Które zwierzę zapada w sen zimowy?', o:['wilk','jeż','sarna','wrona'], ok:1, w:'Jeż zapada w sen zimowy (hibernację) — jego serce zwalnia, a ciało oszczędza energię, bo zimą brakuje pokarmu.'},
+    {p:'Co jest potrzebne roślinie do fotosyntezy?', o:['światło, woda i dwutlenek węgla','ciemność i sól','tylko ziemia','mięso i woda'], ok:0, w:'W fotosyntezie roślina ze światła, wody i CO₂ produkuje cukier i TLEN, którym oddychamy. Dlatego rośliny są tak ważne!'},
+    {p:'Największy ocean na Ziemi to…', o:['Atlantycki','Indyjski','Arktyczny','Spokojny'], ok:3, w:'Ocean Spokojny (Pacyfik) jest większy niż wszystkie kontynenty razem wzięte!'},
+    {p:'Które z tych zwierząt jest ssakiem?', o:['rekin','delfin','krokodyl','pingwin'], ok:1, w:'Delfin to ssak — oddycha powietrzem i karmi młode mlekiem, choć żyje w wodzie. Rekin to ryba, krokodyl — gad, pingwin — ptak.'},
+    {p:'Ile dni (około) trwa rok na Ziemi?', o:['100','365','30','1000'], ok:1, w:'Rok to czas, w którym Ziemia okrąża Słońce — około 365 dni (dlatego co 4 lata mamy rok przestępny z 366 dniami).'},
+  ],
+  [
+    {p:'Który narząd pompuje krew w naszym ciele?', o:['płuca','wątroba','serce','żołądek'], ok:2, w:'Serce to pompa, która tłoczy krew do całego ciała. Bije około 100 000 razy dziennie!'},
+    {p:'Czym oddychają ryby?', o:['płucami','skrzelami','skórą tylko','nie oddychają'], ok:1, w:'Ryby pobierają tlen rozpuszczony w wodzie za pomocą skrzeli. Dlatego wyjęte z wody się duszą.'},
+    {p:'Ile kości ma dorosły człowiek (około)?', o:['26','106','206','606'], ok:2, w:'Dorosły ma ok. 206 kości. Ciekawostka: niemowlę ma ich ponad 300 — niektóre z czasem się zrastają!'},
+    {p:'Motyl rozwija się z…', o:['jajka → gąsienicy → poczwarki','nasionka','małego motylka','kijanki'], ok:0, w:'To przeobrażenie zupełne: jajo → gąsienica → poczwarka → motyl. Z kijanki rozwija się żaba!'},
+    {p:'Które państwo NIE graniczy z Polską?', o:['Niemcy','Czechy','Węgry','Litwa'], ok:2, w:'Polska graniczy z 7 państwami: Niemcami, Czechami, Słowacją, Ukrainą, Białorusią, Litwą i Rosją. Węgry nie mają z nami granicy.'},
+    {p:'Skąd bierze się dzień i noc?', o:['Słońce gaśnie na noc','Ziemia obraca się wokół własnej osi','Księżyc zasłania Słońce','chmury zakrywają niebo'], ok:1, w:'Ziemia kręci się jak bączek — pełny obrót trwa dobę. Strona zwrócona do Słońca ma dzień, a przeciwna noc.'},
+    {p:'Najwyższa góra świata to…', o:['Rysy','Mont Blanc','Mount Everest','Kilimandżaro'], ok:2, w:'Mount Everest w Himalajach ma 8849 m n.p.m. Najwyższy szczyt Polski to Rysy (2499 m).'},
+    {p:'Co powstaje, gdy para wodna w chmurze się ochładza?', o:['wiatr','deszcz','tęcza','piorun'], ok:1, w:'To obieg wody: woda paruje, w górze się skrapla w chmury, a krople spadają jako deszcz.'},
+  ],
+  [
+    {p:'Jak nazywa się gaz, którym oddychamy i który jest niezbędny do życia?', o:['dwutlenek węgla','azot','tlen','hel'], ok:2, w:'Do życia potrzebujemy tlenu (ok. 21% powietrza). Najwięcej w powietrzu jest azotu (78%), ale go nie zużywamy przy oddychaniu.'},
+    {p:'Który z tych materiałów przewodzi prąd?', o:['drewno','guma','miedź','szkło'], ok:2, w:'Metale, np. miedź, przewodzą prąd — dlatego kable są z miedzi, a osłonki z gumy lub plastiku (izolatorów).'},
+    {p:'Fotosynteza zachodzi głównie w…', o:['korzeniach','liściach','kwiatach','nasionach'], ok:1, w:'Liście zawierają chlorofil (zielony barwnik), który wychwytuje światło. Dlatego liście są „fabryką” rośliny.'},
+    {p:'Dlaczego najpierw widzimy błyskawicę, a dopiero potem słyszymy grzmot?', o:['grzmot powstaje później','światło biegnie szybciej niż dźwięk','dźwięk powstaje w chmurze','to przypadek'], ok:1, w:'Światło pędzi ~300 000 km/s, a dźwięk tylko ~340 m/s. Licząc sekundy między błyskiem a grzmotem, oszacujesz odległość burzy (3 s ≈ 1 km).'},
+    {p:'Które źródło energii jest odnawialne?', o:['węgiel','ropa naftowa','wiatr','gaz ziemny'], ok:2, w:'Wiatr, słońce i woda to źródła odnawialne — nie wyczerpują się. Węgiel, ropa i gaz to paliwa kopalne, które się kończą i zanieczyszczają powietrze.'},
+    {p:'DNA to w skrócie…', o:['przepis na budowę organizmu','rodzaj witaminy','nazwa bakterii','część mózgu'], ok:0, w:'DNA to „instrukcja obsługi” organizmu zapisana w komórkach — decyduje m.in. o kolorze oczu. Dziedziczysz ją po rodzicach.'},
+    {p:'Woda słona zamarza…', o:['szybciej niż słodka','w tej samej temperaturze','wolniej (w niższej temperaturze)','nigdy'], ok:2, w:'Sól obniża temperaturę zamarzania — dlatego zimą posypuje się nią drogi, a morza zamarzają trudniej niż jeziora.'},
+    {p:'Który szkielet zewnętrzny (pancerz) ma…?', o:['kot','żaba','chrząszcz','wąż'], ok:2, w:'Owady, np. chrząszcze, mają szkielet zewnętrzny — twardy pancerz. Kot, żaba i wąż mają szkielet wewnętrzny, jak my.'},
+  ],
+],
+angielski: [
+  [
+    {p:'Jak po angielsku powiemy „pies”?', o:['cat','dog','bird','fish'], ok:1, w:'Dog = pies, cat = kot, bird = ptak, fish = ryba. To podstawowe słówka o zwierzętach.'},
+    {p:'„Red” to po polsku…', o:['zielony','niebieski','czerwony','żółty'], ok:2, w:'Red = czerwony. Green = zielony, blue = niebieski, yellow = żółty.'},
+    {p:'Jak przywitasz się po angielsku rano?', o:['Good night','Good morning','Goodbye','Good luck'], ok:1, w:'Good morning = dzień dobry (rano). Good night mówimy na dobranoc, goodbye na pożegnanie.'},
+    {p:'„I have got a sister” znaczy…', o:['Mam siostrę','Mam brata','Jestem siostrą','Lubię siostrę'], ok:0, w:'„I have got…” = „mam…”. Sister = siostra, brother = brat.'},
+    {p:'Która liczba to „seven”?', o:['6','7','8','9'], ok:1, w:'Seven = 7. Kolejno: six (6), seven (7), eight (8), nine (9).'},
+    {p:'„Apple” to…', o:['gruszka','śliwka','jabłko','banan'], ok:2, w:'Apple = jabłko. Pear = gruszka, plum = śliwka, banana = banan.'},
+    {p:'Jak zapytasz kogoś o imię?', o:['How old are you?','What is your name?','Where are you from?','How are you?'], ok:1, w:'„What is your name?” = „Jak masz na imię?”. „How old are you?” pyta o wiek, „Where are you from?” — skąd jesteś.'},
+    {p:'„Monday” to…', o:['niedziela','sobota','poniedziałek','środa'], ok:2, w:'Monday = poniedziałek. Dni tygodnia po angielsku piszemy zawsze wielką literą!'},
+  ],
+  [
+    {p:'„She ___ to school every day.” Wybierz poprawną formę:', o:['go','goes','going','went'], ok:1, w:'Po „she/he/it” w czasie Present Simple czasownik dostaje końcówkę -s: she goes, he plays.'},
+    {p:'„There are three ___ on the table.”', o:['book','books','bookes','bookies'], ok:1, w:'Liczba mnoga większości rzeczowników to końcówka -s: one book, three books.'},
+    {p:'Jak powiesz „Jest godzina trzecia”?', o:['It is three o\'clock','Three hour is','The clock three','It have three'], ok:0, w:'O godzinach mówimy: „It is … o\'clock”. Np. It is three o\'clock = jest 3:00.'},
+    {p:'„I ___ football yesterday.”', o:['play','plays','played','playing'], ok:2, w:'„Yesterday” (wczoraj) wskazuje na czas przeszły Past Simple: play → played.'},
+    {p:'Przeciwieństwo „big” to…', o:['tall','small','long','old'], ok:1, w:'Big (duży) ↔ small (mały). Tall = wysoki, long = długi, old = stary.'},
+    {p:'„Can you swim?” znaczy…', o:['Czy lubisz pływać?','Czy umiesz pływać?','Czy chcesz pływać?','Gdzie pływasz?'], ok:1, w:'„Can” = umieć, móc. „Can you swim?” pyta o umiejętność pływania. Odpowiedź: Yes, I can / No, I can\'t.'},
+    {p:'Które zdanie jest poprawne?', o:['He don\'t like tea.','He doesn\'t likes tea.','He doesn\'t like tea.','He no like tea.'], ok:2, w:'Przeczenie z he/she/it: doesn\'t + czasownik BEZ -s: „He doesn\'t like tea.”'},
+    {p:'„How much is it?” zapytasz, gdy chcesz znać…', o:['godzinę','cenę','drogę','pogodę'], ok:1, w:'„How much is it?” = „Ile to kosztuje?”. Przydatne w sklepie podczas wakacji!'},
+  ],
+  [
+    {p:'„I have lived here ___ 2015.”', o:['for','since','from','at'], ok:1, w:'„Since” + konkretny moment (since 2015), „for” + okres czasu (for 5 years). To czas Present Perfect.'},
+    {p:'Co znaczy idiom „It\'s raining cats and dogs”?', o:['zwierzęta uciekły','leje jak z cebra','pada śnieg','jest burza z piorunami'], ok:1, w:'To idiom — nie tłumaczymy go dosłownie! Znaczy: bardzo mocno pada deszcz (po polsku: „leje jak z cebra”).'},
+    {p:'Stopień najwyższy od „good” to…', o:['goodest','better','the best','most good'], ok:2, w:'Good — better — the best to stopniowanie nieregularne (dobry — lepszy — najlepszy). Trzeba je zapamiętać!'},
+    {p:'„If I ___ rich, I would buy a rocket.”', o:['am','was/were','will be','be'], ok:1, w:'To tryb warunkowy (gdybanie): „If I were rich…” = „Gdybym był bogaty…”. Po „if” używamy czasu przeszłego.'},
+    {p:'Które słowo NIE pasuje do pozostałych?', o:['train','plane','bicycle','kitchen'], ok:3, w:'Train, plane i bicycle to środki transportu. Kitchen (kuchnia) to pomieszczenie — nie pasuje do grupy.'},
+    {p:'„She said she ___ tired.”', o:['is','was','are','be'], ok:1, w:'W mowie zależnej (relacjonowaniu czyichś słów) cofamy czas: „I am tired” → „She said she WAS tired”.'},
+    {p:'„Library” to…', o:['księgarnia','biblioteka','biuro','laboratorium'], ok:1, w:'Uwaga, fałszywy przyjaciel! Library = biblioteka (książki wypożyczamy). Księgarnia to bookshop.'},
+    {p:'Jak grzecznie poprosisz o pomoc?', o:['Help me now!','Could you help me, please?','You must help!','Helping!'], ok:1, w:'„Could you…, please?” to uprzejma prośba. „Help me now!” brzmi jak rozkaz — niegrzecznie.'},
+  ],
+],
+historia: [
+  [
+    {p:'Od którego legendarnego władcy pochodzi nazwa pierwszej stolicy — Gniezna?', o:['od smoka','od Lecha, który znalazł gniazdo orła','od królowej Wandy','od Piasta'], ok:1, w:'Według legendy Lech ujrzał gniazdo białego orła — stąd Gniezno i nasz orzeł w godle.'},
+    {p:'Kto był pierwszym historycznym władcą Polski?', o:['Bolesław Chrobry','Mieszko I','Kazimierz Wielki','Władysław Jagiełło'], ok:1, w:'Mieszko I przyjął chrzest w 966 r. — to symboliczny początek państwa polskiego. Jego syn Bolesław Chrobry był pierwszym KRÓLEM.'},
+    {p:'W którym roku był chrzest Polski?', o:['1410','966','1966','1000'], ok:1, w:'Chrzest Polski — 966 rok. Łatwo zapamiętać: trzy cyfry, dwie szóstki!'},
+    {p:'Smok wawelski według legendy mieszkał w…', o:['Warszawie','Gnieźnie','Krakowie','Gdańsku'], ok:2, w:'Smok mieszkał w jamie pod Wawelem w Krakowie. Pokonał go sprytny szewczyk, podrzucając barana z siarką.'},
+    {p:'Jak nazywała się dynastia pierwszych władców Polski?', o:['Jagiellonowie','Piastowie','Wazowie','Habsburgowie'], ok:1, w:'Piastowie — od legendarnego Piasta Kołodzieja. Rządzili Polską przez ponad 400 lat.'},
+    {p:'Co zbudowano w średniowieczu, by bronić miasta?', o:['mury obronne','centra handlowe','autostrady','lotniska'], ok:0, w:'Średniowieczne miasta otaczano murami z basztami i bramami. W Krakowie zachował się Barbakan i Brama Floriańska.'},
+    {p:'Kim był rycerz?', o:['kupcem','wojownikiem na koniu, w zbroi','rolnikiem','żeglarzem'], ok:1, w:'Rycerz to konny wojownik w zbroi, służący władcy. Obowiązywał go kodeks: honor, odwaga i ochrona słabszych.'},
+    {p:'Najstarsze polskie miasta powstawały najczęściej…', o:['nad rzekami','na pustyniach','na szczytach gór','pod ziemią'], ok:0, w:'Rzeka dawała wodę, rybę i drogę handlową — dlatego Kraków leży nad Wisłą, a Poznań nad Wartą.'},
+  ],
+  [
+    {p:'Bitwa pod Grunwaldem odbyła się w roku…', o:['966','1410','1794','1920'], ok:1, w:'15 lipca 1410 r. wojska polsko-litewskie pod wodzą Władysława Jagiełły pokonały Krzyżaków. To jedna z największych bitew średniowiecznej Europy.'},
+    {p:'O którym królu mówi się, że „zastał Polskę drewnianą, a zostawił murowaną”?', o:['Mieszku I','Kazimierzu Wielkim','Janie III Sobieskim','Stanisławie Auguście'], ok:1, w:'Kazimierz Wielki (XIV w.) budował zamki i miasta, założył też Akademię Krakowską — najstarszą polską uczelnię (1364).'},
+    {p:'Mikołaj Kopernik zasłynął tym, że…', o:['odkrył Amerykę','„wstrzymał Słońce, ruszył Ziemię”','wynalazł druk','zbudował pierwszy zegar'], ok:1, w:'Kopernik udowodnił, że to Ziemia krąży wokół Słońca (heliocentryzm), a nie odwrotnie. Zmienił naukę na zawsze!'},
+    {p:'Kto dowodził odsieczą wiedeńską w 1683 roku?', o:['Jan III Sobieski','Tadeusz Kościuszko','Józef Piłsudski','Bolesław Chrobry'], ok:0, w:'Jan III Sobieski z husarią rozbił armię turecką pod Wiedniem. Husaria — skrzydlata jazda — budziła postrach w całej Europie.'},
+    {p:'Konstytucja 3 maja została uchwalona w roku…', o:['1791','1918','1410','1569'], ok:0, w:'Konstytucja 3 maja 1791 r. była pierwszą w Europie i drugą na świecie (po USA) spisaną konstytucją. Dziś 3 maja to święto narodowe.'},
+    {p:'Unia Polski i Litwy zawarta w Lublinie (1569) utworzyła…', o:['Królestwo Prus','Rzeczpospolitą Obojga Narodów','Unię Europejską','Księstwo Warszawskie'], ok:1, w:'Rzeczpospolita Obojga Narodów była jednym z największych państw ówczesnej Europy — wspólny sejm i król, dwa narody.'},
+    {p:'Kto odkrył Amerykę w 1492 roku?', o:['Vasco da Gama','Krzysztof Kolumb','Ferdynand Magellan','Marco Polo'], ok:1, w:'Kolumb, płynąc do Indii na zachód, trafił na nieznany Europejczykom kontynent. Stąd pomyłkowa nazwa „Indianie”.'},
+    {p:'Rozbiory Polski przeprowadziły…', o:['Francja, Anglia, Hiszpania','Rosja, Prusy, Austria','Szwecja, Dania, Norwegia','Turcja, Węgry, Czechy'], ok:1, w:'W latach 1772–1795 Rosja, Prusy i Austria podzieliły Polskę między siebie. Na 123 lata Polska zniknęła z mapy.'},
+  ],
+  [
+    {p:'Polska odzyskała niepodległość w roku…', o:['1914','1918','1939','1945'], ok:1, w:'11 listopada 1918 r., po 123 latach zaborów, Polska wróciła na mapę. Dlatego 11 listopada obchodzimy Święto Niepodległości.'},
+    {p:'Kto był dwukrotną laureatką Nagrody Nobla (fizyka i chemia)?', o:['Wisława Szymborska','Maria Skłodowska-Curie','Irena Sendlerowa','Emilia Plater'], ok:1, w:'Maria Skłodowska-Curie odkryła polon (nazwany na cześć Polski!) i rad. To jedyna osoba z Noblami z dwóch różnych nauk ścisłych.'},
+    {p:'II wojna światowa rozpoczęła się…', o:['1 września 1939','11 listopada 1918','1 maja 1945','3 maja 1791'], ok:0, w:'1 września 1939 r. Niemcy zaatakowały Polskę (obrona Westerplatte). To początek największej wojny w historii.'},
+    {p:'Powstanie warszawskie wybuchło w roku…', o:['1939','1944','1945','1956'], ok:1, w:'1 sierpnia 1944 r. o 17:00 (godzina „W”) Warszawa stanęła do walki z okupantem. Powstanie trwało 63 dni.'},
+    {p:'Ruch „Solidarność” powstał w roku 1980 w…', o:['Warszawie','Krakowie','Gdańsku','Poznaniu'], ok:2, w:'„Solidarność” narodziła się w Stoczni Gdańskiej pod przywództwem Lecha Wałęsy. Doprowadziła do upadku komunizmu w Polsce.'},
+    {p:'Polska weszła do Unii Europejskiej w roku…', o:['1989','1999','2004','2010'], ok:2, w:'1 maja 2004 r. Polska (razem z 9 innymi państwami) przystąpiła do UE. Do NATO weszliśmy wcześniej — w 1999 r.'},
+    {p:'Kto był pierwszym człowiekiem na Księżycu (1969)?', o:['Jurij Gagarin','Neil Armstrong','Mirosław Hermaszewski','Elon Musk'], ok:1, w:'Neil Armstrong (misja Apollo 11) powiedział wtedy: „To mały krok dla człowieka, ale wielki skok dla ludzkości”. Gagarin był pierwszy w kosmosie (1961).'},
+    {p:'Upadek muru berlińskiego (1989) był symbolem…', o:['początku II wojny','końca zimnej wojny i podziału Europy','powstania internetu','wejścia Polski do UE'], ok:1, w:'Mur dzielił Berlin na część wschodnią i zachodnią przez 28 lat. Jego upadek to symbol zjednoczenia Europy po zimnej wojnie.'},
+  ],
+],
+};
+
+// --- Prawda / Fałsz (tryb specjalny) ---
+const PRAWDA_FALSZ = [
+  {p:'Wieloryb to ryba.', ok:false, w:'Wieloryb to SSAK — oddycha płucami i karmi młode mlekiem.'},
+  {p:'W trójkącie suma kątów wynosi 180°.', ok:true, w:'Każdy trójkąt, duży czy mały, ma kąty sumujące się do 180°.'},
+  {p:'Stolicą Polski jest Kraków.', ok:false, w:'Stolicą jest Warszawa — od 1596 r., wcześniej rzeczywiście był nią Kraków.'},
+  {p:'Rok przestępny ma 366 dni.', ok:true, w:'Co 4 lata dodajemy 29 lutego, bo obieg Ziemi wokół Słońca trwa ok. 365 i ¼ dnia.'},
+  {p:'„Rz” piszemy m.in. po literach p, b, t, d, k, g.', ok:true, w:'Np. przygoda, brzeg, trzeba, drzewo, krzak, grzyb — to reguła spółgłoskowa.'},
+  {p:'Pół godziny to 40 minut.', ok:false, w:'Godzina ma 60 minut, więc pół godziny to 30 minut.'},
+  {p:'Serce człowieka bije szybciej podczas biegu.', ok:true, w:'Mięśnie potrzebują więcej tlenu, więc serce pompuje krew szybciej.'},
+  {p:'„Sunday” znaczy sobota.', ok:false, w:'Sunday = niedziela. Sobota to Saturday.'},
+  {p:'Mrówka jest silniejsza od słonia w stosunku do swojej masy.', ok:true, w:'Mrówka uniesie ciężar wielokrotnie większy od własnego ciała — słoń nie.'},
+  {p:'Liczba 91 jest liczbą pierwszą.', ok:false, w:'91 = 7 × 13, więc ma dzielniki poza 1 i sobą — nie jest pierwsza.'},
+  {p:'Bitwa pod Grunwaldem była w 1410 roku.', ok:true, w:'15 lipca 1410 — zwycięstwo wojsk polsko-litewskich nad Krzyżakami.'},
+  {p:'Wenus jest najgorętszą planetą Układu Słonecznego.', ok:true, w:'Choć Merkury jest bliżej Słońca, to gęsta atmosfera Wenus działa jak szklarnia — ponad 460°C!'},
+  {p:'Kwadrat ma 5 boków.', ok:false, w:'Kwadrat ma 4 równe boki i 4 kąty proste. Pięć boków ma pięciokąt.'},
+  {p:'Banany rosną na palmach… a właściwie na wielkich bylinach.', ok:true, w:'„Drzewo bananowe” to naprawdę ogromna roślina zielna (bylina), nie drzewo!'},
+  {p:'„Nie” z czasownikami piszemy razem.', ok:false, w:'„Nie” z czasownikami piszemy OSOBNO: nie mam, nie wiem.'},
+  {p:'Światło słoneczne dociera do Ziemi w około 8 minut.', ok:true, w:'Słońce jest ~150 mln km od nas; światło pokonuje tę drogę w ok. 8 minut i 20 sekund.'},
+];
+
+// --- Pary do memory (angielski ↔ polski) ---
+const PARY_MEMORY = [
+  ['dog','pies'],['cat','kot'],['house','dom'],['school','szkoła'],
+  ['water','woda'],['sun','słońce'],['book','książka'],['friend','przyjaciel'],
+  ['tree','drzewo'],['milk','mleko'],['window','okno'],['teacher','nauczyciel'],
+  ['bread','chleb'],['moon','księżyc'],['bird','ptak'],['flower','kwiat'],
+];
+
+// ---------------------------------------------------------------------
+// Generator zadań matematycznych — nieskończona liczba zadań,
+// trudność rośnie z poziomem.
+// ---------------------------------------------------------------------
+function zadanieMatematyczne(poziom, rng){
+  const r = rng || Math.random;
+  const l = (a, b) => a + Math.floor(r() * (b - a + 1));
+  let p, wynik, w;
+  if(poziom === 1){
+    if(r() < .5){ const a = l(5, 60), b = l(5, 40); p = `${a} + ${b} = ?`; wynik = a + b; w = `Dodaj dziesiątki, potem jedności: ${a} + ${b} = ${wynik}.`; }
+    else{ const a = l(20, 90), b = l(1, a - 1); p = `${a} − ${b} = ?`; wynik = a - b; w = `Sprawdzenie odejmowania: ${wynik} + ${b} = ${a}. Zgadza się!`; }
+  }else if(poziom === 2){
+    if(r() < .5){ const a = l(3, 12), b = l(3, 12); p = `${a} × ${b} = ?`; wynik = a * b; w = `${a} × ${b} to ${a} dodane ${b} razy. Tabliczka mnożenia: ${wynik}.`; }
+    else{ const b = l(3, 9), wynikD = l(3, 12), a = b * wynikD; p = `${a} ÷ ${b} = ?`; wynik = wynikD; w = `Dzielenie to odwrotność mnożenia: ${wynik} × ${b} = ${a}.`; }
+  }else{
+    const wariant = Math.floor(r() * 3);
+    if(wariant === 0){ const c = l(2, 9) * 10, pr = [10, 20, 25, 50][Math.floor(r() * 4)]; p = `Ile to ${pr}% z ${c * 2}?`; wynik = (c * 2) * pr / 100; w = `${pr}% to ${pr}/100. Licz: ${c * 2} × ${pr} ÷ 100 = ${wynik}. Wskazówka: 10% znajdziesz, dzieląc przez 10.`; }
+    else if(wariant === 1){ const m = l(2, 6), licz = l(1, m - 1), calosc = m * l(2, 8); p = `Ile to ${licz}/${m} z ${calosc}?`; wynik = calosc / m * licz; w = `Najpierw 1/${m} z ${calosc} = ${calosc / m}, potem × ${licz} = ${wynik}.`; }
+    else{ const a = l(2, 9), b = l(2, 9), c = l(2, 9); p = `${a} × ${b} + ${c} = ?`; wynik = a * b + c; w = `Kolejność działań: najpierw mnożenie (${a} × ${b} = ${a * b}), potem dodawanie: ${a * b} + ${c} = ${wynik}.`; }
+  }
+  // Cztery odpowiedzi: poprawna + trzy „pułapki” blisko wyniku
+  const opcje = new Set([wynik]);
+  while(opcje.size < 4){
+    const delta = [wynik + l(1, 4), Math.max(0, wynik - l(1, 4)), wynik + 10, Math.max(0, wynik - 10), wynik + 1][Math.floor(r() * 5)];
+    if(delta !== wynik) opcje.add(delta);
+  }
+  const o = tasuj([...opcje], r).map(String);
+  return {p, o, ok: o.indexOf(String(wynik)), w};
+}
+
+// ---------------------------------------------------------------------
+// Osiągnięcia
+// ---------------------------------------------------------------------
+const OSIAGNIECIA = [
+  {id:'pierwszy-krok', ikona:'👣', nazwa:'Pierwszy krok', opis:'Ukończ swój pierwszy poziom.', warunek:()=>S.wygranePoziomy >= 1},
+  {id:'seria-10', ikona:'🔥', nazwa:'W ogniu!', opis:'Odpowiedz poprawnie 10 razy z rzędu.', warunek:()=>S.najlepszaSeria >= 10},
+  {id:'trzy-gwiazdki', ikona:'🌟', nazwa:'Perfekcjonista', opis:'Zdobądź 3 gwiazdki na dowolnym poziomie.', warunek:()=>Object.values(S.postep).some(pp=>Object.values(pp).some(g=>g===3))},
+  {id:'setka', ikona:'💯', nazwa:'Setka!', opis:'Odpowiedz na 100 pytań.', warunek:()=>S.odpowiedziRazem >= 100},
+  {id:'omnibus', ikona:'🎓', nazwa:'Omnibus', opis:'Ukończ poziom w każdym z 5 przedmiotów.', warunek:()=>Object.keys(PRZEDMIOTY).every(k=>S.postep[k] && Object.keys(S.postep[k]).length > 0)},
+  {id:'sprinter', ikona:'⚡', nazwa:'Błyskawica', opis:'Zdobądź 15+ punktów w Sprincie matematycznym.', warunek:()=>S.rekordSprintu >= 15},
+  {id:'pamiec', ikona:'🧠', nazwa:'Słoniowa pamięć', opis:'Ukończ grę Memory ze słówkami.', warunek:()=>S.sesjeMemory >= 1},
+  {id:'powtorka-mistrz', ikona:'🔁', nazwa:'Mistrz powtórek', opis:'Ukończ 3 sesje powtórek — tak rodzi się trwała wiedza!', warunek:()=>S.sesjePowtorek >= 3},
+  {id:'bogacz', ikona:'💰', nazwa:'Skarbnik', opis:'Uzbieraj 300 monet.', warunek:()=>S.monety >= 300},
+  {id:'poziom-5', ikona:'🚀', nazwa:'Kadet Akademii', opis:'Osiągnij 5. poziom odkrywcy.', warunek:()=>poziomGracza() >= 5},
+  {id:'wyzwanie', ikona:'⭐', nazwa:'Codzienny bohater', opis:'Ukończ wyzwanie dnia.', warunek:()=>S.wyzwanieData !== null},
+  {id:'mistrz-wszystkiego', ikona:'👑', nazwa:'Mistrz Wiedzy', opis:'Ukończ wszystkie poziomy wszystkich przedmiotów.', warunek:()=>Object.keys(PRZEDMIOTY).every(k=>S.postep[k] && PRZEDMIOTY[k].poziomy.every((_,i)=>S.postep[k][i] >= 1))},
+];
+function sprawdzOsiagniecia(){
+  for(const o of OSIAGNIECIA){
+    if(!S.osiagniecia.includes(o.id) && o.warunek()){
+      S.osiagniecia.push(o.id); zapisz();
+      dzwiek('odznaka'); konfetti(60);
+      toast(`🏅 Osiągnięcie: <b>${o.nazwa}</b>!`);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Interfejs: ekrany, toast, konfetti, tło z gwiazdami
+// ---------------------------------------------------------------------
+function pokaz(id){
+  $$('.ekran').forEach(e => e.classList.remove('aktywny'));
+  $('#ekran-' + id).classList.add('aktywny');
+  $$('.nawigacja button').forEach(b => b.classList.toggle('aktywna', b.dataset.cel === id));
+  window.scrollTo({top:0});
+}
+let toastTimer;
+function toast(html){
+  const t = $('#toast');
+  t.innerHTML = html; t.classList.add('widoczny');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('widoczny'), 2600);
+}
+
+// Konfetti przy sukcesach
+const konfKanwa = $('#konfetti'), konfCtx = konfKanwa.getContext('2d');
+let konfCzastki = [];
+function konfetti(ile){
+  konfKanwa.width = innerWidth; konfKanwa.height = innerHeight;
+  const kolory = ['#f59e0b','#22c55e','#4f6df5','#ec4899','#8b5cf6','#ef4444'];
+  for(let i = 0; i < ile; i++) konfCzastki.push({
+    x: Math.random() * innerWidth, y: -20 - Math.random() * 80,
+    vx: (Math.random() - .5) * 3, vy: 2 + Math.random() * 3.5,
+    r: 4 + Math.random() * 5, k: kolory[los(kolory.length)], a: Math.random() * Math.PI,
+  });
+  if(konfCzastki.length === ile) klatkaKonfetti();
+}
+function klatkaKonfetti(){
+  konfCtx.clearRect(0, 0, konfKanwa.width, konfKanwa.height);
+  konfCzastki = konfCzastki.filter(c => c.y < innerHeight + 30);
+  for(const c of konfCzastki){
+    c.x += c.vx; c.y += c.vy; c.a += .1;
+    konfCtx.save(); konfCtx.translate(c.x, c.y); konfCtx.rotate(c.a);
+    konfCtx.fillStyle = c.k; konfCtx.fillRect(-c.r / 2, -c.r / 2, c.r, c.r * .6);
+    konfCtx.restore();
+  }
+  if(konfCzastki.length) requestAnimationFrame(klatkaKonfetti);
+}
+
+// Delikatne animowane tło — gwiazdy
+(function tloGwiazd(){
+  const k = $('#gwiazdy'), ctx = k.getContext('2d');
+  let gw = [];
+  function reset(){
+    k.width = innerWidth; k.height = innerHeight;
+    gw = Array.from({length: 70}, () => ({x: Math.random() * k.width, y: Math.random() * k.height, r: Math.random() * 1.6 + .4, f: Math.random() * Math.PI * 2}));
+  }
+  reset(); addEventListener('resize', reset);
+  (function klatka(t){
+    ctx.clearRect(0, 0, k.width, k.height);
+    for(const g of gw){
+      ctx.globalAlpha = .35 + .35 * Math.sin(t / 900 + g.f);
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, 7); ctx.fill();
+    }
+    requestAnimationFrame(klatka);
+  })(0);
+})();
+
+// ---------------------------------------------------------------------
+// Pasek gracza + mapa
+// ---------------------------------------------------------------------
+function rysujPasekGracza(){
+  const {procent} = xpDoNastepnego();
+  const html = `
+    <span class="awatar">${S.profil.awatar}</span>
+    <div class="info">
+      <div class="imie">${S.profil.imie} · poziom ${poziomGracza()}</div>
+      <div class="pasek-xp"><div style="width:${procent}%"></div></div>
+    </div>
+    <div class="odznaki-paska"><span>✨ ${S.xp}</span><span>🪙 ${S.monety}</span></div>`;
+  $('#pasek-gracza').innerHTML = html;
+  $('#pasek-gracza-2').innerHTML = html;
+}
+function rysujMape(){
+  rysujPasekGracza();
+  $('#siatka-przedmiotow').innerHTML = Object.entries(PRZEDMIOTY).map(([klucz, pr]) => {
+    const zdobyte = Object.values(S.postep[klucz] || {}).reduce((a, b) => a + b, 0);
+    return `<button class="kafel-przedmiot" style="background:${pr.kolor}" data-przedmiot="${klucz}">
+      <span class="ikona">${pr.ikona}</span>
+      <h3>${pr.nazwa}</h3>
+      <div class="postep-mini">⭐ ${zdobyte} / ${pr.poziomy.length * 3} gwiazdek</div>
+    </button>`;
+  }).join('');
+  $$('#siatka-przedmiotow .kafel-przedmiot').forEach(b => b.onclick = () => { dzwiek('klik'); rysujPoziomy(b.dataset.przedmiot); });
+
+  $('#siatka-trybow').innerHTML = `
+    <button class="kafel-tryb" data-tryb="sprint"><span class="ikona">⚡</span><b>Sprint matematyczny</b><small>60 sekund na rekord!</small></button>
+    <button class="kafel-tryb" data-tryb="pf"><span class="ikona">⚖️</span><b>Prawda czy fałsz?</b><small>Szybkie decyzje na czas</small></button>
+    <button class="kafel-tryb" data-tryb="memory"><span class="ikona">🧠</span><b>Memory: słówka</b><small>Angielski ↔ polski</small></button>
+    <button class="kafel-tryb" data-tryb="wyzwanie"><span class="ikona">⭐</span><b>Wyzwanie dnia</b><small>${S.wyzwanieData === dzisiaj() ? 'Ukończone dziś ✅' : 'Podwójne XP!'}</small></button>`;
+  $$('#siatka-trybow .kafel-tryb').forEach(b => b.onclick = () => {
+    dzwiek('klik');
+    const t = b.dataset.tryb;
+    if(t === 'sprint') startSprint();
+    else if(t === 'pf') startPrawdaFalsz();
+    else if(t === 'memory') startMemory();
+    else startWyzwanie();
+  });
+  pokaz('mapa');
+}
+
+// ---------------------------------------------------------------------
+// Lista poziomów przedmiotu (z odblokowywaniem)
+// ---------------------------------------------------------------------
+function rysujPoziomy(przedmiot){
+  const pr = PRZEDMIOTY[przedmiot];
+  rysujPasekGracza();
+  $('#tytul-przedmiotu').textContent = pr.ikona + ' ' + pr.nazwa;
+  $('#opis-przedmiotu').textContent = pr.opis;
+  $('#lista-poziomow').innerHTML = pr.poziomy.map((nazwa, i) => {
+    const gwiazdki = (S.postep[przedmiot] || {})[i] || 0;
+    const odblokowany = i === 0 || ((S.postep[przedmiot] || {})[i - 1] || 0) >= 1;
+    return `<button class="rzad-poziomu" data-poziom="${i}" ${odblokowany ? '' : 'disabled'}>
+      <span class="nr">${odblokowany ? ['1️⃣','2️⃣','3️⃣'][i] : '🔒'}</span>
+      <span><b>${nazwa}</b><br><small class="tekst-slaby">${odblokowany ? 'poziom ' + (i + 1) : 'Zdobądź ⭐ na poprzednim poziomie'}</small></span>
+      <span class="gwiazdki">${'★'.repeat(gwiazdki)}${'☆'.repeat(3 - gwiazdki)}</span>
+    </button>`;
+  }).join('');
+  $$('#lista-poziomow .rzad-poziomu').forEach(b => b.onclick = () => { dzwiek('klik'); startQuiz(przedmiot, +b.dataset.poziom); });
+  pokaz('poziomy');
+}
+
+// ---------------------------------------------------------------------
+// SESJA QUIZU (wspólna dla poziomów, powtórek, wyzwania i Prawda/Fałsz)
+// ---------------------------------------------------------------------
+let sesja = null;
+let stoperPF = null;
+
+function pytaniaDlaPoziomu(przedmiot, poziom){
+  if(przedmiot === 'matematyka') return Array.from({length: 8}, () => Object.assign(zadanieMatematyczne(poziom + 1), {kategoria: 'matematyka'}));
+  return tasuj(BANK[przedmiot][poziom]).slice(0, 8).map(q => Object.assign({}, q, {kategoria: przedmiot}));
+}
+
+function startQuiz(przedmiot, poziom){
+  sesja = {
+    tryb: 'poziom', przedmiot, poziom,
+    pytania: pytaniaDlaPoziomu(przedmiot, poziom),
+    i: 0, dobre: 0, zycia: 3, seria: 0, uzytoPodpowiedzi: false,
+  };
+  rysujPytanie();
+}
+
+function startPowtorki(){
+  if(!S.powtorki.length){
+    toast('🎉 Brak zaległości — wszystkie powtórki zaliczone!');
+    return;
+  }
+  sesja = {tryb: 'powtorki', pytania: tasuj(S.powtorki).slice(0, 10), i: 0, dobre: 0, zycia: 99, seria: 0};
+  rysujPytanie();
+}
+
+function startWyzwanie(){
+  if(S.wyzwanieData === dzisiaj()){
+    toast('⭐ Dzisiejsze wyzwanie już ukończone. Wróć jutro!');
+    return;
+  }
+  // To samo ziarno dla wszystkich w danym dniu — klasa może porównać wyniki.
+  const rng = rngZiarno([...dzisiaj()].reduce((a, c) => a * 31 + c.charCodeAt(0) >>> 0, 7));
+  const zBanku = [];
+  for(const przedmiot of Object.keys(BANK)){
+    const poziom = Math.floor(rng() * 3), lista = BANK[przedmiot][poziom];
+    zBanku.push(Object.assign({}, lista[Math.floor(rng() * lista.length)], {kategoria: przedmiot}));
+  }
+  const pytania = tasuj([...zBanku, Object.assign(zadanieMatematyczne(2, rng), {kategoria: 'matematyka'})], rng);
+  sesja = {tryb: 'wyzwanie', pytania, i: 0, dobre: 0, zycia: 3, seria: 0};
+  rysujPytanie();
+}
+
+function startPrawdaFalsz(){
+  sesja = {
+    tryb: 'pf',
+    pytania: tasuj(PRAWDA_FALSZ).slice(0, 10).map(q => ({p: q.p, o: ['✅ PRAWDA', '❌ FAŁSZ'], ok: q.ok ? 0 : 1, w: q.w, kategoria: 'prawda/fałsz'})),
+    i: 0, dobre: 0, zycia: 3, seria: 0, czasNaPytanie: 10,
+  };
+  rysujPytanie();
+}
+
+function rysujPytanie(){
+  pokaz('quiz');
+  const q = sesja.pytania[sesja.i];
+  $('#quiz-postep').style.width = (100 * sesja.i / sesja.pytania.length) + '%';
+  $('#quiz-zycia').textContent = sesja.zycia > 10 ? '🔁' : '❤️'.repeat(sesja.zycia);
+  $('#quiz-kategoria').textContent =
+    (sesja.tryb === 'powtorki' ? '🔁 Powtórka · ' : sesja.tryb === 'wyzwanie' ? '⭐ Wyzwanie dnia · ' : '') +
+    (PRZEDMIOTY[q.kategoria] ? PRZEDMIOTY[q.kategoria].ikona + ' ' + PRZEDMIOTY[q.kategoria].nazwa : q.kategoria) +
+    ` · pytanie ${sesja.i + 1} z ${sesja.pytania.length}` + (sesja.seria >= 3 ? ` · 🔥 seria ${sesja.seria}` : '');
+  $('#quiz-pytanie').textContent = q.p;
+  $('#quiz-wyjasnienie').className = 'wyjasnienie';
+  $('#quiz-dalej').style.display = 'none';
+  $('#quiz-podpowiedz').style.display = (q.o.length === 4 && !sesja.uzytoPodpowiedziTeraz) ? '' : 'none';
+  $('#quiz-podpowiedz').disabled = S.monety < 20;
+  sesja.uzytoPodpowiedziTeraz = false;
+
+  // Losowa kolejność odpowiedzi przy każdym wyświetleniu
+  const kolejnosc = tasuj(q.o.map((_, i) => i));
+  $('#quiz-odpowiedzi').innerHTML = kolejnosc.map(i =>
+    `<button class="odpowiedz" data-i="${i}">${q.o[i]}</button>`).join('');
+  $$('#quiz-odpowiedzi .odpowiedz').forEach(b => b.onclick = () => odpowiedz(+b.dataset.i));
+
+  // Licznik czasu w trybie Prawda/Fałsz
+  clearInterval(stoperPF);
+  if(sesja.czasNaPytanie){
+    let zostalo = sesja.czasNaPytanie;
+    $('#quiz-czas').textContent = zostalo + 's';
+    stoperPF = setInterval(() => {
+      zostalo--;
+      $('#quiz-czas').textContent = zostalo + 's';
+      if(zostalo <= 0){ clearInterval(stoperPF); odpowiedz(-1); }  // czas minął = błąd
+    }, 1000);
+  }else{
+    $('#quiz-czas').textContent = '';
+  }
+}
+
+function odpowiedz(wybrana){
+  clearInterval(stoperPF);
+  const q = sesja.pytania[sesja.i];
+  const dobrze = wybrana === q.ok;
+  $$('#quiz-odpowiedzi .odpowiedz').forEach(b => {
+    b.disabled = true;
+    const i = +b.dataset.i;
+    if(i === q.ok) b.classList.add('dobra');
+    else if(i === wybrana) b.classList.add('zla');
+  });
+
+  S.odpowiedziRazem++;
+  const kat = q.kategoria || 'inne';
+  S.statystyki[kat] = S.statystyki[kat] || {dobre: 0, wszystkie: 0};
+  S.statystyki[kat].wszystkie++;
+
+  const wyj = $('#quiz-wyjasnienie');
+  if(dobrze){
+    dzwiek('ok');
+    sesja.dobre++; sesja.seria++;
+    S.dobreRazem++; S.statystyki[kat].dobre++;
+    S.najlepszaSeria = Math.max(S.najlepszaSeria, sesja.seria);
+    const xp = (sesja.tryb === 'wyzwanie' ? 2 : 1) * 10 * ((sesja.poziom || 0) + 1);
+    S.xp += xp; S.monety += 2;
+    wyj.className = 'wyjasnienie ok';
+    wyj.innerHTML = `<b>✅ Brawo!</b> +${xp} ✨ &nbsp;<br>${q.w || ''}`;
+    // Powtórka zaliczona → pytanie znika z kolejki
+    if(sesja.tryb === 'powtorki') S.powtorki = S.powtorki.filter(x => x.p !== q.p);
+  }else{
+    dzwiek('blad');
+    sesja.seria = 0;
+    if(sesja.zycia <= 10) sesja.zycia--;
+    wyj.className = 'wyjasnienie blad';
+    wyj.innerHTML = `<b>${wybrana === -1 ? '⏰ Czas minął!' : '❌ Tym razem nie…'}</b> Poprawna odpowiedź: <b>${q.o[q.ok]}</b>.<br>${q.w || ''}<br><small>To pytanie wróci w 🔁 Powtórkach.</small>`;
+    // Spaced repetition: błędne pytanie trafia do kolejki powtórek
+    if(sesja.tryb !== 'powtorki' && !S.powtorki.some(x => x.p === q.p) && S.powtorki.length < 60){
+      S.powtorki.push({p: q.p, o: q.o, ok: q.ok, w: q.w, kategoria: kat});
+    }
+  }
+  zapisz();
+  rysujPasekGracza();
+  sprawdzOsiagniecia();
+
+  if(sesja.zycia === 0){
+    setTimeout(() => koniecSesji(false), 1400);
+  }else{
+    $('#quiz-dalej').style.display = '';
+    $('#quiz-dalej').focus();
+  }
+}
+
+function dalej(){
+  sesja.i++;
+  if(sesja.i >= sesja.pytania.length) koniecSesji(true);
+  else rysujPytanie();
+}
+
+function koniecSesji(ukonczona){
+  clearInterval(stoperPF);
+  const razem = sesja.pytania.length;
+  const procent = sesja.dobre / razem;
+  let gwiazdki = 0, tytul, komentarz;
+
+  if(!ukonczona){
+    tytul = '💔 Skończyły się życia…';
+    komentarz = 'Nie szkodzi! Zajrzyj do wyjaśnień w 🔁 Powtórkach i spróbuj jeszcze raz — nauka to właśnie poprawianie błędów.';
+  }else{
+    gwiazdki = procent >= .9 ? 3 : procent >= .75 ? 2 : procent >= .55 ? 1 : 0;
+    if(sesja.tryb === 'poziom' && gwiazdki > 0){
+      S.postep[sesja.przedmiot] = S.postep[sesja.przedmiot] || {};
+      S.postep[sesja.przedmiot][sesja.poziom] = Math.max(S.postep[sesja.przedmiot][sesja.poziom] || 0, gwiazdki);
+      S.wygranePoziomy++;
+    }
+    if(sesja.tryb === 'wyzwanie' && gwiazdki > 0){
+      S.wyzwanieData = dzisiaj();
+      S.monety += 30;
+    }
+    if(sesja.tryb === 'powtorki'){ S.sesjePowtorek++; }
+    if(gwiazdki === 3){ S.monety += 20; dzwiek('fanfary'); konfetti(120); }
+    else if(gwiazdki > 0){ dzwiek('fanfary'); konfetti(50); }
+    tytul = gwiazdki === 3 ? '🏆 Perfekcyjnie!' : gwiazdki === 2 ? '🎉 Świetna robota!' : gwiazdki === 1 ? '👍 Poziom zaliczony!' : '📖 Jeszcze chwila treningu!';
+    komentarz = gwiazdki === 0
+      ? 'Potrzebujesz min. 55% poprawnych odpowiedzi. Przeczytaj wyjaśnienia i spróbuj ponownie — dasz radę!'
+      : gwiazdki === 3 ? 'Bezbłędnie lub prawie bezbłędnie. +20 🪙 premii!' : 'Zdobądź 90% poprawnych odpowiedzi, aby wywalczyć 3 gwiazdki.';
+  }
+  zapisz(); sprawdzOsiagniecia();
+
+  $('#wynik-tytul').textContent = tytul;
+  $('#wynik-gwiazdy').textContent = sesja.tryb === 'poziom' || sesja.tryb === 'wyzwanie' ? '★'.repeat(gwiazdki) + '☆'.repeat(3 - gwiazdki) : '🎯';
+  $('#wynik-liczby').innerHTML = `
+    <div><b>${sesja.dobre}/${razem}</b><span>poprawnych</span></div>
+    <div><b>${S.xp}</b><span>✨ razem</span></div>
+    <div><b>${S.powtorki.length}</b><span>🔁 do powtórki</span></div>`;
+  $('#wynik-komentarz').textContent = komentarz;
+  const s = sesja;
+  $('#wynik-powtorz').onclick = () => {
+    dzwiek('klik');
+    if(s.tryb === 'poziom') startQuiz(s.przedmiot, s.poziom);
+    else if(s.tryb === 'powtorki') startPowtorki();
+    else if(s.tryb === 'pf') startPrawdaFalsz();
+    else rysujMape();
+  };
+  pokaz('wynik');
+}
+
+// ---------------------------------------------------------------------
+// SPRINT MATEMATYCZNY — 60 sekund, wynik wpisywany z klawiatury
+// ---------------------------------------------------------------------
+let sprint = null;
+function startSprint(){
+  sprint = {wynik: 0, czas: 60, zadanie: null, stoper: null};
+  $('#sprint-rekord').textContent = S.rekordSprintu;
+  $('#sprint-wynik').textContent = '0';
+  nastepneSprint();
+  pokaz('sprint');
+  $('#sprint-pole').value = '';
+  $('#sprint-pole').focus();
+  sprint.stoper = setInterval(() => {
+    sprint.czas--;
+    $('#sprint-czas').textContent = sprint.czas;
+    $('#sprint-postep').style.width = (100 * sprint.czas / 60) + '%';
+    if(sprint.czas <= 0) koniecSprintu();
+  }, 1000);
+}
+function nastepneSprint(){
+  // Trudność rośnie wraz z wynikiem: +, − → ×, ÷
+  const poziom = sprint.wynik < 5 ? 1 : sprint.wynik < 12 ? 2 : 3;
+  sprint.zadanie = zadanieMatematyczne(Math.min(poziom, 2));
+  $('#sprint-dzialanie').textContent = sprint.zadanie.p.replace(' = ?', ' = …');
+}
+function odpowiedzSprint(){
+  const pole = $('#sprint-pole');
+  if(pole.value === '') return;
+  const dobrze = pole.value.trim() === sprint.zadanie.o[sprint.zadanie.ok];
+  if(dobrze){
+    dzwiek('ok'); sprint.wynik++;
+    $('#sprint-wynik').textContent = sprint.wynik;
+  }else{
+    dzwiek('blad'); sprint.czas = Math.max(1, sprint.czas - 3);  // kara czasowa zamiast utraty punktów
+    toast(`❌ Prawidłowy wynik: <b>${sprint.zadanie.o[sprint.zadanie.ok]}</b> (−3 s)`);
+  }
+  pole.value = '';
+  nastepneSprint();
+  pole.focus();
+}
+function koniecSprintu(){
+  clearInterval(sprint.stoper);
+  const rekord = sprint.wynik > S.rekordSprintu;
+  if(rekord){ S.rekordSprintu = sprint.wynik; konfetti(80); dzwiek('fanfary'); }
+  S.xp += sprint.wynik * 6; S.monety += sprint.wynik;
+  zapisz(); sprawdzOsiagniecia();
+  $('#wynik-tytul').textContent = rekord ? '⚡ NOWY REKORD!' : '⚡ Sprint ukończony!';
+  $('#wynik-gwiazdy').textContent = '🏁';
+  $('#wynik-liczby').innerHTML = `
+    <div><b>${sprint.wynik}</b><span>rozwiązanych</span></div>
+    <div><b>${S.rekordSprintu}</b><span>rekord</span></div>
+    <div><b>+${sprint.wynik * 6}</b><span>✨ XP</span></div>`;
+  $('#wynik-komentarz').textContent = 'Szybkie liczenie w pamięci to supermoc — trenuj codziennie, a rekord poszybuje!';
+  $('#wynik-powtorz').onclick = () => { dzwiek('klik'); startSprint(); };
+  pokaz('wynik');
+}
+
+// ---------------------------------------------------------------------
+// MEMORY — dopasuj słówka EN ↔ PL
+// ---------------------------------------------------------------------
+let memory = null;
+function startMemory(){
+  const pary = tasuj(PARY_MEMORY).slice(0, 8);
+  const karty = tasuj(pary.flatMap(([en, pl], nr) => [
+    {tekst: '🇬🇧 ' + en, para: nr}, {tekst: '🇵🇱 ' + pl, para: nr},
+  ]));
+  memory = {karty, odkryte: [], trafione: 0, ruchy: 0, blokada: false};
+  $('#memory-ruchy').textContent = '0';
+  $('#siatka-memory').innerHTML = karty.map((k, i) => `
+    <button class="karta-memory" data-i="${i}">
+      <span class="srodek"><span class="przod">❓</span><span class="tyl">${k.tekst}</span></span>
+    </button>`).join('');
+  $$('#siatka-memory .karta-memory').forEach(b => b.onclick = () => ruchMemory(+b.dataset.i));
+  pokaz('memory');
+}
+function ruchMemory(i){
+  const przycisk = $$('#siatka-memory .karta-memory')[i];
+  if(memory.blokada || przycisk.classList.contains('odkryta')) return;
+  dzwiek('klik');
+  przycisk.classList.add('odkryta');
+  memory.odkryte.push(i);
+  if(memory.odkryte.length < 2) return;
+
+  memory.ruchy++;
+  $('#memory-ruchy').textContent = memory.ruchy;
+  const [a, b] = memory.odkryte;
+  const przyciski = $$('#siatka-memory .karta-memory');
+  if(memory.karty[a].para === memory.karty[b].para){
+    dzwiek('ok');
+    przyciski[a].classList.add('trafiona'); przyciski[b].classList.add('trafiona');
+    memory.trafione++; memory.odkryte = [];
+    if(memory.trafione === 8) setTimeout(koniecMemory, 500);
+  }else{
+    memory.blokada = true;
+    setTimeout(() => {
+      przyciski[a].classList.remove('odkryta'); przyciski[b].classList.remove('odkryta');
+      memory.odkryte = []; memory.blokada = false;
+    }, 900);
+  }
+}
+function koniecMemory(){
+  S.sesjeMemory++;
+  const premia = Math.max(20, 90 - memory.ruchy * 4);  // im mniej ruchów, tym więcej XP
+  S.xp += premia; S.monety += 10;
+  zapisz(); sprawdzOsiagniecia();
+  dzwiek('fanfary'); konfetti(70);
+  $('#wynik-tytul').textContent = '🧠 Wszystkie pary znalezione!';
+  $('#wynik-gwiazdy').textContent = memory.ruchy <= 12 ? '★★★' : memory.ruchy <= 18 ? '★★☆' : '★☆☆';
+  $('#wynik-liczby').innerHTML = `
+    <div><b>${memory.ruchy}</b><span>ruchów</span></div>
+    <div><b>+${premia}</b><span>✨ XP</span></div>
+    <div><b>+10</b><span>🪙 monet</span></div>`;
+  $('#wynik-komentarz').textContent = 'Każda odkryta para to słówko, które właśnie utrwaliło się w Twojej pamięci. Mistrzowie kończą w 12 ruchach!';
+  $('#wynik-powtorz').onclick = () => { dzwiek('klik'); startMemory(); };
+  pokaz('wynik');
+}
+
+// ---------------------------------------------------------------------
+// OSIĄGNIĘCIA I STATYSTYKI
+// ---------------------------------------------------------------------
+function rysujOsiagniecia(){
+  $('#osiagniecia-licznik').textContent = `Zdobyto ${S.osiagniecia.length} z ${OSIAGNIECIA.length}`;
+  $('#lista-osiagniec').innerHTML = OSIAGNIECIA.map(o => `
+    <div class="osiagniecie ${S.osiagniecia.includes(o.id) ? 'zdobyte' : ''}">
+      <span class="ikona">${o.ikona}</span>
+      <span><b>${o.nazwa}</b><br><small>${o.opis}</small></span>
+      ${S.osiagniecia.includes(o.id) ? '<span style="margin-left:auto">✅</span>' : ''}
+    </div>`).join('');
+  pokaz('osiagniecia');
+}
+
+function rysujStatystyki(){
+  const skutecznosc = S.odpowiedziRazem ? Math.round(100 * S.dobreRazem / S.odpowiedziRazem) : 0;
+  $('#statystyki-ogolne').innerHTML = `
+    <div class="wynik-liczby">
+      <div><b>${S.odpowiedziRazem}</b><span>pytań razem</span></div>
+      <div><b>${skutecznosc}%</b><span>skuteczność</span></div>
+      <div><b>${S.najlepszaSeria}</b><span>🔥 najlepsza seria</span></div>
+      <div><b>${S.rekordSprintu}</b><span>⚡ rekord sprintu</span></div>
+    </div>`;
+  const kategorie = Object.entries(S.statystyki);
+  $('#statystyki-kategorie').innerHTML = kategorie.length ? kategorie.map(([kat, st]) => {
+    const proc = Math.round(100 * st.dobre / st.wszystkie);
+    const naz = PRZEDMIOTY[kat] ? PRZEDMIOTY[kat].ikona + ' ' + PRZEDMIOTY[kat].nazwa : kat;
+    return `<div class="rzad-stat">
+      <div class="etykieta"><span>${naz}</span><span><b>${proc}%</b> (${st.dobre}/${st.wszystkie})</span></div>
+      <div class="pasek-stat"><div style="width:${proc}%;${proc < 60 ? 'background:linear-gradient(90deg,#f87171,#ef4444)' : ''}"></div></div>
+    </div>`;
+  }).join('') : '<p class="tekst-slaby">Zagraj w dowolny tryb, a tutaj pojawią się Twoje wyniki.</p>';
+
+  $('#tabela-stat').innerHTML = `
+    <tr><th>Wskaźnik</th><th>Wartość</th></tr>
+    <tr><td>Gracz</td><td>${S.profil.awatar} ${S.profil.imie} (poziom ${poziomGracza()})</td></tr>
+    <tr><td>Punkty XP / monety</td><td>${S.xp} ✨ / ${S.monety} 🪙</td></tr>
+    <tr><td>Ukończone poziomy</td><td>${S.wygranePoziomy}</td></tr>
+    <tr><td>Pytania czekające na powtórkę</td><td>${S.powtorki.length}</td></tr>
+    <tr><td>Sesje powtórek / memory</td><td>${S.sesjePowtorek} / ${S.sesjeMemory}</td></tr>
+    <tr><td>Osiągnięcia</td><td>${S.osiagniecia.length} / ${OSIAGNIECIA.length}</td></tr>`;
+  pokaz('statystyki');
+}
+
+function eksportujCSV(){
+  const wiersze = [
+    ['gracz', S.profil.imie], ['data', dzisiaj()],
+    ['pytania_razem', S.odpowiedziRazem], ['poprawne_razem', S.dobreRazem],
+    ['najlepsza_seria', S.najlepszaSeria], ['rekord_sprintu', S.rekordSprintu],
+    ['xp', S.xp], ['ukonczone_poziomy', S.wygranePoziomy],
+    [], ['przedmiot', 'poprawne', 'wszystkie', 'procent'],
+    ...Object.entries(S.statystyki).map(([k, st]) => [k, st.dobre, st.wszystkie, Math.round(100 * st.dobre / st.wszystkie) + '%']),
+  ];
+  const csv = '﻿' + wiersze.map(w => w.join(';')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8'}));
+  a.download = `wyniki-${S.profil.imie}-${dzisiaj()}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ---------------------------------------------------------------------
+// EKRAN PROFILU / START
+// ---------------------------------------------------------------------
+const AWATARY = ['🦊','🐼','🦁','🐸','🦉','🐙','🦄','🤖','🐯','🐧'];
+let wybranyAwatar = AWATARY[0];
+function rysujProfil(){
+  $('#wybor-awatara').innerHTML = AWATARY.map(a =>
+    `<button data-awatar="${a}" class="${a === wybranyAwatar ? 'wybrany' : ''}">${a}</button>`).join('');
+  $$('#wybor-awatara button').forEach(b => b.onclick = () => {
+    wybranyAwatar = b.dataset.awatar; dzwiek('klik'); rysujProfil();
+  });
+}
+
+// ---------------------------------------------------------------------
+// Podpięcie zdarzeń i start aplikacji
+// ---------------------------------------------------------------------
+$('#przycisk-start').onclick = () => {
+  const imie = $('#pole-imie').value.trim() || 'Odkrywca';
+  S.profil = {imie, awatar: wybranyAwatar};
+  zapisz(); dzwiek('fanfary');
+  $('#nawigacja').style.display = '';
+  rysujMape();
+};
+$$('#nawigacja button, [data-cel]').forEach(b => b.addEventListener('click', () => {
+  const cel = b.dataset.cel;
+  if(!cel) return;
+  dzwiek('klik');
+  if(cel === 'mapa') rysujMape();
+  else if(cel === 'powtorki') startPowtorki();
+  else if(cel === 'wyzwanie') startWyzwanie();
+  else if(cel === 'osiagniecia') rysujOsiagniecia();
+  else if(cel === 'statystyki') rysujStatystyki();
+}));
+$('#quiz-dalej').onclick = () => { dzwiek('klik'); dalej(); };
+$('#quiz-wyjscie').onclick = () => { clearInterval(stoperPF); rysujMape(); };
+$('#quiz-podpowiedz').onclick = () => {
+  // Podpowiedź 50/50 — kosztuje monety, uczy zarządzania zasobami
+  if(S.monety < 20 || sesja.uzytoPodpowiedziTeraz) return;
+  S.monety -= 20; sesja.uzytoPodpowiedziTeraz = true;
+  zapisz(); rysujPasekGracza(); dzwiek('klik');
+  const q = sesja.pytania[sesja.i];
+  const zle = q.o.map((_, i) => i).filter(i => i !== q.ok);
+  tasuj(zle).slice(0, 2).forEach(i => {
+    const b = $(`#quiz-odpowiedzi .odpowiedz[data-i="${i}"]`);
+    if(b){ b.classList.add('wygaszona'); b.disabled = true; }
+  });
+  $('#quiz-podpowiedz').style.display = 'none';
+};
+$('#sprint-ok').onclick = odpowiedzSprint;
+$('#sprint-pole').addEventListener('keydown', e => { if(e.key === 'Enter') odpowiedzSprint(); });
+$('#sprint-wyjscie').onclick = () => { clearInterval(sprint.stoper); rysujMape(); };
+$('#memory-wyjscie').onclick = () => rysujMape();
+$('#eksport-csv').onclick = eksportujCSV;
+$('#reset-postepu').onclick = () => {
+  if(confirm('Na pewno usunąć CAŁY postęp i zacząć od nowa?')){
+    localStorage.removeItem(KLUCZ);
+    location.reload();
+  }
+};
+
+// Start: nowy gracz widzi ekran profilu, powracający — od razu mapę
+if(S.profil){
+  $('#nawigacja').style.display = '';
+  rysujMape();
+}else{
+  rysujProfil();
+  pokaz('profil');
+}
+</script>
+</body>
+</html>
