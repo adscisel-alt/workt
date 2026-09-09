@@ -1132,7 +1132,7 @@ function rysujStatystyki(){
   pokaz('statystyki');
 }
 
-function eksportujCSV(){
+async function eksportujCSV(){
   const wiersze = [
     ['gracz', S.profil.imie], ['data', dzisiaj()],
     ['pytania_razem', S.odpowiedziRazem], ['poprawne_razem', S.dobreRazem],
@@ -1142,9 +1142,21 @@ function eksportujCSV(){
     ...Object.entries(S.statystyki).map(([k, st]) => [k, st.dobre, st.wszystkie, Math.round(100 * st.dobre / st.wszystkie) + '%']),
   ];
   const csv = '﻿' + wiersze.map(w => w.join(';')).join('\n');
+  const nazwaPliku = `wyniki-${S.profil.imie}-${dzisiaj()}.csv`;
+  // Na claude.ai (artefakt) pobieranie idzie przez window.claude; lokalnie — zwykły link.
+  if(window.claude && window.claude.use){
+    try{
+      const downloads = await window.claude.use('downloads');
+      if(downloads){
+        await downloads.save({filename: nazwaPliku, data: csv});
+        toast('✅ Plik zapisany');
+        return;
+      }
+    }catch(e){ return; }  // widz odmówił zapisu — nic nie rób
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8'}));
-  a.download = `wyniki-${S.profil.imie}-${dzisiaj()}.csv`;
+  a.download = nazwaPliku;
   a.click();
   URL.revokeObjectURL(a.href);
 }
