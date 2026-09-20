@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Edukacyjna aplikacja o budowie piramidy Cheopsa dla klasy IV: przekrój, wyprawa do środka, etapy budowy, quiz i sprawdzian.">
+<title>Wielka Piramida od środka</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:ital,wght@0,400;0,700;0,800;1,400&display=swap">
+<style>
+/* ====== kolory (starożytny Egipt) ====== */
+:root{
+  --lapis:#1b2a5e;      /* granat lapis-lazuli */
+  --lapis-2:#2c3f7d;
+  --gold:#e2a62b;       /* złoto */
+  --gold-soft:#f3c96b;
+  --turkus:#0f8f8a;     /* turkus fajansu */
+  --red:#c8452f;        /* czerwień karneolu */
+  --bg:#f1e6cd;         /* wapień */
+  --card:#fbf5e6;
+  --card-2:#f3ead3;
+  --ink:#241f14;
+  --muted:#6b5f49;
+  --line:#d8c9a6;
+  --ok:#1e7d3c;
+  --bad:#b4321f;
+  --focus:#e2a62b;
+  --btn-ink:#fff;
+  --hl:#ffd93d;         /* żółte podświetlenie części */
+  --shadow:0 2px 10px rgba(60,45,15,.14);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --lapis:#39519e; --lapis-2:#2c3f7d;
+    --gold:#f0b93f; --gold-soft:#c98f1e;
+    --turkus:#2db3ac; --red:#e0604a;
+    --bg:#141a2f; --card:#1e2542; --card-2:#252d50;
+    --ink:#f0e8d6; --muted:#b6ac93; --line:#3a4266;
+    --ok:#5bc57e; --bad:#f08a76;
+    --shadow:0 2px 10px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --lapis:#39519e; --lapis-2:#2c3f7d;
+  --gold:#f0b93f; --gold-soft:#c98f1e;
+  --turkus:#2db3ac; --red:#e0604a;
+  --bg:#141a2f; --card:#1e2542; --card-2:#252d50;
+  --ink:#f0e8d6; --muted:#b6ac93; --line:#3a4266;
+  --ok:#5bc57e; --bad:#f08a76;
+  --shadow:0 2px 10px rgba(0,0,0,.45);
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Nunito","Segoe UI",system-ui,-apple-system,sans-serif;
+  font-size:18px; line-height:1.55;
+}
+h1,h2,h3,.tab,.stage-dot{font-family:"Baloo 2","Segoe UI",system-ui,sans-serif}
+:focus-visible{outline:3px solid var(--focus); outline-offset:2px; border-radius:6px}
+
+/* ====== nagłówek i zakładki ====== */
+header.top{
+  background:linear-gradient(115deg,#1b2a5e 0%,#27407e 70%,#3b5a9c 100%);
+  color:#fdf6e3; padding:14px 16px 12px; border-bottom:4px solid var(--gold);
+}
+header.top h1{margin:0; font-size:clamp(24px,4vw,36px); line-height:1.15; letter-spacing:.3px}
+header.top h1 .hiero{color:#f3c96b}
+header.top p{margin:4px 0 0; font-size:clamp(15px,2vw,18px); color:#e8dcbc; max-width:70ch}
+nav.tabs{
+  display:flex; flex-wrap:wrap; gap:8px; padding:10px 16px;
+  background:var(--card); border-bottom:2px solid var(--line);
+  position:relative; z-index:5;
+}
+.tab{
+  border:2px solid var(--lapis); background:var(--card); color:var(--ink);
+  min-height:48px; padding:8px 18px; font-size:19px; font-weight:700;
+  border-radius:12px; cursor:pointer;
+}
+.tab[aria-selected="true"]{background:var(--lapis); color:#fff; border-color:var(--lapis)}
+.tab:hover{border-color:var(--gold)}
+
+/* ====== układ ====== */
+.layout{
+  display:grid; grid-template-columns:minmax(0,7fr) minmax(300px,5fr);
+  gap:16px; padding:16px; align-items:start; max-width:1500px; margin:0 auto;
+}
+.scene-wrap{position:sticky; top:8px}
+.scene-card{background:var(--card); border-radius:14px; box-shadow:var(--shadow); padding:8px}
+#scene{display:block; width:100%; height:auto; max-height:calc(100vh - 140px); border-radius:10px}
+#sceneHint{margin:6px 6px 2px; font-size:16px; color:var(--muted); min-height:1.4em}
+.panel-wrap{min-width:0}
+#panel{
+  background:var(--card); border-radius:14px; box-shadow:var(--shadow);
+  padding:18px 20px;
+}
+#panel h2{margin:0 0 8px; font-size:26px; color:var(--lapis); text-wrap:balance}
+:root[data-theme="dark"] #panel h2{color:var(--gold)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) #panel h2{color:var(--gold)} }
+#panel h3{margin:18px 0 8px; font-size:20px}
+#panel p{margin:8px 0}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr; padding:12px}
+  .scene-wrap{position:static}
+  #scene{max-height:none}
+}
+
+/* ====== przyciski ====== */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  min-height:48px; padding:10px 18px; margin:4px 6px 4px 0;
+  font:inherit; font-weight:700; font-size:18px;
+  border-radius:12px; border:2px solid var(--lapis);
+  background:var(--lapis); color:#fff; cursor:pointer;
+}
+.btn:hover{background:var(--lapis-2)}
+.btn.alt{background:var(--card); color:var(--ink)}
+.btn.alt:hover{background:var(--card-2)}
+.btn.gold{background:var(--gold); border-color:var(--gold); color:#241f14}
+.btn.turkus{background:var(--turkus); border-color:var(--turkus)}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.btn-row{display:flex; flex-wrap:wrap; align-items:center; margin-top:10px}
+
+/* opcje quizu / sprawdzianu */
+.opt{
+  display:block; width:100%; text-align:left; margin:8px 0;
+  min-height:48px; padding:10px 14px; font:inherit; font-size:18px;
+  border:2px solid var(--line); border-radius:12px;
+  background:var(--card-2); color:var(--ink); cursor:pointer;
+}
+.opt:hover{border-color:var(--gold)}
+.opt.picked{border-color:var(--lapis); background:var(--card); box-shadow:inset 0 0 0 2px var(--lapis)}
+.opt.ok{border-color:var(--ok); box-shadow:inset 0 0 0 2px var(--ok)}
+.opt.bad{border-color:var(--bad); box-shadow:inset 0 0 0 2px var(--bad)}
+.opt:disabled{cursor:default; opacity:.9}
+
+.feedback{border-radius:12px; padding:12px 14px; margin:12px 0; font-weight:700}
+.feedback.good{background:rgba(30,125,60,.14); border:2px solid var(--ok)}
+.feedback.wrong{background:rgba(180,50,31,.12); border:2px solid var(--bad)}
+.feedback p{font-weight:400}
+
+.funbox{
+  border:2px solid var(--turkus); border-radius:12px;
+  background:rgba(15,143,138,.08); padding:12px 14px; margin:14px 0;
+}
+.funbox b{color:var(--turkus)}
+
+.chip{
+  display:inline-block; background:var(--red); color:#fff; font-weight:800;
+  border-radius:999px; min-width:30px; text-align:center; padding:2px 9px; margin-right:8px;
+}
+.place-list{list-style:none; margin:10px 0; padding:0}
+.place-list button{
+  display:flex; align-items:center; width:100%; text-align:left;
+  min-height:48px; padding:8px 10px; margin:3px 0; font:inherit; font-size:18px;
+  border:2px solid transparent; border-radius:10px; background:transparent; color:var(--ink); cursor:pointer;
+}
+.place-list button:hover{background:var(--card-2); border-color:var(--gold)}
+
+.progress-wrap{margin:12px 0}
+.progress-bar{height:14px; border-radius:999px; background:var(--card-2); border:1px solid var(--line); overflow:hidden}
+.progress-bar > div{height:100%; background:var(--turkus); width:0; transition:width .4s}
+@media (prefers-reduced-motion: reduce){ .progress-bar > div{transition:none} }
+
+.stage-bar{display:flex; flex-wrap:wrap; gap:6px; margin:10px 0}
+.stage-dot{
+  min-width:48px; min-height:48px; border-radius:12px; border:2px solid var(--lapis);
+  background:var(--card); color:var(--ink); font-size:19px; font-weight:700; cursor:pointer;
+}
+.stage-dot[aria-current="true"]{background:var(--gold); border-color:var(--gold); color:#241f14}
+
+.name-input{
+  display:block; width:100%; min-height:48px; margin:8px 0 4px;
+  font:inherit; font-size:19px; padding:10px 12px;
+  border:2px solid var(--lapis); border-radius:10px; background:var(--card-2); color:var(--ink);
+}
+label{font-weight:700}
+.small{font-size:16px; color:var(--muted)}
+.score-big{font-size:40px; font-weight:800; color:var(--lapis); font-family:"Baloo 2",sans-serif}
+:root[data-theme="dark"] .score-big{color:var(--gold)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .score-big{color:var(--gold)} }
+
+.err-item{border-left:5px solid var(--red); background:var(--card-2); border-radius:0 10px 10px 0; padding:10px 12px; margin:10px 0}
+.err-item p{margin:3px 0}
+
+#resultCard{background:var(--card); border:2px solid var(--gold); border-radius:14px; padding:16px}
+
+.compare-fig{margin:14px 0 6px}
+.compare-fig svg{width:100%; max-width:420px; height:auto; display:block}
+
+/* ====== SVG: części przekroju ====== */
+.part{pointer-events:none}
+#scene.parts-on .part{pointer-events:auto; cursor:pointer}
+.part:focus{outline:none}
+.part .vis{transition:stroke .15s,fill .15s}
+@media (prefers-reduced-motion: reduce){ .part .vis{transition:none} }
+.hit{fill:rgba(0,0,0,.001); stroke:rgba(0,0,0,.001)}
+#scene.parts-on .part:hover .strokev,
+.part.sel .strokev,
+.part:focus-visible .strokev{stroke:var(--hl)}
+#scene.parts-on .part:hover .fillv,
+.part.sel .fillv,
+.part:focus-visible .fillv{fill:var(--hl)}
+.part:focus-visible{filter:drop-shadow(0 0 5px var(--hl))}
+.part.sel{filter:drop-shadow(0 0 6px var(--hl))}
+
+.badge{display:none; cursor:pointer}
+#scene.show-badges .badge{display:block}
+.badge circle{fill:var(--red); stroke:#fff; stroke-width:1.6}
+.badge text{fill:#fff; font:800 12px "Baloo 2","Segoe UI",sans-serif; text-anchor:middle; dominant-baseline:central; pointer-events:none}
+.badge:hover circle,.badge:focus-visible circle{fill:#e2632f}
+
+#exped{display:none}
+#scene.show-exped #exped{display:block}
+.trail{fill:none; stroke:var(--hl); stroke-width:3.5; stroke-dasharray:7 6; stroke-linecap:round; stroke-linejoin:round; opacity:.95}
+.exp-node{fill:#cbbfa0; stroke:#6b5f49; stroke-width:1.5}
+.exp-node.found{fill:var(--turkus); stroke:#fff}
+.exp-node.here{fill:var(--gold)}
+
+#clipRect{transition:y .9s ease, height .9s ease}
+@media (prefers-reduced-motion: reduce){ #clipRect{transition:none} }
+
+/* ====== druk – tylko karta wyniku ====== */
+@media print{
+  body *{visibility:hidden}
+  #resultCard, #resultCard *{visibility:visible}
+  #resultCard{position:absolute; left:0; top:0; width:100%; border:none; color:#000; background:#fff}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1><span class="hiero">▲</span> Wielka Piramida od środka</h1>
+  <p>Piramida Cheopsa (Chufu) w Gizie. Zbudowano ją około 2560 r. p.n.e., czyli w XXVI wieku p.n.e., w III tysiącleciu p.n.e.</p>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Działy aplikacji">
+  <button class="tab" role="tab" id="tab-poznaj" aria-selected="true" data-tab="poznaj">Poznaj</button>
+  <button class="tab" role="tab" id="tab-wyprawa" aria-selected="false" data-tab="wyprawa">Wyprawa</button>
+  <button class="tab" role="tab" id="tab-budowa" aria-selected="false" data-tab="budowa">Budowa</button>
+  <button class="tab" role="tab" id="tab-quiz" aria-selected="false" data-tab="quiz">Quiz</button>
+  <button class="tab" role="tab" id="tab-sprawdzian" aria-selected="false" data-tab="sprawdzian">Sprawdzian</button>
+</nav>
+
+<main class="layout">
+  <section class="scene-wrap" aria-label="Przekrój piramidy">
+    <div class="scene-card">
+      <!-- Przekrój piramidy Cheopsa; północ po lewej; skala ok. 3,13 px na metr -->
+      <svg id="scene" viewBox="0 0 1000 640" role="img"
+           aria-label="Przekrój Wielkiej Piramidy: północ po lewej stronie, pod ziemią skała, wewnątrz korytarze i komory">
+        <defs>
+          <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#131f4a"/>
+            <stop offset="0.55" stop-color="#2b4076"/>
+            <stop offset="0.85" stop-color="#8a5f4b"/>
+            <stop offset="1" stop-color="#e5b164"/>
+          </linearGradient>
+          <linearGradient id="casingGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fdf9ec"/>
+            <stop offset="1" stop-color="#e7dab5"/>
+          </linearGradient>
+          <pattern id="blocks" width="26" height="26" patternUnits="userSpaceOnUse">
+            <rect width="26" height="26" fill="#d9c493"/>
+            <path d="M0,0H26 M0,13H26 M13,0V13 M0,13V26" stroke="#c0a674" stroke-width="1.4" fill="none"/>
+          </pattern>
+          <clipPath id="buildClip"><rect id="clipRect" x="0" y="0" width="1000" height="640"/></clipPath>
+        </defs>
+
+        <!-- niebo, słońce, gwiazdy -->
+        <rect x="0" y="0" width="1000" height="480" fill="url(#skyGrad)"/>
+        <circle cx="924" cy="436" r="26" fill="#f6c56b" opacity=".95"/>
+        <circle cx="924" cy="436" r="40" fill="#f6c56b" opacity=".25"/>
+        <g fill="#fdf6d8" opacity=".8">
+          <circle cx="80" cy="60" r="1.8"/><circle cx="200" cy="110" r="1.4"/><circle cx="640" cy="50" r="1.6"/>
+          <circle cx="760" cy="120" r="1.3"/><circle cx="920" cy="70" r="1.7"/><circle cx="330" cy="45" r="1.3"/>
+        </g>
+
+        <!-- skała pod ziemią -->
+        <rect x="0" y="480" width="1000" height="160" fill="#8a7154"/>
+        <g stroke="#79624a" stroke-width="1.6" opacity=".8">
+          <path d="M30,520 l50,6 M120,560 l60,4 M240,600 l55,-5 M640,600 l60,5 M760,540 l55,6 M880,590 l50,-4 M900,505 l45,6 M60,620 l50,3"/>
+        </g>
+        <line x1="0" y1="480" x2="1000" y2="480" stroke="#5f4c37" stroke-width="3"/>
+
+        <!-- piramida + wnętrze (grupa przycinana w zakładce Budowa) -->
+        <g id="pyr">
+          <polygon id="body" points="140,480 500,23 860,480" fill="url(#blocks)" stroke="#93744a" stroke-width="3"/>
+
+          <g id="parts">
+            <!-- 1 wejście -->
+            <g class="part" data-id="wejscie">
+              <polygon class="vis fillv" points="168,434 182,416 196,434" fill="#b08c50" stroke="#6b4f2a" stroke-width="2"/>
+              <rect class="vis" x="177" y="424" width="10" height="10" fill="#332818"/>
+              <circle class="hit" cx="182" cy="427" r="18"/>
+            </g>
+            <!-- 2 korytarz zstępujący -->
+            <g class="part" data-id="zstepujacy">
+              <polyline class="vis strokev" points="182,427 476,574 504,574" fill="none" stroke="#4a3b28" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline class="hit" points="182,427 476,574 504,574" fill="none" stroke-width="20" pointer-events="stroke"/>
+            </g>
+            <!-- 3 komora podziemna -->
+            <g class="part" data-id="podziemna">
+              <polygon class="vis fillv" points="504,561 511,553 534,554 552,559 551,573 538,580 515,578 504,574" fill="#3c2f1f" stroke="#2a2014" stroke-width="2"/>
+              <polygon class="hit" points="504,561 511,553 534,554 552,559 551,573 538,580 515,578 504,574" stroke-width="16" pointer-events="all"/>
+            </g>
+            <!-- 4 korytarz wstępujący + korki -->
+            <g class="part" data-id="wstepujacy">
+              <line class="vis strokev" x1="261" y1="466" x2="370" y2="412" stroke="#4a3b28" stroke-width="6" stroke-linecap="round"/>
+              <line x1="261" y1="466" x2="279" y2="457" stroke="#c8452f" stroke-width="8" stroke-linecap="round"/>
+              <line class="hit" x1="261" y1="466" x2="370" y2="412" stroke-width="20" pointer-events="stroke"/>
+            </g>
+            <!-- 5 Wielka Galeria -->
+            <g class="part" data-id="galeria">
+              <polygon class="vis fillv" points="370,412 502,346 502,322 374,386" fill="#4a3b28" stroke="#2a2014" stroke-width="2"/>
+              <polygon class="hit" points="370,412 502,346 502,322 374,386" stroke-width="14" pointer-events="all"/>
+            </g>
+            <!-- 6 korytarz poziomy + komora królowej -->
+            <g class="part" data-id="krolowej">
+              <line class="vis strokev" x1="370" y1="412" x2="482" y2="412" stroke="#4a3b28" stroke-width="5" stroke-linecap="round"/>
+              <polygon class="vis fillv" points="482,415 482,398 491,389 500,398 500,415" fill="#3c2f1f" stroke="#2a2014" stroke-width="2"/>
+              <line class="hit" x1="370" y1="412" x2="482" y2="412" stroke-width="18" pointer-events="stroke"/>
+              <rect class="hit" x="476" y="384" width="30" height="36" pointer-events="all"/>
+            </g>
+            <!-- 7 przedsionek + komora króla -->
+            <g class="part" data-id="krol">
+              <line class="vis strokev" x1="502" y1="344" x2="526" y2="344" stroke="#4a3b28" stroke-width="5" stroke-linecap="round"/>
+              <rect class="vis fillv" x="526" y="326" width="34" height="21" fill="#3c2f1f" stroke="#2a2014" stroke-width="2"/>
+              <rect x="531" y="338" width="9" height="6" fill="#c8452f" stroke="#7e2418" stroke-width="1"/>
+              <rect class="hit" x="498" y="320" width="66" height="31" pointer-events="all"/>
+            </g>
+            <!-- 8 komory odciążające -->
+            <g class="part" data-id="odciazajace">
+              <rect class="vis fillv" x="526" y="318" width="34" height="6" fill="#6b5638" stroke="#4a3b28" stroke-width="1.4"/>
+              <rect class="vis fillv" x="526" y="310" width="34" height="6" fill="#6b5638" stroke="#4a3b28" stroke-width="1.4"/>
+              <rect class="vis fillv" x="526" y="302" width="34" height="6" fill="#6b5638" stroke="#4a3b28" stroke-width="1.4"/>
+              <rect class="vis fillv" x="526" y="294" width="34" height="6" fill="#6b5638" stroke="#4a3b28" stroke-width="1.4"/>
+              <polygon class="vis fillv" points="524,290 543,274 562,290" fill="#b08c50" stroke="#6b4f2a" stroke-width="2"/>
+              <rect class="hit" x="518" y="270" width="50" height="54" pointer-events="all"/>
+            </g>
+            <!-- 9 szyby -->
+            <g class="part" data-id="szyby">
+              <g class="vis strokev" stroke="#7f6a4a" stroke-width="2.4" stroke-dasharray="6 4" fill="none">
+                <line x1="526" y1="334" x2="343" y2="222"/>
+                <line x1="560" y1="334" x2="664" y2="232"/>
+                <line x1="482" y1="404" x2="336" y2="287"/>
+                <line x1="500" y1="404" x2="646" y2="287"/>
+              </g>
+              <g class="hit" fill="none" stroke-width="14" pointer-events="stroke">
+                <line x1="526" y1="334" x2="343" y2="222"/>
+                <line x1="560" y1="334" x2="664" y2="232"/>
+                <line x1="482" y1="404" x2="336" y2="287"/>
+                <line x1="500" y1="404" x2="646" y2="287"/>
+              </g>
+            </g>
+            <!-- 10 szyb ucieczki -->
+            <g class="part" data-id="ucieczki">
+              <polyline class="vis strokev" points="370,412 366,440 380,470 400,520 436,554" fill="none" stroke="#4a3b28" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline class="hit" points="370,412 366,440 380,470 400,520 436,554" fill="none" stroke-width="16" pointer-events="stroke"/>
+            </g>
+            <!-- 11 tunel rabusiów -->
+            <g class="part" data-id="rabusiow">
+              <polyline class="vis strokev" points="157,459 250,459 280,457" fill="none" stroke="#5d4a33" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 8"/>
+              <polyline class="hit" points="157,459 250,459 280,457" fill="none" stroke-width="20" pointer-events="stroke"/>
+            </g>
+            <!-- 12 Wielka Pustka -->
+            <g class="part" data-id="pustka">
+              <polygon class="vis strokev" points="400,352 490,307 490,290 400,335" fill="#4a3b28" fill-opacity=".28" stroke="#7f6a4a" stroke-width="2.4" stroke-dasharray="7 5"/>
+              <text x="447" y="329" font-size="24" font-weight="800" fill="#e2a62b" text-anchor="middle" style="font-family:'Baloo 2',sans-serif" pointer-events="none">?</text>
+              <polygon class="hit" points="400,352 490,307 490,290 400,335" stroke-width="14" pointer-events="all"/>
+            </g>
+            <!-- 13 piramidion -->
+            <g class="part" data-id="piramidion">
+              <polygon class="vis fillv" points="500,23 483.5,45 516.5,45" fill="#e2a62b" stroke="#a97b18" stroke-width="2"/>
+              <circle class="hit" cx="500" cy="36" r="24"/>
+            </g>
+          </g>
+
+          <!-- biała okładzina (Budowa, etap 6) -->
+          <g id="casing" hidden>
+            <polygon points="140,480 500,23 860,480" fill="url(#casingGrad)" stroke="#cbb98a" stroke-width="3"/>
+            <polygon points="500,23 483.5,45 516.5,45" fill="#e2a62b" stroke="#a97b18" stroke-width="2"/>
+          </g>
+        </g>
+
+        <!-- rampa (Budowa, etapy 3–5) -->
+        <g id="ramp"></g>
+
+        <!-- warstwa Wyprawy -->
+        <g id="exped">
+          <g id="trails"></g>
+          <g id="expNodes"></g>
+          <g id="marker">
+            <circle r="9" fill="#ffd93d" stroke="#1b2a5e" stroke-width="2.5"/>
+            <circle r="3.2" fill="#1b2a5e"/>
+          </g>
+        </g>
+
+        <!-- numery części -->
+        <g id="badges"></g>
+      </svg>
+      <p id="sceneHint"></p>
+    </div>
+  </section>
+
+  <section class="panel-wrap">
+    <div id="panel" aria-live="polite"></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+/* =====================================================================
+   DANE DO EDYCJI PRZEZ NAUCZYCIELA
+   Poniżej znajdują się wszystkie teksty aplikacji: części piramidy,
+   węzły i przejścia Wyprawy, etapy Budowy oraz pula pytań.
+   ===================================================================== */
+
+/* ---- 13 części przekroju (zakładka Poznaj) ----
+   id     – identyfikator grupy na rysunku (nie zmieniać)
+   badge  – położenie czerwonego kółka z numerem [x, y]
+   name   – nazwa miejsca
+   desc   – opis (2–4 zdania prostym językiem)
+   fun    – ciekawostka                                              */
+const PARTS = [
+ { id:"wejscie", badge:[156,412], name:"Wejście",
+   desc:"Prawdziwe wejście do piramidy znajduje się na północnej ścianie, aż 17 metrów nad ziemią. Osłania je potężny daszek z kamiennych bloków, który przejmuje ciężar piramidy. Przez tysiące lat wejście było szczelnie ukryte pod gładką okładziną.",
+   fun:"Wejście zamaskowano tak dobrze, że poszukiwacze skarbów w IX wieku nie mogli go znaleźć – dlatego wykuli obok własny tunel (nr 11)." },
+ { id:"zstepujacy", badge:[300,516], name:"Korytarz zstępujący",
+   desc:"Od wejścia w dół prowadzi korytarz zstępujący. Ma ponad 100 metrów długości, a przy tym jest bardzo ciasny: około 1 metr szerokości i 1,2 metra wysokości, więc dorosły musi iść mocno schylony. Prowadzi głęboko pod piramidę, do komory podziemnej.",
+   fun:"Korytarz wycelowano tak dokładnie, że przez jego wylot widać było kiedyś gwiazdy krążące blisko północnego bieguna nieba." },
+ { id:"podziemna", badge:[576,566], name:"Komora podziemna",
+   desc:"Ta komora leży aż 30 metrów pod piramidą i została wykuta w litej skale. Nigdy jej nie dokończono – podłoga jest nierówna, a ściany chropowate. Być może miała być pierwszym grobowcem faraona, ale plany się zmieniły.",
+   fun:"Niektórzy badacze sądzą, że komorę zostawiono niedokończoną specjalnie – żeby zmylić rabusiów szukających skarbów." },
+ { id:"wstepujacy", badge:[317,463], name:"Korytarz wstępujący i granitowe korki",
+   desc:"Ten korytarz prowadzi od rozwidlenia w górę, w stronę Wielkiej Galerii. Tuż przy jego początku tkwią trzy ogromne granitowe korki (na rysunku czerwone), które szczelnie blokują przejście. Wsunięto je po pogrzebie faraona, żeby nikt nie dostał się do komory króla.",
+   fun:"Granit jest tak twardy, że rabusie nawet nie próbowali rozkuwać korków – wykuli obok nich tunel w dużo miększym wapieniu." },
+ { id:"galeria", badge:[440,394], name:"Wielka Galeria",
+   desc:"Wielka Galeria to najbardziej zdumiewający korytarz piramidy: ma 47 metrów długości i aż 8,6 metra wysokości. Jej gładkie ściany zwężają się ku górze, schodek po schodku, aż strop staje się wąski jak szczelina. Idzie się nią stromo w górę, do komory króla.",
+   fun:"Naukowcy podejrzewają, że w galerii przechowywano granitowe korki, zanim po pogrzebie zsunięto je w dół korytarza." },
+ { id:"krolowej", badge:[491,437], name:"Komora królowej",
+   desc:"Nazwa tej komory jest myląca – nie pochowano w niej żadnej królowej! Tak nazwali ją dawni podróżnicy i nazwa została do dziś. Komora ma spadzisty strop i leży dokładnie pod wierzchołkiem piramidy. Prowadzi do niej niski, poziomy korytarz.",
+   fun:"Żony faraonów chowano w osobnych, mniejszych piramidach, które stoją tuż obok Wielkiej Piramidy." },
+ { id:"krol", badge:[585,337], name:"Komora króla",
+   desc:"Komora króla znajduje się 43 metry nad ziemią i jest w całości zbudowana z twardego granitu. Kamień przypłynął z Asuanu, oddalonego o około 800 kilometrów! W komorze stoi kamienny sarkofag – jest szerszy niż korytarz, więc musiano go wstawić już podczas budowy.",
+   fun:"Sarkofag jest dziś pusty i nie ma wieka. Nikt nie wie na pewno, co stało się z mumią faraona Chufu." },
+ { id:"odciazajace", badge:[543,258], name:"Komory odciążające",
+   desc:"Nad stropem komory króla ukryto pięć niskich, pustych komór, a nad nimi kamienny daszek. Rozkładają one ogromny ciężar piramidy na boki, żeby płaski strop komory się nie zawalił. To genialny pomysł starożytnych inżynierów.",
+   fun:"Robotnicy zostawili w tych komorach napisy z nazwą swojej drużyny i imieniem faraona Chufu – to jeden z dowodów na to, dla kogo zbudowano piramidę." },
+ { id:"szyby", badge:[600,262], name:"Tajemnicze szyby",
+   desc:"Z komory króla i komory królowej biegną ukośnie w górę wąziutkie szyby – mają tylko około 20 centymetrów szerokości. Szyby z komory króla dochodzą aż do ścian piramidy, a te z komory królowej kończą się gdzieś w środku. Badały je specjalne małe roboty z kamerami.",
+   fun:"Niektórzy uczeni uważają, że szyby były „drogą do gwiazd”, którą dusza faraona miała wędrować na nocne niebo." },
+ { id:"ucieczki", badge:[424,502], name:"Szyb ucieczki",
+   desc:"Ten wąski, kręty szyb łączy początek Wielkiej Galerii z dolną częścią korytarza zstępującego. Prawdopodobnie uciekli nim robotnicy, którzy po pogrzebie faraona zsunęli granitowe korki. Bez niego zostaliby uwięzieni w piramidzie!",
+   fun:"Szyb jest tak ciasny, że trzeba się w nim czołgać – to była droga tylko dla szczupłych i odważnych." },
+ { id:"rabusiow", badge:[180,471], name:"Tunel rabusiów",
+   desc:"Ten chodnik wykuli poszukiwacze skarbów – według uczonych byli to ludzie kalifa Al-Mamuna w IX wieku naszej ery, ponad trzy tysiące lat po zbudowaniu piramidy. Tunelem ominęli granitowe korki i dostali się do środka. Dziś to właśnie tędy wchodzą do piramidy turyści.",
+   fun:"Według opowieści śmiałkowie znaleźli w środku tylko… pusty sarkofag. Skarby zniknęły dużo, dużo wcześniej." },
+ { id:"pustka", badge:[483,272], name:"Wielka Pustka",
+   desc:"W 2017 roku naukowcy odkryli nad Wielką Galerią tajemniczą pustą przestrzeń, długą na co najmniej 30 metrów. Wykryły ją miony – niewidzialne cząstki przylatujące z kosmosu, które przenikają przez kamień. Nikt jeszcze do niej nie zajrzał i nikt nie wie, do czego służyła.",
+   fun:"Miony prześwietlają piramidę trochę jak promienie rentgenowskie ciało człowieka – tam, gdzie jest pusto, przelatuje ich więcej." },
+ { id:"piramidion", badge:[500,63], name:"Piramidion i szczyt",
+   desc:"Piramida miała pierwotnie 146,6 metra wysokości – dziś jest o około 8 metrów niższa, bo brakuje szczytu i okładziny. Każdy bok podstawy mierzy około 230 metrów. Gładką, białą okładzinę z wapienia rozebrano w średniowieczu na budowę innych gmachów, a na samym czubku stał kiedyś błyszczący kamień – piramidion.",
+   fun:"Przez prawie cztery tysiące lat Wielka Piramida była najwyższą budowlą świata!" },
+];
+
+/* ---- Wyprawa: węzły grafu ----
+   pos    – punkt na rysunku [x, y]
+   counts – czy węzeł liczy się do „Odkrytych miejsc” (7 węzłów)     */
+const NODES = {
+ start:       { name:"Przed piramidą", pos:[110,474], counts:false,
+   desc:"Stoisz na piaszczystym płaskowyżu w Gizie. Przed tobą wyrasta ogromna kamienna góra – jej szczyt niemal dotyka nieba. Czujesz gorący wiatr i ziarenka piasku na twarzy." },
+ wejscie:     { name:"Wejście (17 m nad ziemią)", pos:[182,427], counts:true,
+   desc:"Jesteś 17 metrów nad ziemią, na północnej ścianie piramidy. Nad głową masz ogromne bloki ułożone w daszek. W głąb prowadzi ciasny, ciemny korytarz – czujesz chłód bijący ze środka." },
+ tunel:       { name:"Wylot tunelu rabusiów", pos:[157,459], counts:true,
+   desc:"To nierówna dziura wykuta ponad tysiąc lat temu przez poszukiwaczy skarbów. Ściany są chropowate od uderzeń dłut. Właśnie tędy wchodzą dziś do piramidy turyści – ty też możesz!" },
+ rozwidlenie: { name:"Rozwidlenie korytarzy", pos:[261,466], counts:false,
+   desc:"Korytarz się rozdziela. W górę drogę zagradzają czerwone granitowe korki – nie da się ich przecisnąć ani rozkuć! W dół korytarz znika w zupełnej ciemności. Słyszysz tylko własny oddech." },
+ podziemna:   { name:"Komora podziemna", pos:[528,566], counts:true,
+   desc:"Jesteś 30 metrów pod piramidą, w komorze wykutej w litej skale. Podłoga jest nierówna, ściany niedokończone. Panuje tu chłód i taka cisza, że słychać bicie serca." },
+ galeria1:    { name:"Początek Wielkiej Galerii", pos:[370,412], counts:true,
+   desc:"Sufit ucieka nagle w górę na 8,6 metra! Gładkie ściany zwężają się ku górze jak w ogromnym kamiennym namiocie. Twój szept niesie się echem po całej galerii." },
+ krolowej:    { name:"Komora królowej", pos:[491,403], counts:true,
+   desc:"Niska komora ze spadzistym stropem, dokładnie pod wierzchołkiem piramidy. Jest zupełnie pusta – wbrew nazwie nigdy nie pochowano tu żadnej królowej." },
+ galeria2:    { name:"Szczyt Wielkiej Galerii", pos:[502,346], counts:true,
+   desc:"Stoisz na wielkim kamiennym stopniu na końcu galerii, wysoko nad jej początkiem. Przed tobą niziutki przedsionek – żeby przejść dalej, musisz się mocno schylić." },
+ krol:        { name:"Komora króla", pos:[543,338], counts:true,
+   desc:"Ściany z ciemnego granitu przywiezionego z dalekiego Asuanu. Pod ścianą stoi kamienny sarkofag bez wieka. Z wąskich szybów czujesz delikatny powiew – jesteś w sercu piramidy." },
+};
+
+/* ---- Wyprawa: przejścia (krawędzie grafu) ----
+   pts – łamana, po której idzie znacznik (dokładnie po korytarzach) */
+const EDGES = [
+ { a:"start", b:"wejscie", via:"po zboczu piramidy",
+   pts:[[110,474],[150,469],[182,427]] },
+ { a:"start", b:"tunel", via:"kilka kroków po piasku",
+   pts:[[110,474],[147,471],[157,459]] },
+ { a:"wejscie", b:"rozwidlenie", via:"korytarzem zstępującym",
+   pts:[[182,427],[261,466]] },
+ { a:"rozwidlenie", b:"podziemna", via:"korytarzem zstępującym w dół",
+   pts:[[261,466],[476,574],[504,574],[528,566]] },
+ { a:"tunel", b:"galeria1", via:"tunelem i korytarzem wstępującym – omijasz korki!",
+   pts:[[157,459],[250,459],[280,457],[370,412]] },
+ { a:"galeria1", b:"podziemna", via:"ciasnym szybem ucieczki",
+   pts:[[370,412],[366,440],[380,470],[400,520],[436,554],[476,574],[504,574],[528,566]] },
+ { a:"galeria1", b:"krolowej", via:"niskim korytarzem poziomym",
+   pts:[[370,412],[482,412],[491,403]] },
+ { a:"galeria1", b:"galeria2", via:"stromo w górę Wielkiej Galerii",
+   pts:[[370,412],[502,346]] },
+ { a:"galeria2", b:"krol", via:"schylona/schylony przez przedsionek",
+   pts:[[502,346],[504,344],[526,344],[543,340]] },
+];
+const EXP_GOAL = 7;             // tyle węzłów ma counts:true
+const EXP_SPEED = 170;          // px na sekundę
+
+/* ---- Budowa: 6 etapów ---- */
+const STAGES = [
+ { t:"Wybór miejsca", pct:0, ramp:false, casing:false,
+   txt:"Budowniczowie wybierają skalny płaskowyż w Gizie, na zachodnim brzegu Nilu – tam, gdzie zachodzi słońce, zaczynała się według Egipcjan kraina zmarłych. Teren zostaje wyrównany, a boki piramidy wyznaczone dokładnie według stron świata: północ–południe i wschód–zachód. Pod ziemią robotnicy zaczynają już kuć korytarz i komorę podziemną." },
+ { t:"Kamieniołomy", pct:0.12, ramp:false, casing:false,
+   txt:"W kamieniołomach robotnicy odcinają bloki miedzianymi dłutami i kamiennymi młotami. W szczeliny wbijają drewniane kliny i polewają je wodą – pęczniejące drewno rozsadza skałę. Przeciętny blok waży około 2,5 tony! Piramidę budowali opłacani robotnicy i rolnicy, którzy dostawali za pracę chleb i piwo – a nie niewolnicy, jak dawniej sądzono." },
+ { t:"Transport", pct:0.35, ramp:true, casing:false,
+   txt:"Bloki układa się na drewnianych saniach i ciągnie po piasku polewanym wodą – mokry piasek robi się śliski i sanie suną dużo łatwiej. Cięższe kamienie płyną łodziami po Nilu. Wiemy o tym m.in. z dziennika urzędnika Merera – najstarszego zapisanego papirusu świata, w którym opisano przewożenie kamieni do Gizy." },
+ { t:"Rampy", pct:0.60, ramp:true, casing:false,
+   txt:"Jak wciągano bloki tak wysoko? Naukowcy przypuszczają, że po rampach z cegły, gruzu i piasku. To jednak hipoteza – nikt nie wie na pewno, jak rampy dokładnie wyglądały: mogły być proste, spiralne, a nawet ukryte w środku piramidy. Przy budowie pracowało jednocześnie około 20–30 tysięcy ludzi." },
+ { t:"Komory i korytarze", pct:0.85, ramp:true, casing:false,
+   txt:"Komory i korytarze budowano razem z piramidą, warstwa po warstwie – nie wykuwano ich później. Nad komorą króla ułożono granitowe belki ważące nawet 80 ton, żeby rozłożyć ciężar milionów kamieni nad stropem." },
+ { t:"Okładzina i szczyt", pct:1, ramp:false, casing:true,
+   txt:"Na koniec piramidę pokryto od góry do dołu gładką, białą okładziną z wapienia, a na szczycie stanął błyszczący piramidion. Budowa trwała około 20 lat i pochłonęła około 2 300 000 bloków. Gotowa piramida lśniła w słońcu tak, że było ją widać z daleka." },
+];
+const GROUND_Y = 480, APEX_Y = 23, PYR_H = GROUND_Y - APEX_Y;
+
+/* ---- Pula pytań (Quiz losuje 10, Sprawdzian 15) ----
+   type:"click"  – uczeń klika część rysunku (part = id części)
+   type:"choice" – wybór 1 z 4 (ok = poprawna, bad = 3 błędne)
+   part (opcjonalnie) – miejsce podświetlane przy wyjaśnieniu
+   time:true – pytanie o oś czasu (zawsze trafia do quizu)          */
+const QUESTIONS = [
+ { type:"click", q:"Kliknij na rysunku komorę króla – tę, w której stoi sarkofag.", part:"krol",
+   explain:"Komora króla jest zbudowana z granitu i leży 43 metry nad ziemią." },
+ { type:"click", q:"Kliknij na rysunku Wielką Galerię – najwyższy korytarz piramidy.", part:"galeria",
+   explain:"Wielka Galeria ma 47 metrów długości i aż 8,6 metra wysokości." },
+ { type:"click", q:"Kliknij na rysunku komorę podziemną, wykutą głęboko w skale.", part:"podziemna",
+   explain:"Komora podziemna leży 30 metrów pod piramidą i nigdy jej nie dokończono." },
+ { type:"click", q:"Kliknij na rysunku prawdziwe wejście do piramidy.", part:"wejscie",
+   explain:"Wejście znajduje się na północnej ścianie, 17 metrów nad ziemią." },
+ { type:"click", q:"Kliknij na rysunku tunel, którym dziś do piramidy wchodzą turyści.", part:"rabusiow",
+   explain:"To tunel rabusiów, przypisywany ludziom kalifa Al-Mamuna z IX wieku naszej ery." },
+ { type:"click", q:"Kliknij na rysunku Wielką Pustkę – przestrzeń odkrytą w 2017 roku.", part:"pustka",
+   explain:"Wielką Pustkę wykryto dzięki mionom – cząstkom z kosmosu; ma co najmniej 30 metrów długości." },
+ { type:"click", q:"Kliknij na rysunku szyb, którym robotnicy uciekli po zablokowaniu korytarza korkami.", part:"ucieczki",
+   explain:"Szyb ucieczki łączy początek Wielkiej Galerii z korytarzem zstępującym." },
+ { type:"choice", time:true, q:"Piramidę zbudowano około 2560 r. p.n.e. Który to wiek?",
+   ok:"XXVI wiek p.n.e.", bad:["XVI wiek p.n.e.","XXV wiek n.e.","III wiek p.n.e."],
+   explain:"Rok 2560 p.n.e. należy do XXVI wieku p.n.e., czyli do III tysiąclecia p.n.e." },
+ { type:"choice", q:"Kto budował Wielką Piramidę?",
+   ok:"Opłacani robotnicy i rolnicy", bad:["Niewolnicy w łańcuchach","Wyłącznie żołnierze faraona","Przybysze z kosmosu"],
+   explain:"Budowali ją opłacani robotnicy i rolnicy, którzy dostawali za pracę chleb i piwo." },
+ { type:"choice", q:"Ile ważył przeciętny blok kamienny piramidy?",
+   ok:"Około 2,5 tony", bad:["Około 25 kilogramów","Około 250 ton","Około 2,5 kilograma"],
+   explain:"Przeciętny blok ważył około 2,5 tony – tyle co duży samochód terenowy." },
+ { type:"choice", q:"Skąd przywieziono granit do komory króla?", part:"krol",
+   ok:"Z Asuanu, oddalonego o około 800 km", bad:["Z pobliskiej Gizy","Z drugiego brzegu Nilu","Zza morza, z innego kraju"],
+   explain:"Granitowe bloki przypłynęły łodziami z Asuanu, oddalonego o około 800 kilometrów." },
+ { type:"choice", q:"Jak naukowcy odkryli Wielką Pustkę?", part:"pustka",
+   ok:"Dzięki mionom – cząstkom z kosmosu, które przenikają przez skały",
+   bad:["Wywiercili tunel przez całą piramidę","Znaleźli starą mapę w grobowcu","Usłyszeli echo podczas zwiedzania"],
+   explain:"Miony przenikają przez kamień – tam, gdzie jest pusta przestrzeń, przelatuje ich więcej." },
+ { type:"choice", q:"Do czego służą komory odciążające nad komorą króla?", part:"odciazajace",
+   ok:"Rozkładają ciężar kamieni, żeby strop komory nie pękł",
+   bad:["Mieszkali w nich strażnicy","Przechowywano w nich zboże","To były sypialnie faraona"],
+   explain:"Puste komory i kamienny daszek rozkładają na boki ogromny ciężar piramidy." },
+ { type:"choice", q:"Jak szerokie są tajemnicze szyby biegnące z komór?", part:"szyby",
+   ok:"Około 20 centymetrów – za wąskie dla człowieka", bad:["Około 2 metrów","Około 1 metra","Około 5 metrów"],
+   explain:"Szyby mają tylko około 20 cm szerokości, dlatego badały je małe roboty z kamerami." },
+ { type:"choice", q:"Ile wynosiła pierwotna wysokość Wielkiej Piramidy?", part:"piramidion",
+   ok:"146,6 metra", bad:["46 metrów","300 metrów","1000 metrów"],
+   explain:"Piramida mierzyła 146,6 m; dziś jest o około 8 metrów niższa." },
+ { type:"choice", q:"Jak długo trwała budowa piramidy?",
+   ok:"Około 20 lat", bad:["Około 2 lat","Około 200 lat","Jedno lato"],
+   explain:"Budowa trwała około 20 lat i pracowały przy niej dziesiątki tysięcy ludzi." },
+ { type:"choice", q:"Z ilu bloków kamiennych zbudowano piramidę?",
+   ok:"Z około 2 300 000", bad:["Z około 2300","Z około 23 000","Z około 230"],
+   explain:"Piramida składa się z około 2 300 000 bloków kamienia." },
+ { type:"choice", q:"Jak przeciągano ciężkie bloki po lądzie?",
+   ok:"Na drewnianych saniach po zwilżonym piasku", bad:["Na wozach z gumowymi kołami","Niesiono je na plecach","Toczono je jak piłki"],
+   explain:"Mokry piasek jest śliski, więc sanie z blokami sunęły po nim dużo łatwiej." },
+ { type:"choice", q:"Co się stało z białą okładziną piramidy?", part:"piramidion",
+   ok:"Rozebrano ją w średniowieczu na inne budowle", bad:["Zmyła ją wielka powódź","Nigdy jej nie było","Zabrano ją w całości do muzeum"],
+   explain:"Gładkie płyty okładziny rozebrano w średniowieczu i użyto do budowy innych gmachów." },
+ { type:"choice", q:"Dlaczego nazwa „komora królowej” jest myląca?", part:"krolowej",
+   ok:"Nie pochowano tam żadnej królowej", bad:["Komora należała do króla sąsiedniego państwa","To była kuchnia pałacowa","Mieszkały tam koty królowej"],
+   explain:"Żony faraonów chowano w osobnych, mniejszych piramidach obok Wielkiej Piramidy." },
+ { type:"choice", q:"Jak długi jest korytarz zstępujący?", part:"zstepujacy",
+   ok:"Ponad 100 metrów", bad:["Około 10 metrów","Około 3 metrów","Ponad 1000 metrów"],
+   explain:"Korytarz zstępujący ma ponad 100 m długości i tylko 1,2 m wysokości." },
+ { type:"choice", q:"Co blokuje korytarz wstępujący?", part:"wstepujacy",
+   ok:"Trzy ogromne granitowe korki", bad:["Drewniane drzwi z zamkiem","Żelazna krata","Wielka kula z piasku"],
+   explain:"Trzy granitowe korki wsunięto po pogrzebie faraona, by zamknąć drogę do komory króla." },
+ { type:"choice", q:"Kim był Merer?",
+   ok:"Urzędnikiem, którego dziennik opisuje przewożenie kamieni łodziami po Nilu",
+   bad:["Faraonem, dla którego zbudowano piramidę","Rabusiem, który okradł piramidę","Rzeźbiarzem sarkofagu"],
+   explain:"Dziennik Merera to najstarszy zapisany papirus świata – opisuje transport kamieni do Gizy." },
+ { type:"choice", q:"Dlaczego sarkofag wstawiono do komory króla już podczas budowy?", part:"krol",
+   ok:"Bo jest szerszy niż korytarz prowadzący do komory", bad:["Bo był bardzo lekki","Bo faraon chciał go obejrzeć","Bo później zabrakło robotników"],
+   explain:"Sarkofag nie zmieściłby się w korytarzu – jest od niego szerszy." },
+ { type:"choice", q:"Po której stronie Nilu zbudowano piramidę?",
+   ok:"Na zachodnim brzegu, tam gdzie zachodzi słońce", bad:["Na wschodnim brzegu, tam gdzie wschodzi słońce","Na wyspie na środku rzeki","Wysoko w górach, daleko od rzeki"],
+   explain:"Zachód słońca kojarzył się Egipcjanom z krainą zmarłych, dlatego grobowce budowano na zachodnim brzegu." },
+ { type:"choice", q:"Skąd wiemy, jak wyglądały rampy do wciągania bloków?",
+   ok:"Nie wiemy na pewno – rampy to hipoteza naukowców", bad:["Zachował się film z budowy","Rampy stoją w Gizie do dziś","Opisano je dokładnie w gazetach"],
+   explain:"Rampy to przypuszczenie badaczy – mogły być proste, spiralne albo ukryte w środku piramidy." },
+];
+const QUIZ_LEN = 10, TEST_LEN = 15;
+
+/* Komunikaty na koniec quizu: [minimalny wynik, tekst] */
+const QUIZ_MSGS = [
+ [9,"Znakomicie! Jesteś prawdziwym badaczem piramid!"],
+ [7,"Bardzo dobrze! Piramida nie ma przed tobą wielu tajemnic."],
+ [5,"Nieźle! Zajrzyj jeszcze raz do zakładki Poznaj i spróbuj ponownie."],
+ [0,"Piramida wciąż kryje przed tobą tajemnice. Poczytaj opisy w zakładce Poznaj i zagraj jeszcze raz!"],
+];
+
+/* =====================================================================
+   KONIEC DANYCH – dalej logika aplikacji
+   ===================================================================== */
+
+const $ = s => document.querySelector(s);
+const scene = $("#scene"), panel = $("#panel"), sceneHint = $("#sceneHint");
+const SVGNS = "http://www.w3.org/2000/svg";
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function speak(text){
+  try{
+    const s = window.speechSynthesis;
+    if(!s || !window.SpeechSynthesisUtterance) return;
+    s.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "pl-PL"; u.rate = 0.95;
+    s.speak(u);
+  }catch(e){ /* brak syntezy mowy – pomijamy */ }
+}
+function stopSpeak(){ try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){} }
+
+/* ---------- stan aplikacji ---------- */
+let tab = "poznaj";
+let poznajSel = null;                      // wybrana część (id) albo null = lista
+let exp = null;                            // stan Wyprawy
+let stageIdx = 0;                          // etap Budowy
+let quiz = null;                           // stan Quizu
+let test = null;                           // stan Sprawdzianu
+
+/* ---------- części rysunku ---------- */
+const partById = {};
+PARTS.forEach((p,i)=>{ p.nr = i+1; partById[p.id] = p; });
+
+function decorateParts(){
+  const badges = $("#badges");
+  PARTS.forEach(p=>{
+    const g = scene.querySelector(`.part[data-id="${p.id}"]`);
+    g.setAttribute("tabindex","0");
+    g.setAttribute("role","button");
+    g.setAttribute("aria-label",`${p.nr}. ${p.name}`);
+    g.addEventListener("click", ()=>onPartActivate(p.id));
+    g.addEventListener("keydown", ev=>{
+      if(ev.key==="Enter" || ev.key===" " || ev.key==="Spacebar"){ ev.preventDefault(); onPartActivate(p.id); }
+    });
+    const b = document.createElementNS(SVGNS,"g");
+    b.setAttribute("class","badge");
+    b.setAttribute("transform",`translate(${p.badge[0]},${p.badge[1]})`);
+    b.setAttribute("aria-hidden","true");
+    const c = document.createElementNS(SVGNS,"circle"); c.setAttribute("r","10.5");
+    const t = document.createElementNS(SVGNS,"text"); t.textContent = p.nr;
+    b.appendChild(c); b.appendChild(t);
+    b.addEventListener("click", ()=>onPartActivate(p.id));
+    badges.appendChild(b);
+  });
+}
+function clearSel(){ scene.querySelectorAll(".part.sel").forEach(g=>g.classList.remove("sel")); }
+function selectPart(id){
+  clearSel();
+  const g = scene.querySelector(`.part[data-id="${id}"]`);
+  if(g) g.classList.add("sel");
+}
+
+function onPartActivate(id){
+  if(tab==="poznaj"){ poznajSel = id; selectPart(id); renderPoznaj(); }
+  else if(tab==="quiz" && quiz && quiz.phase==="q" && quiz.qs[quiz.i].type==="click"){ answerQuizClick(id); }
+  else if(tab==="sprawdzian" && test && !test.done && test.qs[test.i].type==="click"){
+    test.answers[test.i] = id; selectPart(id); renderTest();
+  }
+}
+
+/* ---------- tryb sceny (co widać / co klikalne) ---------- */
+function updateScene(){
+  const pyr = $("#pyr");
+  const clickable =
+    (tab==="poznaj") ||
+    (tab==="quiz" && quiz && quiz.phase==="q" && quiz.qs[quiz.i].type==="click") ||
+    (tab==="sprawdzian" && test && !test.done && test.qs[test.i].type==="click");
+  scene.classList.toggle("parts-on", clickable);
+  scene.classList.toggle("show-badges", tab==="poznaj");
+  scene.classList.toggle("show-exped", tab==="wyprawa");
+  if(tab==="budowa"){
+    pyr.setAttribute("clip-path","url(#buildClip)");
+    applyStage(stageIdx);
+  }else{
+    pyr.removeAttribute("clip-path");
+    $("#casing").setAttribute("hidden","");
+    $("#ramp").replaceChildren();
+  }
+  const hints = {
+    poznaj:"Kliknij numer lub część rysunku, aby dowiedzieć się o niej więcej.",
+    wyprawa:"Żółty znacznik to ty. Wybieraj przejścia w panelu obok.",
+    budowa:"Rysunek pokazuje, jak piramida rośnie etap po etapie.",
+    quiz: clickable ? "Kliknij właściwe miejsce na rysunku!" : "Odpowiadaj w panelu obok.",
+    sprawdzian: clickable ? "Kliknij właściwe miejsce na rysunku!" : "Odpowiadaj w panelu obok.",
+  };
+  sceneHint.textContent = hints[tab] || "";
+}
+
+/* ---------- zakładki ---------- */
+document.querySelectorAll(".tab").forEach(btn=>{
+  btn.addEventListener("click", ()=>setTab(btn.dataset.tab));
+});
+function setTab(name){
+  tab = name;
+  stopSpeak();
+  clearSel();
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===name)));
+  if(name==="wyprawa" && !exp) initExp();
+  if(name==="wyprawa") renderExpScene();
+  updateScene();
+  render();
+}
+function render(){
+  if(tab==="poznaj") renderPoznaj();
+  else if(tab==="wyprawa") renderWyprawa();
+  else if(tab==="budowa") renderBudowa();
+  else if(tab==="quiz") renderQuiz();
+  else renderTest();
+}
+
+/* =================== POZNAJ =================== */
+function comparisonSVG(){
+  return `
+  <figure class="compare-fig">
+    <figcaption><b>Jak wysoka jest piramida?</b> Porównaj:</figcaption>
+    <svg viewBox="0 0 360 200" role="img" aria-label="Porównanie wysokości: piramida Cheopsa 147 metrów, Pałac Kultury i Nauki 237 metrów, blok mieszkalny 30 metrów">
+      <line x1="8" y1="172" x2="352" y2="172" stroke="var(--muted)" stroke-width="2"/>
+      <polygon points="22,172 77,84 132,172" fill="#d9b96a" stroke="#a3814f" stroke-width="2"/>
+      <text x="77" y="76" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)">147 m</text>
+      <text x="77" y="188" text-anchor="middle" font-size="12" fill="var(--muted)">piramida Cheopsa</text>
+      <rect x="168" y="135" width="56" height="37" fill="#7f93c4" stroke="#4a5f96" stroke-width="2"/>
+      <rect x="181" y="62" width="30" height="110" fill="#8fa2cf" stroke="#4a5f96" stroke-width="2"/>
+      <line x1="196" y1="30" x2="196" y2="62" stroke="#4a5f96" stroke-width="3"/>
+      <text x="196" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)">237 m</text>
+      <text x="196" y="188" text-anchor="middle" font-size="12" fill="var(--muted)">Pałac Kultury</text>
+      <rect x="266" y="154" width="66" height="18" fill="#8fb3a4" stroke="#4d7a68" stroke-width="2"/>
+      <text x="299" y="146" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)">30 m</text>
+      <text x="299" y="188" text-anchor="middle" font-size="12" fill="var(--muted)">blok (10 pięter)</text>
+    </svg>
+  </figure>`;
+}
+function renderPoznaj(){
+  if(poznajSel===null){
+    panel.innerHTML = `
+      <h2>Poznaj piramidę od środka</h2>
+      <p>Wielka Piramida wygląda jak zwykła góra kamieni, ale w środku kryje korytarze, komory i zagadki,
+         których naukowcy nie rozwiązali do dziś. Kliknij numer na rysunku albo miejsce na liście.</p>
+      <ol class="place-list">
+        ${PARTS.map(p=>`<li><button data-part="${p.id}"><span class="chip">${p.nr}</span> ${p.name}</button></li>`).join("")}
+      </ol>
+      ${comparisonSVG()}`;
+    panel.querySelectorAll("[data-part]").forEach(b=>{
+      b.addEventListener("click", ()=>{ poznajSel = b.dataset.part; selectPart(poznajSel); renderPoznaj(); });
+    });
+  }else{
+    const p = partById[poznajSel];
+    const idx = p.nr-1;
+    const prev = PARTS[(idx+PARTS.length-1)%PARTS.length];
+    const next = PARTS[(idx+1)%PARTS.length];
+    panel.innerHTML = `
+      <h2><span class="chip">${p.nr}</span>${p.name}</h2>
+      <p>${p.desc}</p>
+      <div class="funbox"><b>💡 Ciekawostka:</b> ${p.fun}</div>
+      <div class="btn-row">
+        <button class="btn alt" id="pPrev">◀ Poprzednie</button>
+        <button class="btn alt" id="pNext">Następne ▶</button>
+        <button class="btn" id="pList">Lista miejsc</button>
+        <button class="btn turkus" id="pRead">🔊 Przeczytaj</button>
+      </div>`;
+    $("#pPrev").addEventListener("click", ()=>{ poznajSel = prev.id; selectPart(prev.id); renderPoznaj(); });
+    $("#pNext").addEventListener("click", ()=>{ poznajSel = next.id; selectPart(next.id); renderPoznaj(); });
+    $("#pList").addEventListener("click", ()=>{ poznajSel = null; clearSel(); renderPoznaj(); });
+    $("#pRead").addEventListener("click", ()=>speak(`${p.name}. ${p.desc} Ciekawostka: ${p.fun}`));
+  }
+}
+
+/* =================== WYPRAWA =================== */
+function initExp(){
+  exp = { cur:"start", found:new Set(), moving:false, trails:new Set() };
+}
+function edgesFrom(nodeId){
+  const list = [];
+  EDGES.forEach((e,i)=>{
+    if(e.a===nodeId) list.push({edge:e, idx:i, rev:false, to:e.b});
+    else if(e.b===nodeId) list.push({edge:e, idx:i, rev:true, to:e.a});
+  });
+  return list;
+}
+function renderExpScene(){
+  const nodesG = $("#expNodes");
+  nodesG.replaceChildren();
+  Object.entries(NODES).forEach(([id,n])=>{
+    const c = document.createElementNS(SVGNS,"circle");
+    c.setAttribute("cx",n.pos[0]); c.setAttribute("cy",n.pos[1]);
+    c.setAttribute("r", id===exp.cur ? 7 : 5);
+    let cls = "exp-node";
+    if(exp.found.has(id) || id==="start") cls += " found";
+    if(id===exp.cur) cls += " here";
+    c.setAttribute("class",cls);
+    nodesG.appendChild(c);
+  });
+  const trailsG = $("#trails");
+  trailsG.replaceChildren();
+  exp.trails.forEach(i=>{
+    const pl = document.createElementNS(SVGNS,"polyline");
+    pl.setAttribute("class","trail");
+    pl.setAttribute("points", EDGES[i].pts.map(p=>p.join(",")).join(" "));
+    trailsG.appendChild(pl);
+  });
+  setMarker(NODES[exp.cur].pos);
+}
+function setMarker(pt){ $("#marker").setAttribute("transform",`translate(${pt[0]},${pt[1]})`); }
+
+function travel(idx, rev){
+  if(exp.moving) return;
+  const e = EDGES[idx];
+  const pts = rev ? e.pts.slice().reverse() : e.pts;
+  const target = rev ? e.a : e.b;
+  exp.moving = true;
+  renderWyprawa();
+  const finish = ()=>{
+    exp.trails.add(idx);
+    exp.cur = target;
+    if(NODES[target].counts) exp.found.add(target);
+    exp.moving = false;
+    renderExpScene();
+    renderWyprawa();
+  };
+  if(reducedMotion.matches){ finish(); return; }
+  // łamana: długości odcinków
+  const segs = []; let total = 0;
+  for(let i=0;i<pts.length-1;i++){
+    const len = Math.hypot(pts[i+1][0]-pts[i][0], pts[i+1][1]-pts[i][1]);
+    segs.push({p1:pts[i], p2:pts[i+1], len, acc:total}); total += len;
+  }
+  const live = document.createElementNS(SVGNS,"polyline");
+  live.setAttribute("class","trail");
+  $("#trails").appendChild(live);
+  const posAt = d=>{
+    for(const s of segs){
+      if(d <= s.acc + s.len || s === segs[segs.length-1]){
+        const t = s.len ? Math.min(1,(d - s.acc)/s.len) : 1;
+        return [s.p1[0]+(s.p2[0]-s.p1[0])*t, s.p1[1]+(s.p2[1]-s.p1[1])*t];
+      }
+    }
+    return pts[pts.length-1];
+  };
+  const t0 = performance.now();
+  const frame = now=>{
+    if(tab!=="wyprawa"){ live.remove(); finish(); return; }
+    const d = Math.min((now-t0)/1000*EXP_SPEED, total);
+    const pos = posAt(d);
+    setMarker(pos);
+    const passed = pts.filter((p,i)=> i===0 || (segs[i-1].acc+segs[i-1].len)<=d );
+    live.setAttribute("points", passed.concat([pos]).map(p=>p.join(",")).join(" "));
+    if(d < total) requestAnimationFrame(frame);
+    else { live.remove(); finish(); }
+  };
+  requestAnimationFrame(frame);
+}
+function renderWyprawa(){
+  const n = NODES[exp.cur];
+  const found = exp.found.size;
+  const all = found >= EXP_GOAL;
+  const moves = edgesFrom(exp.cur).map(m=>`
+    <button class="btn alt" data-edge="${m.idx}" data-rev="${m.rev}" ${exp.moving?"disabled":""}>
+      ➜ ${NODES[m.to].name}<span class="small" style="font-weight:400">&nbsp;(${m.edge.via})</span>
+    </button>`).join("");
+  panel.innerHTML = `
+    <h2>${n.name}</h2>
+    <p>${n.desc}</p>
+    <div class="progress-wrap">
+      <b>Odkryte miejsca: ${found} z ${EXP_GOAL}</b>
+      <div class="progress-bar" role="progressbar" aria-valuenow="${found}" aria-valuemin="0" aria-valuemax="${EXP_GOAL}">
+        <div style="width:${found/EXP_GOAL*100}%"></div>
+      </div>
+    </div>
+    ${all ? `<div class="feedback good">🎉 Brawo! Wszystkie miejsca odkryte – piramida nie ma przed tobą tajemnic!</div>` : ""}
+    <h3>${exp.moving ? "W drodze…" : "Dokąd teraz?"}</h3>
+    <div>${moves}</div>
+    <div class="btn-row"><button class="btn gold" id="expReset" ${exp.moving?"disabled":""}>Zacznij od nowa</button></div>`;
+  panel.querySelectorAll("[data-edge]").forEach(b=>{
+    b.addEventListener("click", ()=>travel(+b.dataset.edge, b.dataset.rev==="true"));
+  });
+  $("#expReset").addEventListener("click", ()=>{ initExp(); renderExpScene(); renderWyprawa(); });
+}
+
+/* =================== BUDOWA =================== */
+function applyStage(i){
+  const st = STAGES[i];
+  const y = GROUND_Y - PYR_H*st.pct;
+  const r = $("#clipRect");
+  r.setAttribute("y", y);
+  r.setAttribute("height", 640 - y);
+  // uwaga: to element SVG – właściwość .hidden nie działa, trzeba atrybutu
+  $("#casing").toggleAttribute("hidden", !st.casing);
+  const ramp = $("#ramp");
+  ramp.replaceChildren();
+  if(st.ramp){
+    const yTop = y;
+    const xTop = 500 + (yTop-APEX_Y)*360/PYR_H;
+    const foot = Math.min(xTop + (GROUND_Y-yTop)*1.9, 985);
+    const poly = document.createElementNS(SVGNS,"polygon");
+    poly.setAttribute("points",`${xTop},${yTop} ${foot},${GROUND_Y} 860,${GROUND_Y}`);
+    poly.setAttribute("fill","#c9a066"); poly.setAttribute("stroke","#9c7a45"); poly.setAttribute("stroke-width","2.5");
+    ramp.appendChild(poly);
+    // sanie z blokiem w połowie rampy
+    const mx = (xTop+foot)/2, my = (yTop+GROUND_Y)/2;
+    const deg = Math.atan2(GROUND_Y-yTop, foot-xTop)*180/Math.PI;
+    const sled = document.createElementNS(SVGNS,"g");
+    sled.setAttribute("transform",`translate(${mx},${my}) rotate(${deg})`);
+    sled.innerHTML = `
+      <rect x="-16" y="-4" width="32" height="5" rx="2" fill="#7a4c22"/>
+      <rect x="-11" y="-17" width="22" height="13" fill="#d9c493" stroke="#a3814f" stroke-width="1.5"/>
+      <line x1="-16" y1="-2" x2="-40" y2="-2" stroke="#54401f" stroke-width="1.6"/>
+      <g stroke="#3a2c14" stroke-width="2" fill="#3a2c14">
+        <circle cx="-30" cy="-9" r="2.6"/><line x1="-30" y1="-6" x2="-30" y2="1"/>
+        <circle cx="-42" cy="-9" r="2.6"/><line x1="-42" y1="-6" x2="-42" y2="1"/>
+      </g>`;
+    ramp.appendChild(sled);
+  }
+}
+function renderBudowa(){
+  const st = STAGES[stageIdx];
+  panel.innerHTML = `
+    <h2>Jak zbudowano piramidę?</h2>
+    <div class="stage-bar" role="group" aria-label="Etapy budowy">
+      ${STAGES.map((s,i)=>`<button class="stage-dot" data-st="${i}" aria-current="${i===stageIdx}" aria-label="Etap ${i+1}: ${s.t}">${i+1}</button>`).join("")}
+    </div>
+    <h3>Etap ${stageIdx+1}: ${st.t}</h3>
+    <p>${st.txt}</p>
+    <div class="btn-row">
+      <button class="btn alt" id="stPrev" ${stageIdx===0?"disabled":""}>◀ Wstecz</button>
+      <button class="btn" id="stNext" ${stageIdx===STAGES.length-1?"disabled":""}>Dalej ▶</button>
+      <button class="btn turkus" id="stRead">🔊 Przeczytaj</button>
+    </div>`;
+  panel.querySelectorAll("[data-st]").forEach(b=>{
+    b.addEventListener("click", ()=>{ stageIdx = +b.dataset.st; applyStage(stageIdx); renderBudowa(); });
+  });
+  $("#stPrev").addEventListener("click", ()=>{ stageIdx--; applyStage(stageIdx); renderBudowa(); });
+  $("#stNext").addEventListener("click", ()=>{ stageIdx++; applyStage(stageIdx); renderBudowa(); });
+  $("#stRead").addEventListener("click", ()=>speak(`Etap ${stageIdx+1}: ${st.t}. ${st.txt}`));
+}
+
+/* =================== przygotowanie pytań =================== */
+function prepQuestion(q){
+  const c = Object.assign({}, q);
+  if(c.type==="choice") c.opts = shuffle([c.ok, ...c.bad]);
+  return c;
+}
+function pickQuiz(){
+  const timeQ = QUESTIONS.find(q=>q.time);
+  const rest = shuffle(QUESTIONS.filter(q=>q!==timeQ)).slice(0, QUIZ_LEN-1);
+  return shuffle([timeQ, ...rest]).map(prepQuestion);
+}
+function correctText(q){ return q.type==="click" ? partById[q.part].name : q.ok; }
+
+/* =================== QUIZ =================== */
+function renderQuiz(){
+  if(!quiz){
+    panel.innerHTML = `
+      <h2>Quiz: 10 pytań o piramidę</h2>
+      <p>Sprawdź, ile już wiesz! Część pytań to zagadki „kliknij na rysunku”, część – wybór jednej z czterech odpowiedzi.
+         Po każdej odpowiedzi dowiesz się, czy było dobrze.</p>
+      <div class="btn-row"><button class="btn gold" id="qStart">Rozpocznij quiz</button></div>`;
+    $("#qStart").addEventListener("click", ()=>{
+      quiz = { qs:pickQuiz(), i:0, score:0, phase:"q", pickedWrong:null };
+      clearSel(); updateScene(); renderQuiz();
+    });
+    return;
+  }
+  if(quiz.phase==="end"){
+    const msg = QUIZ_MSGS.find(m=>quiz.score>=m[0])[1];
+    panel.innerHTML = `
+      <h2>Koniec quizu!</h2>
+      <p class="score-big">${quiz.score} / ${quiz.qs.length}</p>
+      <p>${msg}</p>
+      <div class="btn-row"><button class="btn gold" id="qAgain">Zagraj jeszcze raz</button></div>`;
+    $("#qAgain").addEventListener("click", ()=>{
+      quiz = { qs:pickQuiz(), i:0, score:0, phase:"q", pickedWrong:null };
+      clearSel(); updateScene(); renderQuiz();
+    });
+    return;
+  }
+  const q = quiz.qs[quiz.i];
+  const head = `<h2>Pytanie ${quiz.i+1} z ${quiz.qs.length}</h2><p><b>${q.q}</b></p>`;
+  if(quiz.phase==="q"){
+    if(q.type==="click"){
+      panel.innerHTML = head + `<p class="small">👉 Kliknij właściwe miejsce na rysunku po lewej. Numery są ukryte!</p>`;
+    }else{
+      panel.innerHTML = head + q.opts.map((o,i)=>`<button class="opt" data-o="${i}">${o}</button>`).join("");
+      panel.querySelectorAll(".opt").forEach(b=>{
+        b.addEventListener("click", ()=>answerQuizChoice(q.opts[+b.dataset.o], b));
+      });
+    }
+  }else{ // feedback
+    const good = quiz.lastGood;
+    let optsHtml = "";
+    if(q.type==="choice"){
+      optsHtml = q.opts.map(o=>{
+        let cls = "opt";
+        if(o===q.ok) cls += " ok";
+        else if(o===quiz.pickedWrong) cls += " bad";
+        return `<button class="${cls}" disabled>${o}</button>`;
+      }).join("");
+    }
+    panel.innerHTML = head + optsHtml + `
+      <div class="feedback ${good?"good":"wrong"}">${good?"✅ Dobrze!":"❌ Jeszcze nie."}
+        <p>${q.explain}</p>
+      </div>
+      <div class="btn-row"><button class="btn" id="qNext">${quiz.i+1<quiz.qs.length?"Następne pytanie ▶":"Zobacz wynik"}</button></div>`;
+    $("#qNext").addEventListener("click", ()=>{
+      quiz.i++; quiz.pickedWrong = null;
+      if(quiz.i>=quiz.qs.length) quiz.phase = "end"; else quiz.phase = "q";
+      clearSel(); updateScene(); renderQuiz();
+    });
+  }
+}
+function answerQuizClick(id){
+  const q = quiz.qs[quiz.i];
+  quiz.lastGood = (id===q.part);
+  if(quiz.lastGood) quiz.score++;
+  quiz.phase = "fb";
+  selectPart(q.part);
+  updateScene(); renderQuiz();
+}
+function answerQuizChoice(text){
+  const q = quiz.qs[quiz.i];
+  quiz.lastGood = (text===q.ok);
+  if(quiz.lastGood) quiz.score++; else quiz.pickedWrong = text;
+  quiz.phase = "fb";
+  if(q.part) selectPart(q.part);
+  updateScene(); renderQuiz();
+}
+
+/* =================== SPRAWDZIAN =================== */
+function renderTest(){
+  if(!test){
+    panel.innerHTML = `
+      <h2>Sprawdzian: 15 pytań</h2>
+      <p>Odpowiadasz bez podpowiedzi – wynik zobaczysz na końcu. Odpowiedź możesz zmieniać,
+         dopóki nie klikniesz „Dalej”.</p>
+      <label for="studentName">Imię i nazwisko:</label>
+      <input class="name-input" id="studentName" type="text" autocomplete="name" maxlength="60" placeholder="np. Ania Kowalska">
+      <p class="small" id="nameWarn" hidden>Wpisz najpierw swoje imię i nazwisko. 😊</p>
+      <div class="btn-row"><button class="btn gold" id="tStart">Rozpocznij sprawdzian</button></div>`;
+    $("#tStart").addEventListener("click", ()=>{
+      const name = $("#studentName").value.trim();
+      if(!name){ $("#nameWarn").hidden = false; $("#studentName").focus(); return; }
+      test = { name, qs:shuffle(QUESTIONS).slice(0,TEST_LEN).map(prepQuestion),
+               i:0, answers:Array(TEST_LEN).fill(null), done:false };
+      clearSel(); updateScene(); renderTest();
+    });
+    return;
+  }
+  if(test.done){ renderTestResult(); return; }
+  const q = test.qs[test.i];
+  const a = test.answers[test.i];
+  const head = `<h2>Pytanie ${test.i+1} z ${test.qs.length}</h2><p><b>${q.q}</b></p>`;
+  let body = "";
+  if(q.type==="click"){
+    body = `<p class="small">👉 Kliknij miejsce na rysunku po lewej. Możesz zmienić wybór przed przejściem dalej.</p>
+            <p><b>${a ? "Wybrano: "+partById[a].name : "Jeszcze nic nie wybrano."}</b></p>`;
+  }else{
+    body = q.opts.map((o,i)=>`<button class="opt ${o===a?"picked":""}" data-o="${i}">${o}</button>`).join("");
+  }
+  panel.innerHTML = head + body + `
+    <div class="btn-row">
+      <button class="btn" id="tNext" ${a===null?"disabled":""}>${test.i+1<test.qs.length?"Dalej ▶":"Zakończ sprawdzian"}</button>
+    </div>
+    <p class="small">Piszesz jako: <b>${escapeHtml(test.name)}</b></p>`;
+  panel.querySelectorAll(".opt").forEach(b=>{
+    b.addEventListener("click", ()=>{ test.answers[test.i] = q.opts[+b.dataset.o]; renderTest(); });
+  });
+  $("#tNext").addEventListener("click", ()=>{
+    test.i++;
+    if(test.i>=test.qs.length){ test.done = true; }
+    clearSel(); updateScene(); renderTest();
+  });
+}
+function renderTestResult(){
+  const errors = [];
+  let score = 0;
+  test.qs.forEach((q,i)=>{
+    const a = test.answers[i];
+    const good = q.type==="click" ? a===q.part : a===q.ok;
+    if(good) score++;
+    else errors.push({
+      q:q.q,
+      your: q.type==="click" ? (a?partById[a].name:"(brak)") : (a||"(brak)"),
+      corr: correctText(q),
+      explain: q.explain
+    });
+  });
+  const pct = Math.round(score/test.qs.length*100);
+  const date = new Date().toLocaleDateString("pl-PL",{year:"numeric",month:"long",day:"numeric"});
+  panel.innerHTML = `
+    <div id="resultCard">
+      <h2>Karta wyniku sprawdzianu</h2>
+      <p><b>Uczeń/uczennica:</b> ${escapeHtml(test.name)}<br>
+         <b>Data:</b> ${date}<br>
+         <b>Temat:</b> Wielka Piramida od środka</p>
+      <p class="score-big">${score} / ${test.qs.length} pkt (${pct}%)</p>
+      ${errors.length===0
+        ? `<div class="feedback good">🏆 Gratulacje! Komplet punktów – wiesz o piramidzie wszystko!</div>`
+        : `<h3>Do poprawy (${errors.length}):</h3>` + errors.map(e=>`
+            <div class="err-item">
+              <p><b>${e.q}</b></p>
+              <p>Twoja odpowiedź: <b style="color:var(--bad)">${escapeHtml(e.your)}</b></p>
+              <p>Poprawna odpowiedź: <b style="color:var(--ok)">${escapeHtml(e.corr)}</b></p>
+              <p class="small">${e.explain}</p>
+            </div>`).join("")}
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="tPrint">🖨️ Drukuj wynik</button>
+      <button class="btn gold" id="tNew">Nowy sprawdzian</button>
+    </div>`;
+  $("#tPrint").addEventListener("click", ()=>{ try{ window.print(); }catch(e){} });
+  $("#tNew").addEventListener("click", ()=>{ test = null; clearSel(); updateScene(); renderTest(); });
+}
+
+/* =================== start =================== */
+decorateParts();
+setTab("poznaj");
+</script>
+</body>
+</html>
