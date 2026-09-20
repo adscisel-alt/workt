@@ -164,6 +164,34 @@
   #zr-odpowiedzi .odp.zla{outline:3px solid var(--zle);}
   #zr-odpowiedzi .odp[disabled]{cursor:default;}
   #zr-karta{margin:14px 0;max-width:720px;}
+  /* pracownia map */
+  .mapa-uklad{display:grid;grid-template-columns:minmax(340px,1fr) minmax(280px,360px);gap:16px;align-items:start;}
+  @media (max-width:900px){.mapa-uklad{grid-template-columns:1fr;}}
+  .mapa-panel .srodek{padding:14px 16px 16px;}
+  .mapa-naglowek{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;}
+  .mapa-naglowek h3{margin:0;}
+  #mapa-opis{margin:6px 0 10px;font-size:13.5px;color:var(--karta-tekst2);max-width:70ch;}
+  .mapa-svg-box svg{display:block;width:100%;height:auto;border-radius:6px;cursor:crosshair;}
+  .m-miasto{font:700 13px Lato,sans-serif;fill:#2c2a24;paint-order:stroke;stroke:#f0e9d6;stroke-width:3px;}
+  .m-etyk{font:italic 13px 'Bona Nova',Georgia,serif;fill:#5a5142;}
+  .m-etyk.duza{font-size:17px;letter-spacing:.12em;}
+  .m-etyk.woda{fill:#4a6b7d;}
+  .mapa-zrodla{margin-top:10px;font-size:12px;color:var(--karta-tekst2);line-height:1.6;}
+  .mapa-zrodla a{color:var(--sw);font-weight:700;}
+  .mapa-zadania{display:flex;flex-direction:column;gap:10px;}
+  .zadanie{background:var(--tablica2);border:1px solid rgba(233,228,210,.25);border-radius:8px;padding:12px 14px;}
+  .zadanie .polecenie{font-size:14px;line-height:1.45;}
+  .zadanie .polecenie b{color:var(--zloto);}
+  .zadanie.aktywne{border-color:var(--zloto);}
+  .zadanie.zaliczone{border-color:var(--dobrze);}
+  .zadanie .status{margin-top:8px;font-size:13px;min-height:1em;}
+  .zadanie .status .ok{color:#8fce9d;font-weight:700;} .zadanie .status .blad{color:#e8a19b;font-weight:700;}
+  .zadanie .abcd{display:flex;flex-direction:column;gap:6px;margin-top:9px;}
+  .zadanie .abcd button{text-align:left;font:inherit;font-size:13.5px;padding:8px 11px;border-radius:6px;
+    background:rgba(233,228,210,.06);border:1px solid rgba(233,228,210,.25);color:var(--kreda);cursor:pointer;}
+  .zadanie .abcd button:hover{border-color:var(--zloto);}
+  .zadanie .abcd button.dobra{outline:2px solid var(--dobrze);}
+  .zadanie .abcd button.zla{outline:2px solid var(--zle);}
   /* podsumowanie */
   .podsumowanie{max-width:520px;margin:26px auto;text-align:center;background:var(--karta);
     color:var(--karta-tekst);border-radius:12px;padding:28px 26px;box-shadow:0 14px 40px rgba(0,0,0,.4);}
@@ -198,6 +226,7 @@
     <button class="tryb" data-widok="chrono" role="tab" aria-selected="false">Gra: chronologia</button>
     <button class="tryb" data-widok="pf" role="tab" aria-selected="false">Gra: prawda/fałsz</button>
     <button class="tryb" data-widok="zr" role="tab" aria-selected="false">Gra: skąd to źródło?</button>
+    <button class="tryb" data-widok="mapy" role="tab" aria-selected="false">Pracownia map</button>
     <select id="wybor-dzialu" aria-label="Zakres materiału (dział podstawy programowej)"></select>
   </div>
 </header>
@@ -293,6 +322,27 @@
       <div class="plansza" id="zr-podsumowanie" hidden style="margin:0"></div>
     </div>
   </section>
+
+  <!-- ============ WIDOK 6: PRACOWNIA MAP ============ -->
+  <section id="widok-mapy" hidden>
+    <div class="plansza">
+      <div class="hud-gry">
+        <span class="duze">Pracownia map</span>
+        <span class="info" id="mapy-postep"></span>
+        <span class="info">Mapy poglądowe w stylu konturowych map z arkuszy. Klikaj na mapie zgodnie z poleceniami.</span>
+      </div>
+      <div class="skoki" id="mapy-chipy" style="margin:0 0 14px"></div>
+      <div class="mapa-uklad">
+        <div class="karta mapa-panel"><div class="pasek"></div><div class="srodek">
+          <div class="mapa-naglowek"><h3 id="mapa-tytul"></h3><span class="data" id="mapa-okres"></span></div>
+          <p id="mapa-opis"></p>
+          <div class="mapa-svg-box" id="mapa-svg"></div>
+          <div class="mapa-zrodla" id="mapa-zrodla"></div>
+        </div></div>
+        <div class="mapa-zadania" id="mapa-zadania"></div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <footer>
@@ -304,7 +354,9 @@
   (w tym daty dzienne i „konkursowe smaczki”: statut kaliski, pokój w Budziszynie, unia horodelska,
   pokój Grzymułtowskiego, Biblioteka Załuskich…). Program merytoryczny bieżącej edycji i arkusze
   archiwalne znajdziesz na konkursy.kuratorium.waw.pl oraz konkursy.mscdn.pl (bank zadań) —
-  sprawdź tam dokładny zakres i literaturę swojej edycji. Wskazówka: w starożytności punktacja
+  sprawdź tam dokładny zakres i literaturę swojej edycji. Mapy w „Pracowni map” są poglądowymi
+schematami w stylu konturowych map z arkuszy — przy każdej podano odnośniki do oficjalnych map
+w Wikipedii i na Wikimedia Commons. Wskazówka: w starożytności punktacja
   ma tolerancję ±5 lat, od średniowiecza liczy się dokładny rok.
 </footer>
 
@@ -1250,8 +1302,373 @@ elZR.dalej.addEventListener('click', () => {
   document.getElementById('zr-jeszcze').addEventListener('click', startGryZR);
 });
 
+/* ---------------- widok 6: pracownia map ---------------- */
+/* Pomocnicy rysowania map poglądowych (SVG, viewBox 800x520). */
+const KM = {          // kolory map
+  morze: '#b9cdd4', lad: '#ece4cf', kontur: '#8a8168',
+  cz: '#d08a83', nb: '#9db8d2', zl: '#d9c07a', zi: '#a8b98a', sz: '#cac2b1', fi: '#b9a3c4',
+};
+function svgMapa(c) {
+  let o = `<svg viewBox="0 0 800 520" role="img" aria-label="${c.alt || 'mapa poglądowa'}">`;
+  o += `<rect width="800" height="520" fill="${c.tlo === 'lad' ? KM.lad : KM.morze}"/>`;
+  for (const l of c.lady || []) o += `<path d="${l}" fill="${KM.lad}" stroke="${KM.kontur}" stroke-width="1.5"/>`;
+  for (const m of c.morza || []) o += `<path d="${m}" fill="${KM.morze}" stroke="${KM.kontur}" stroke-width="1"/>`;
+  for (const r of c.regiony || []) o += `<path d="${r.d}" fill="${r.k}" fill-opacity=".72" stroke="#6b6552" stroke-width="1.3"/>`;
+  for (const g of c.granice || []) o += `<path d="${g}" fill="none" stroke="#5a4f3a" stroke-width="2.2" stroke-dasharray="8 5"/>`;
+  for (const rz of c.rzeki || []) o += `<path d="${rz}" fill="none" stroke="#7fa3b5" stroke-width="2.4" stroke-linecap="round"/>`;
+  for (const t of c.trasy || []) o += `<path d="${t.d}" fill="none" stroke="${t.k}" stroke-width="3.2" stroke-linecap="round" ${t.p ? 'stroke-dasharray="11 7"' : ''}/>`;
+  for (const b of c.bitwy || []) o += `<path transform="translate(${b[0]},${b[1]})" d="M-7,-7 L7,7 M-7,7 L7,-7" stroke="#8e2f23" stroke-width="4" stroke-linecap="round"/>`;
+  for (const m of c.miasta || [])
+    o += `<circle cx="${m[0]}" cy="${m[1]}" r="5" fill="#2c2a24" stroke="#f0e9d6" stroke-width="1.6"/>` +
+         `<text x="${m[0] + (m[3] ?? 9)}" y="${m[1] + (m[4] ?? 5)}" class="m-miasto">${m[2]}</text>`;
+  for (const e of c.etykiety || [])
+    o += `<text x="${e[0]}" y="${e[1]}" class="m-etyk ${e[3] || ''}">${e[2]}</text>`;
+  if (c.legenda) {
+    const n = c.legenda.length;
+    o += `<g><rect x="12" y="${520 - 24 - n * 21}" width="230" height="${12 + n * 21}" rx="6" fill="#f7f2e2" stroke="#8a8168"/>`;
+    c.legenda.forEach((p, i) => {
+      const y = 520 - 18 - (n - 1 - i) * 21;
+      o += `<rect x="22" y="${y - 11}" width="15" height="12" fill="${p[0]}" fill-opacity=".8" stroke="#6b6552"/>` +
+           `<text x="44" y="${y}" style="font:12px Lato,sans-serif;fill:#2c2a24">${p[1]}</text>`;
+    });
+    o += '</g>';
+  }
+  return o + '<g id="mapa-znaczniki"></g></svg>';
+}
+/* bazowe kontury (schematy) */
+const LAD_EU = 'M0,45 C30,60 70,85 120,110 C160,132 210,145 260,138 C300,132 330,148 370,135 C400,125 430,105 450,80 C480,45 520,30 540,0 L800,0 V520 H0 Z';
+const RZEKI_PL = ['M205,148 C195,230 170,320 160,400 C155,440 150,465 148,490',
+  'M340,150 C360,220 320,300 300,370 C290,420 310,460 318,495',
+  'M455,120 C480,170 500,210 520,255', 'M600,190 C640,270 665,350 690,440'];
+const MAPY = [
+  { id: 'grecja', dzial: 0, tytul: 'Świat grecki i wojny z Persją', okres: 'V wiek p.n.e.',
+    opis: 'Hellada to setki polis rozsianych wokół Morza Egejskiego. Na początku V w. p.n.e. najechało ją imperium perskie — obroniły ją zwycięstwa pod Maratonem, Salaminą i Platejami.',
+    szukaj: 'Greco-Persian Wars map', art: 'Wojny_perskie',
+    svg: svgMapa({
+      alt: 'Grecja w czasie wojen perskich',
+      lady: ['M0,0 H800 V90 C740,110 690,120 650,150 C620,175 600,210 580,240 C560,270 570,300 555,330 L540,360 C520,330 525,290 515,260 C505,230 480,210 470,180 L460,90 C420,100 380,95 340,105 L300,95 C290,140 310,180 300,225 C295,260 320,290 335,270 C350,245 345,210 355,180 L365,120 C380,170 400,210 390,260 C385,290 405,330 385,350 C365,365 340,340 330,310 L305,240 C280,280 300,340 275,380 C260,400 240,385 245,355 C255,310 260,260 255,210 L250,100 C180,110 90,95 0,105 Z',
+             'M240,430 C280,415 330,425 355,455 C340,485 300,495 265,485 C240,470 230,450 240,430 Z'],
+      etykiety: [[235, 135, 'HELLADA', 'duza'], [600, 70, 'IMPERIUM PERSKIE', 'duza'], [430, 400, 'Morze Egejskie', 'woda'], [285, 465, 'Peloponez']],
+      trasy: [{ d: 'M700,150 C640,190 560,200 500,215', k: '#8e2f23', p: 1 }],
+      bitwy: [[370, 275], [335, 205], [352, 318]],
+      miasta: [[345, 300, 'Ateny', -60, 4], [290, 445, 'Sparta'], [370, 275, 'Maraton (490 p.n.e.)'], [335, 205, 'Termopile (480 p.n.e.)'], [352, 318, 'Salamina (480 p.n.e.)', 10, 14]],
+      legenda: [['#8e2f23', 'najazdy perskie / bitwy']],
+    }),
+    zadania: [
+      { typ: 'klik', cel: [370, 275], r: 42, polecenie: 'Wskaż na mapie miejsce bitwy z <b>490 r. p.n.e.</b>, od której wzięła nazwę dyscyplina biegowa.', nazwa: 'Maraton' },
+      { typ: 'klik', cel: [335, 205], r: 42, polecenie: 'Wskaż wąwóz, w którym w 480 r. p.n.e. bronił się <b>Leonidas z 300 Spartanami</b>.', nazwa: 'Termopile' },
+      { typ: 'abcd', pytanie: 'Bitwa morska pod Salaminą (480 p.n.e.) zakończyła się…',
+        opcje: ['zwycięstwem floty greckiej Temistoklesa', 'zwycięstwem floty perskiej', 'zatonięciem obu flot w sztormie', 'rozejmem bez rozstrzygnięcia'], poprawna: 0,
+        wyjasnienie: 'Grecy zwabili wielką flotę perską w wąską cieśninę, gdzie przewaga liczebna przestała się liczyć.' },
+    ] },
+  { id: 'rzym', dzial: 0, tytul: 'Imperium Rzymskie i jego podział', okres: 'II–V wiek n.e.',
+    opis: 'W szczycie potęgi Rzym panował nad całym Morzem Śródziemnym — nazywano je Mare Nostrum („nasze morze”). W 395 r. cesarstwo podzielono na część zachodnią i wschodnią.',
+    szukaj: 'Roman Empire 117 map', art: 'Cesarstwo_Rzymskie',
+    svg: svgMapa({
+      alt: 'Imperium Rzymskie wokół Morza Śródziemnego', tlo: 'lad',
+      morza: ['M40,190 C140,160 240,175 330,185 C310,225 320,270 340,300 L360,330 C420,340 480,320 520,300 C560,280 600,290 660,270 C700,255 740,265 770,250 C760,300 740,340 700,355 C600,390 480,380 380,390 C280,400 160,380 80,350 C50,300 35,240 40,190 Z'],
+      regiony: [{ d: 'M0,80 H800 V470 H0 Z M60,195 C150,168 245,180 330,190 C315,225 325,268 342,296 L362,326 C420,335 478,316 518,296 C558,277 600,286 658,266 C698,252 738,262 764,248 C755,296 736,335 698,350 C600,384 480,374 382,384 C284,394 164,376 86,348 C56,300 42,242 60,195 Z', k: KM.cz }],
+      granice: ['M470,80 C460,150 480,240 470,330 C465,390 475,430 470,470'],
+      miasta: [[355, 165, 'Rzym'], [335, 355, 'Kartagina', -84, 16], [545, 175, 'Konstantynopol'], [590, 385, 'Aleksandria'], [130, 130, 'Galia', 10, 4]],
+      etykiety: [[390, 260, 'MARE NOSTRUM', 'duza woda'], [180, 440, 'AFRYKA'], [640, 120, 'cesarstwo wschodnie'], [230, 105, 'cesarstwo zachodnie']],
+      legenda: [[KM.cz, 'Imperium Rzymskie (II w. n.e.)'], ['#5a4f3a', 'linia podziału z 395 r.']],
+    }),
+    zadania: [
+      { typ: 'klik', cel: [545, 175], r: 44, polecenie: 'Wskaż miasto, które od 330 r. było stolicą wschodniej części cesarstwa (późniejsze <b>Bizancjum</b>).', nazwa: 'Konstantynopol' },
+      { typ: 'klik', cel: [335, 355], r: 44, polecenie: 'Wskaż miasto, z którym Rzym stoczył <b>wojny punickie</b>.', nazwa: 'Kartagina' },
+      { typ: 'abcd', pytanie: 'Co wydarzyło się w 476 roku?',
+        opcje: ['upadek cesarstwa zachodniorzymskiego', 'upadek cesarstwa wschodniorzymskiego', 'podział cesarstwa na dwie części', 'edykt mediolański'], poprawna: 0,
+        wyjasnienie: 'Odoaker zdetronizował Romulusa Augustulusa; Bizancjum przetrwało do 1453 r.' },
+    ] },
+  { id: 'europa800', dzial: 1, tytul: 'Europa około roku 800', okres: 'przełom VIII i IX wieku',
+    opis: 'Trzy kręgi ówczesnego świata: chrześcijański Zachód z imperium Karola Wielkiego, greckie Bizancjum i arabski świat islamu. Ziemie Polan leżały jeszcze poza nimi.',
+    szukaj: 'Carolingian Empire 814 map Europe', art: 'Karol_Wielki',
+    svg: svgMapa({
+      alt: 'Europa około 800 roku',
+      lady: ['M0,520 V150 C60,120 120,95 200,98 C280,102 350,70 430,76 C520,82 600,108 700,118 L800,128 V520 Z',
+             'M60,40 C100,30 140,45 135,80 C110,100 70,95 55,70 Z'],
+      morza: ['M120,470 C260,450 420,462 560,450 L800,460 V520 H120 Z'],
+      regiony: [
+        { d: 'M120,300 C150,220 230,180 310,195 C350,250 340,330 300,390 C230,420 160,390 120,300 Z', k: KM.cz },
+        { d: 'M560,330 C610,300 680,310 720,350 C710,400 650,430 590,420 C560,390 545,360 560,330 Z', k: KM.fi },
+        { d: 'M60,380 C110,355 170,365 190,410 C160,450 90,455 55,430 Z', k: KM.zi },
+      ],
+      miasta: [[240, 290, 'Akwizgran'], [655, 370, 'Konstantynopol', -120, -10], [120, 415, 'Kordoba'], [360, 170, 'Gniezno (Polanie)', 10, -6]],
+      etykiety: [[165, 260, 'PAŃSTWO', 'duza'], [165, 282, 'FRANKÓW', 'duza'], [600, 315, 'BIZANCJUM', 'duza'], [62, 375, 'emirat Kordoby'], [430, 150, 'ludy słowiańskie'], [330, 500, 'Morze Śródziemne', 'woda']],
+      legenda: [[KM.cz, 'imperium Karola Wielkiego'], [KM.fi, 'cesarstwo bizantyjskie'], [KM.zi, 'świat islamu']],
+    }),
+    zadania: [
+      { typ: 'klik', cel: [240, 290], r: 46, polecenie: 'Wskaż <b>Akwizgran</b> — ulubioną siedzibę Karola Wielkiego.', nazwa: 'Akwizgran' },
+      { typ: 'abcd', pytanie: 'Kto i kiedy koronował Karola Wielkiego na cesarza?',
+        opcje: ['papież Leon III, Boże Narodzenie 800 r.', 'cesarz bizantyjski, 812 r.', 'sam Karol, 795 r.', 'papież Grzegorz VII, 800 r.'], poprawna: 0,
+        wyjasnienie: 'Koronacja w Rzymie w Boże Narodzenie 800 r. odnowiła cesarstwo na Zachodzie.' },
+    ] },
+  { id: 'chrobry', dzial: 2, tytul: 'Polska pierwszych Piastów', okres: '966–1025',
+    opis: 'Państwo Mieszka I i Bolesława Chrobrego: Wielkopolska z Gnieznem i Poznaniem jako kolebka, walki o ujście Odry (Cedynia) i zdobycze Chrobrego — Milsko, Łużyce i Grody Czerwieńskie.',
+    szukaj: 'Poland 1025 map Boleslaw Chrobry', art: 'Bolesław_I_Chrobry',
+    svg: svgMapa({
+      alt: 'Polska za pierwszych Piastów',
+      lady: [LAD_EU], rzeki: RZEKI_PL,
+      regiony: [{ d: 'M165,175 C240,150 330,155 400,175 C460,190 490,240 480,300 C470,360 430,420 380,450 C310,470 240,460 195,430 C150,390 135,320 140,260 C145,220 150,195 165,175 Z', k: KM.cz },
+                { d: 'M95,255 C120,240 150,245 160,275 C150,305 120,315 95,300 Z', k: KM.zl },
+                { d: 'M480,330 C515,315 555,325 565,355 C550,385 510,390 485,370 Z', k: KM.zl }],
+      miasta: [[265, 240, 'Gniezno'], [225, 265, 'Poznań', -70, 14], [330, 425, 'Kraków'], [155, 200, 'Cedynia (972)'], [300, 330, 'Giecz', 10, 4]],
+      etykiety: [[240, 60, 'Morze Bałtyckie', 'woda'], [98, 250, 'Milsko i Łużyce'], [488, 325, 'Grody Czerwieńskie'], [600, 120, 'Prusowie'], [170, 480, 'Czechy'], [620, 470, 'Ruś Kijowska']],
+      legenda: [[KM.cz, 'państwo Mieszka I i Chrobrego'], [KM.zl, 'zdobycze Bolesława Chrobrego']],
+    }),
+    zadania: [
+      { typ: 'klik', cel: [155, 200], r: 42, polecenie: 'Wskaż miejsce zwycięskiej bitwy Mieszka I z margrabią Hodonem (<b>972</b>).', nazwa: 'Cedynia' },
+      { typ: 'klik', cel: [265, 240], r: 40, polecenie: 'Wskaż gród, w którym w <b>1000 r.</b> odbył się zjazd z udziałem Ottona III.', nazwa: 'Gniezno' },
+      { typ: 'abcd', pytanie: 'Które ziemie Bolesław Chrobry zatrzymał na mocy pokoju w Budziszynie (1018)?',
+        opcje: ['Milsko i Łużyce', 'Pomorze Gdańskie', 'Śląsk i Morawy', 'Prusy'], poprawna: 0,
+        wyjasnienie: 'Pokój w Budziszynie zakończył długie wojny z cesarstwem niemieckim.' },
+    ] },
+  { id: 'dzielnice', dzial: 3, tytul: 'Rozbicie dzielnicowe', okres: 'po 1138 roku',
+    opis: 'Statut Krzywoustego podzielił Polskę między synów. Senior — najstarszy z rodu — miał władać niedziedziczną dzielnicą senioralną z Krakowem i zwierzchnością nad Pomorzem.',
+    szukaj: 'Testament Krzywoustego 1138 map', art: 'Testament_Bolesława_Krzywoustego',
+    svg: svgMapa({
+      alt: 'Podział Polski po 1138 roku',
+      lady: [LAD_EU], rzeki: RZEKI_PL,
+      regiony: [
+        { d: 'M160,200 C220,180 280,190 300,235 C295,285 250,310 195,300 C160,270 150,230 160,200 Z', k: KM.nb },
+        { d: 'M305,240 C355,225 395,250 400,300 C400,370 380,430 340,460 C300,450 285,390 290,330 C292,295 295,265 305,240 Z', k: KM.cz },
+        { d: 'M310,175 C380,160 450,175 475,220 C465,260 410,275 355,265 L310,235 Z', k: KM.zi },
+        { d: 'M180,310 C225,300 260,320 260,365 C250,410 205,425 165,410 C150,370 155,335 180,310 Z', k: KM.zl },
+        { d: 'M405,300 C455,285 505,300 515,345 C505,395 455,415 410,400 C395,360 395,325 405,300 Z', k: KM.fi },
+        { d: 'M200,140 C280,120 380,125 440,145 C420,170 340,180 270,175 C235,170 210,158 200,140 Z', k: KM.sz },
+      ],
+      miasta: [[330, 430, 'Kraków'], [230, 250, 'Poznań'], [390, 205, 'Płock'], [215, 370, 'Wrocław'], [460, 355, 'Sandomierz'], [330, 300, 'Łęczyca', 10, -4]],
+      etykiety: [[240, 60, 'Morze Bałtyckie', 'woda'], [175, 230, 'wielkopolska'], [300, 350, 'SENIORALNA', 'duza'], [355, 195, 'mazowiecka'], [175, 350, 'śląska'], [430, 330, 'sandomierska'], [290, 160, 'Pomorze (zwierzchność seniora)']],
+      legenda: [[KM.cz, 'dzielnica senioralna'], [KM.nb, 'wielkopolska'], [KM.zi, 'mazowiecka'], [KM.zl, 'śląska'], [KM.fi, 'sandomierska']],
+    }),
+    zadania: [
+      { typ: 'klik', cel: [340, 370], r: 60, polecenie: 'Wskaż <b>dzielnicę senioralną</b> — pas ziem z Krakowem przeznaczony dla seniora.', nazwa: 'dzielnica senioralna' },
+      { typ: 'abcd', pytanie: 'Na czym polegała zasada senioratu?',
+        opcje: ['władzę zwierzchnią sprawuje najstarszy z rodu Piastów', 'każdy syn dziedziczy równą część na własność', 'o władzy decyduje wiec możnych', 'tron przypada najmłodszemu synowi'], poprawna: 0,
+        wyjasnienie: 'Senior władał dzielnicą krakowską i reprezentował całe państwo; zasada szybko została złamana.' },
+    ] },
+  { id: 'kazimierz', dzial: 3, tytul: 'Polska Kazimierza Wielkiego', okres: '1333–1370',
+    opis: 'Odrodzone królestwo bez Śląska i Pomorza, za to powiększone o Ruś Halicką ze Lwowem. „Zastał Polskę drewnianą, a zostawił murowaną”.',
+    szukaj: 'Poland Casimir the Great 1370 map', art: 'Kazimierz_III_Wielki',
+    svg: svgMapa({
+      alt: 'Polska za Kazimierza Wielkiego',
+      lady: [LAD_EU], rzeki: RZEKI_PL,
+      regiony: [{ d: 'M225,215 C300,195 380,205 420,240 C445,280 440,340 420,390 C395,440 340,465 290,455 C240,445 210,400 205,340 C202,290 208,245 225,215 Z', k: KM.cz },
+                { d: 'M420,340 C480,320 550,335 575,380 C565,425 510,450 455,440 C425,415 412,375 420,340 Z', k: KM.zl },
+                { d: 'M150,310 C195,295 230,315 230,355 C222,400 180,415 145,400 C132,362 135,332 150,310 Z', k: KM.sz },
+                { d: 'M215,135 C295,115 390,120 450,140 C430,165 345,178 275,172 C240,167 225,152 215,135 Z', k: KM.sz }],
+      miasta: [[330, 425, 'Kraków'], [250, 250, 'Poznań'], [500, 400, 'Lwów'], [215, 365, 'Wrocław'], [340, 150, 'Gdańsk']],
+      etykiety: [[240, 60, 'Morze Bałtyckie', 'woda'], [150, 345, 'Śląsk (Czechy)'], [275, 148, 'Pomorze (zakon)'], [455, 375, 'Ruś Halicka'], [610, 200, 'Litwa']],
+      legenda: [[KM.cz, 'Królestwo Polskie'], [KM.zl, 'przyłączona Ruś Halicka'], [KM.sz, 'ziemie poza królestwem']],
+    }),
+    zadania: [
+      { typ: 'klik', cel: [500, 400], r: 48, polecenie: 'Wskaż <b>Lwów</b> — główny gród przyłączonej przez Kazimierza Rusi Halickiej.', nazwa: 'Lwów' },
+      { typ: 'abcd', pytanie: 'Co ustalono w pokoju kaliskim z 1343 roku?',
+        opcje: ['Kujawy i ziemia dobrzyńska wracają do Polski, Pomorze zostaje przy zakonie', 'Pomorze Gdańskie wraca do Polski', 'Śląsk wraca do Polski', 'zakon płaci Polsce coroczny trybut'], poprawna: 0,
+        wyjasnienie: 'Pomorze zapisano zakonowi jako „wieczystą jałmużnę” — spór odżył w XV wieku.' },
+    ] },
+  { id: 'grunwald', dzial: 4, tytul: 'Wielka wojna z zakonem', okres: '1409–1411',
+    opis: 'Połączone siły Polski Jagiełły i Litwy Witolda ruszyły na stolicę zakonu — Malbork. Po drodze, 15 lipca 1410 r., rozegrała się bitwa pod Grunwaldem.',
+    szukaj: 'Battle of Grunwald 1410 campaign map', art: 'Bitwa_pod_Grunwaldem',
+    svg: svgMapa({
+      alt: 'Państwo zakonu krzyżackiego i kampania grunwaldzka',
+      lady: [LAD_EU], rzeki: RZEKI_PL,
+      regiony: [{ d: 'M300,150 C370,130 450,130 500,155 C520,185 510,225 475,250 C420,268 350,262 315,235 C295,205 292,175 300,150 Z', k: KM.sz },
+                { d: 'M230,250 C330,225 430,240 480,280 C500,330 480,400 440,440 C360,465 270,455 225,420 C195,370 200,300 230,250 Z', k: KM.cz },
+                { d: 'M480,180 C560,155 650,165 700,200 C710,260 680,330 630,360 C560,370 505,330 490,280 Z', k: KM.nb }],
+      bitwy: [[400, 210]],
+      trasy: [{ d: 'M350,380 C370,330 385,270 398,222', k: '#8e2f23' }],
+      miasta: [[360, 165, 'Malbork'], [400, 210, 'Grunwald (15 VII 1410)', 12, 14], [320, 225, 'Toruń', -58, 14], [345, 135, 'Gdańsk', 10, -4], [335, 400, 'Czerwińsk (przeprawa)', 10, 12]],
+      etykiety: [[240, 55, 'Morze Bałtyckie', 'woda'], [330, 190, 'PAŃSTWO ZAKONU', 'duza'], [290, 330, 'KRÓLESTWO POLSKIE', 'duza'], [560, 240, 'WIELKIE KSIĘSTWO LITEWSKIE', 'duza']],
+      legenda: [[KM.sz, 'państwo zakonu krzyżackiego'], [KM.cz, 'Korona'], [KM.nb, 'Litwa'], ['#8e2f23', 'marsz armii Jagiełły']],
+    }),
+    zadania: [
+      { typ: 'klik', cel: [400, 210], r: 42, polecenie: 'Wskaż pole bitwy z <b>15 lipca 1410 roku</b>.', nazwa: 'Grunwald' },
+      { typ: 'klik', cel: [360, 165], r: 40, polecenie: 'Wskaż <b>stolicę zakonu</b>, której po bitwie nie udało się zdobyć.', nazwa: 'Malbork' },
+      { typ: 'abcd', pytanie: 'Co Polska odzyskała na mocy II pokoju toruńskiego (1466)?',
+        opcje: ['Pomorze Gdańskie z Malborkiem i Warmią (Prusy Królewskie)', 'całe Prusy z Królewcem', 'Śląsk', 'Inflanty'], poprawna: 0,
+        wyjasnienie: 'Reszta ziem zakonu (Prusy Zakonne) stała się lennem Polski.' },
+    ] },
+  { id: 'ron', dzial: 5, tytul: 'Rzeczpospolita Obojga Narodów', okres: 'po unii lubelskiej 1569',
+    opis: 'Państwo „obojga narodów”: Korona i Litwa ze wspólnym sejmem i królem. Na sejmie lubelskim Podlasie, Wołyń i Ukraina naddnieprzańska przeszły z Litwy do Korony.',
+    szukaj: 'Polish-Lithuanian Commonwealth 1569 map', art: 'Unia_lubelska',
+    svg: svgMapa({
+      alt: 'Rzeczpospolita Obojga Narodów po 1569',
+      lady: [LAD_EU], rzeki: RZEKI_PL,
+      regiony: [{ d: 'M215,220 C310,195 420,205 480,235 C530,270 560,340 550,410 C530,465 440,490 350,480 C270,470 215,430 200,370 C190,310 195,255 215,220 Z', k: KM.cz },
+                { d: 'M470,120 C560,95 660,105 710,145 C725,200 705,265 655,300 C590,320 520,300 490,255 C470,215 462,160 470,120 Z', k: KM.nb },
+                { d: 'M430,100 C480,80 540,82 575,100 C560,122 505,130 465,124 Z', k: KM.zl }],
+      granice: ['M480,235 C500,280 515,330 520,390'],
+      miasta: [[360, 300, 'Warszawa'], [330, 430, 'Kraków'], [560, 190, 'Wilno'], [640, 400, 'Kijów'], [345, 140, 'Gdańsk'], [500, 300, 'Lublin (1569)', 10, 14]],
+      etykiety: [[240, 55, 'Morze Bałtyckie', 'woda'], [265, 265, 'KORONA', 'duza'], [545, 155, 'LITWA', 'duza'], [455, 95, 'Inflanty'], [590, 440, 'Ukraina (do Korony po 1569)']],
+      legenda: [[KM.cz, 'Korona Królestwa Polskiego'], [KM.nb, 'Wielkie Księstwo Litewskie'], [KM.zl, 'Inflanty (wspólne)']],
+    }),
+    zadania: [
+      { typ: 'klik', cel: [560, 190], r: 44, polecenie: 'Wskaż <b>stolicę Wielkiego Księstwa Litewskiego</b>.', nazwa: 'Wilno' },
+      { typ: 'klik', cel: [500, 300], r: 40, polecenie: 'Wskaż miasto, w którym w <b>1569 r.</b> zawarto unię realną polsko-litewską.', nazwa: 'Lublin' },
+      { typ: 'abcd', pytanie: 'Co po unii lubelskiej pozostało ODRĘBNE dla Korony i Litwy?',
+        opcje: ['wojsko, skarb, urzędy i prawo', 'sejm', 'władca', 'polityka zagraniczna'], poprawna: 0,
+        wyjasnienie: 'Wspólne były: monarcha, sejm i polityka zagraniczna; osobne — urzędy, skarb, wojsko i sądownictwo.' },
+    ] },
+  { id: 'odkrycia', dzial: 5, tytul: 'Wielkie odkrycia geograficzne', okres: '1492–1522',
+    opis: 'Trzy przełomowe wyprawy: Kolumb przez Atlantyk (1492), Vasco da Gama wokół Afryki do Indii (1498) i wyprawa Magellana — pierwsze opłynięcie Ziemi (1519–1522).',
+    szukaj: 'Age of Discovery voyages map Columbus Gama Magellan', art: 'Wielkie_odkrycia_geograficzne',
+    svg: svgMapa({
+      alt: 'Trasy wielkich wypraw odkrywczych',
+      lady: ['M45,60 C125,48 185,80 195,130 C205,172 165,200 145,232 L95,262 C62,222 30,150 45,60 Z',
+             'M140,272 C182,260 212,292 207,342 C202,402 177,452 152,472 C130,432 118,352 125,310 Z',
+             'M375,72 C418,60 458,70 468,100 C450,122 418,132 388,126 C372,106 368,86 375,72 Z',
+             'M378,150 C430,140 470,162 480,212 C490,272 462,332 432,362 C400,332 368,252 371,200 Z',
+             'M480,62 C572,50 682,72 722,112 C742,152 702,192 652,202 C602,212 542,182 502,142 C482,112 475,86 480,62 Z',
+             'M598,205 l32,62 26,-58 Z', 'M655,330 c42,-12 74,10 63,46 c-32,20 -72,4 -63,-46 Z'],
+      trasy: [{ d: 'M385,122 C310,140 240,165 185,190', k: '#8e2f23' },
+              { d: 'M392,130 C388,210 385,290 400,330 C415,362 432,370 448,362 C465,340 470,300 472,260 C520,240 570,232 612,228', k: '#3f6d99' },
+              { d: 'M380,128 C300,180 220,290 170,420 C200,450 230,445 250,430 C400,470 560,430 700,360 C710,300 700,262 688,232 C600,180 480,150 395,132', k: '#a8892e', p: 1 }],
+      miasta: [[388, 124, 'Hiszpania i Portugalia', -40, -12], [180, 192, 'Karaiby (1492)', 10, -6], [448, 366, 'przyl. Dobrej Nadziei', 8, 18], [617, 226, 'Indie (1498)'], [693, 300, 'Filipiny (†Magellan)', -150, 16]],
+      etykiety: [[80, 300, 'Ameryka'], [408, 300, 'Afryka'], [590, 100, 'Azja'], [250, 70, 'OCEAN ATLANTYCKI', 'woda'], [120, 500, 'OCEAN SPOKOJNY →', 'woda']],
+      legenda: [['#8e2f23', 'Kolumb 1492'], ['#3f6d99', 'Vasco da Gama 1498'], ['#a8892e', 'wyprawa Magellana 1519–1522']],
+    }),
+    zadania: [
+      { typ: 'klik', cel: [448, 362], r: 46, polecenie: 'Wskaż <b>przylądek Dobrej Nadziei</b>, który opłynął Vasco da Gama w drodze do Indii.', nazwa: 'przylądek Dobrej Nadziei' },
+      { typ: 'klik', cel: [180, 192], r: 46, polecenie: 'Wskaż rejon, do którego w <b>1492 r.</b> dotarł Krzysztof Kolumb.', nazwa: 'Karaiby' },
+      { typ: 'abcd', pytanie: 'Która wyprawa jako pierwsza opłynęła Ziemię dookoła?',
+        opcje: ['wyprawa Magellana (1519–1522)', 'druga wyprawa Kolumba', 'wyprawa Vasco da Gamy', 'wyprawa Amerigo Vespucciego'], poprawna: 0,
+        wyjasnienie: 'Z pięciu okrętów wróciła jedna „Victoria”; sam Magellan zginął na Filipinach.' },
+    ] },
+  { id: 'rozbiory', dzial: 7, tytul: 'Rozbiory Rzeczypospolitej', okres: '1772 · 1793 · 1795',
+    opis: 'W trzech rozbiorach Rosja, Prusy i Austria podzieliły całe państwo. Po trzecim rozbiorze (1795) Rzeczpospolita zniknęła z mapy Europy na 123 lata.',
+    szukaj: 'Partitions of Poland map 1772 1793 1795', art: 'Rozbiory_Polski',
+    svg: svgMapa({
+      alt: 'Ziemie Rzeczypospolitej po trzech rozbiorach',
+      lady: [LAD_EU], rzeki: RZEKI_PL,
+      regiony: [{ d: 'M230,120 C300,100 370,108 400,140 C430,182 430,250 410,310 C392,348 345,358 305,342 C248,325 202,288 194,238 C190,190 202,146 230,120 Z', k: KM.nb },
+                { d: 'M255,335 C330,315 430,320 490,355 C505,395 480,440 430,460 C350,475 280,460 250,420 C238,390 242,360 255,335 Z', k: KM.zl },
+                { d: 'M430,165 C520,140 630,155 695,200 C725,260 710,350 660,410 C600,452 515,442 478,398 C448,358 438,290 430,235 Z', k: KM.cz }],
+      miasta: [[360, 300, 'Warszawa'], [330, 435, 'Kraków'], [462, 438, 'Lwów'], [245, 255, 'Poznań'], [560, 210, 'Wilno'], [345, 140, 'Gdańsk']],
+      etykiety: [[240, 55, 'Morze Bałtyckie', 'woda'], [225, 220, 'ZABÓR PRUSKI', 'duza'], [300, 400, 'ZABÓR AUSTRIACKI', 'duza'], [520, 260, 'ZABÓR ROSYJSKI', 'duza'], [300, 442, '(Galicja)']],
+      legenda: [[KM.nb, 'zabór pruski'], [KM.zl, 'zabór austriacki'], [KM.cz, 'zabór rosyjski (największy)']],
+    }),
+    zadania: [
+      { typ: 'klik', cel: [462, 438], r: 44, polecenie: 'Wskaż miasto, które już po <b>I rozbiorze (1772)</b> znalazło się w zaborze austriackim jako stolica Galicji.', nazwa: 'Lwów' },
+      { typ: 'klik', cel: [360, 300], r: 40, polecenie: 'Wskaż <b>Warszawę</b> — po III rozbiorze trafiła (uwaga!) do zaboru pruskiego.', nazwa: 'Warszawa' },
+      { typ: 'abcd', pytanie: 'Które państwo NIE brało udziału w II rozbiorze Polski (1793)?',
+        opcje: ['Austria', 'Rosja', 'Prusy', 'wszystkie trzy brały udział'], poprawna: 0,
+        wyjasnienie: 'II rozbioru dokonały tylko Rosja i Prusy; Austria uczestniczyła w I i III.' },
+    ] },
+];
+/* ---- logika pracowni ---- */
+const elMapy = {
+  chipy: document.getElementById('mapy-chipy'), tytul: document.getElementById('mapa-tytul'),
+  okres: document.getElementById('mapa-okres'), opis: document.getElementById('mapa-opis'),
+  svg: document.getElementById('mapa-svg'), zrodla: document.getElementById('mapa-zrodla'),
+  zadania: document.getElementById('mapa-zadania'), postep: document.getElementById('mapy-postep'),
+};
+let aktualnaMapa = null;
+const stanMap = {};                       // id mapy -> Set zaliczonych zadań
+function pokazMapy() {
+  const widoczne = MAPY.filter(m => filtrDzialu < 0 || m.dzial === filtrDzialu);
+  elMapy.chipy.innerHTML = '';
+  for (const m of (widoczne.length ? widoczne : MAPY)) {
+    const b = document.createElement('button');
+    b.textContent = m.tytul;
+    b.addEventListener('click', () => wybierzMape(m, b));
+    elMapy.chipy.appendChild(b);
+  }
+  wybierzMape((widoczne.length ? widoczne : MAPY)[0], elMapy.chipy.firstChild);
+}
+function wybierzMape(m, przycisk) {
+  aktualnaMapa = m;
+  stanMap[m.id] = stanMap[m.id] || new Set();
+  for (const b of elMapy.chipy.children) b.style.borderColor = '';
+  if (przycisk) przycisk.style.borderColor = 'var(--zloto)';
+  elMapy.tytul.textContent = m.tytul;
+  elMapy.okres.textContent = m.okres;
+  elMapy.opis.textContent = m.opis + ' (Mapa poglądowa — schemat do ćwiczeń.)';
+  elMapy.svg.innerHTML = m.svg;
+  elMapy.zrodla.innerHTML = `Oficjalne mapy: <a href="https://pl.wikipedia.org/wiki/${m.art}" target="_blank" rel="noopener">artykuł „${m.art.replaceAll('_', ' ')}” (Wikipedia)</a> ·
+    <a href="https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(m.szukaj)}&title=Special:MediaSearch&type=image" target="_blank" rel="noopener">Wikimedia Commons</a>`;
+  elMapy.svg.querySelector('svg').addEventListener('click', klikMapy);
+  rysujZadaniaMapy();
+}
+function rysujZadaniaMapy() {
+  const m = aktualnaMapa, stan = stanMap[m.id];
+  elMapy.zadania.innerHTML = '';
+  m.zadania.forEach((z, i) => {
+    const el = document.createElement('div');
+    el.className = 'zadanie' + (stan.has(i) ? ' zaliczone' : '');
+    el.dataset.nr = i;
+    if (z.typ === 'klik') {
+      el.innerHTML = `<div class="polecenie">🎯 ${z.polecenie}</div><div class="status"></div>`;
+    } else {
+      el.innerHTML = `<div class="polecenie">❓ ${z.pytanie}</div><div class="abcd">${
+        z.opcje.map((o, j) => `<button data-j="${j}">${'ABCD'[j]}. ${o}</button>`).join('')}</div><div class="status"></div>`;
+      el.querySelectorAll('.abcd button').forEach(b => b.addEventListener('click', () => {
+        if (stan.has(i)) return;
+        const dobrze = Number(b.dataset.j) === z.poprawna;
+        el.querySelectorAll('.abcd button').forEach(x => { x.disabled = true;
+          if (Number(x.dataset.j) === z.poprawna) x.classList.add('dobra'); });
+        if (!dobrze) b.classList.add('zla');
+        el.querySelector('.status').innerHTML =
+          (dobrze ? '<span class="ok">Dobrze!</span> ' : '<span class="blad">Nie tym razem.</span> ') + z.wyjasnienie;
+        stan.add(i); el.classList.add('zaliczone');
+        piknij(dobrze); aktualizujPostepMap();
+      }));
+    }
+    elMapy.zadania.appendChild(el);
+  });
+  m.zadania.forEach((z, i) => { z._proby = 0; });
+  aktualizujPostepMap();
+  zaznaczAktywneKlik();
+}
+function zaznaczAktywneKlik() {
+  const m = aktualnaMapa, stan = stanMap[m.id];
+  let znaleziono = false;
+  [...elMapy.zadania.children].forEach(el => {
+    const i = Number(el.dataset.nr);
+    const aktywne = !znaleziono && m.zadania[i].typ === 'klik' && !stan.has(i);
+    el.classList.toggle('aktywne', aktywne);
+    if (aktywne) znaleziono = true;
+  });
+}
+function klikMapy(e) {
+  const m = aktualnaMapa, stan = stanMap[m.id];
+  const i = m.zadania.findIndex((z, j) => z.typ === 'klik' && !stan.has(j));
+  if (i < 0) return;
+  const z = m.zadania[i];
+  const svg = elMapy.svg.querySelector('svg');
+  const rect = svg.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width * 800;
+  const y = (e.clientY - rect.top) / rect.height * 520;
+  const g = svg.querySelector('#mapa-znaczniki');
+  const el = elMapy.zadania.children[i];
+  const trafiony = Math.hypot(x - z.cel[0], y - z.cel[1]) <= z.r;
+  if (trafiony) {
+    g.innerHTML += `<circle cx="${z.cel[0]}" cy="${z.cel[1]}" r="${z.r * .55}" fill="none" stroke="#4d8f5b" stroke-width="4"/>`;
+    el.querySelector('.status').innerHTML = `<span class="ok">Dobrze — to ${z.nazwa}!</span>`;
+    stan.add(i); el.classList.add('zaliczone');
+    piknij(true);
+  } else {
+    z._proby = (z._proby || 0) + 1;
+    g.innerHTML += `<path transform="translate(${x},${y})" d="M-6,-6 L6,6 M-6,6 L6,-6" stroke="#b8433c" stroke-width="3.5" stroke-linecap="round"/>`;
+    if (z._proby >= 3) {
+      g.innerHTML += `<circle cx="${z.cel[0]}" cy="${z.cel[1]}" r="${z.r * .55}" fill="none" stroke="#d9b96a" stroke-width="4" stroke-dasharray="6 5"/>`;
+      el.querySelector('.status').innerHTML = `<span class="blad">Prawidłowe miejsce zaznaczono na złoto</span> — to ${z.nazwa}. Zapamiętaj je!`;
+      stan.add(i); el.classList.add('zaliczone');
+    } else {
+      el.querySelector('.status').innerHTML = `<span class="blad">Pudło.</span> Spróbuj jeszcze raz (próba ${z._proby}/3).`;
+    }
+    piknij(false);
+  }
+  aktualizujPostepMap();
+  zaznaczAktywneKlik();
+}
+function aktualizujPostepMap() {
+  const m = aktualnaMapa;
+  elMapy.postep.textContent = `Mapa: rozwiązano ${stanMap[m.id].size} / ${m.zadania.length} zadań`;
+}
+
 /* ---------------- przełączanie widoków i filtra ---------------- */
-const widoki = { os: document.getElementById('widok-os'), rok: document.getElementById('widok-rok'), chrono: document.getElementById('widok-chrono'), pf: document.getElementById('widok-pf'), zr: document.getElementById('widok-zr') };
+const widoki = { os: document.getElementById('widok-os'), rok: document.getElementById('widok-rok'), chrono: document.getElementById('widok-chrono'), pf: document.getElementById('widok-pf'), zr: document.getElementById('widok-zr'), mapy: document.getElementById('widok-mapy') };
 let aktywnyWidok = 'os';
 function pokazWidok(nazwa) {
   aktywnyWidok = nazwa;
@@ -1266,6 +1683,7 @@ function pokazWidok(nazwa) {
   if (nazwa === 'chrono') startGryChrono();
   if (nazwa === 'pf') startGryPF();
   if (nazwa === 'zr') startGryZR();
+  if (nazwa === 'mapy') pokazMapy();
 }
 document.querySelectorAll('.tryb').forEach(b =>
   b.addEventListener('click', () => pokazWidok(b.dataset.widok)));

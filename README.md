@@ -230,5 +230,8 @@ pełna historia Polski 966–2004, ~115 wydarzeń z datami dziennymi, zaostrzona
 wyniki przeliczane na szczeble konkursu (etap rejonowy → wojewódzki → finalista → laureat).
 Oś etapu szkolnego `public/os-czasu-etap-szkolny.html` (Mazowsze · MSCDN): zakres od cywilizacji
 starożytnych do 1797 r. zgodnie z programem merytorycznym konkursu, z obsługą lat p.n.e.
-(dwusegmentowa skala osi, dostrajanie roku przyciskami, wieki rzymskie z „p.n.e." w grze prawda/fałsz).
+(dwusegmentowa skala osi, dostrajanie roku przyciskami, wieki rzymskie z „p.n.e." w grze prawda/fałsz),
+z tekstem źródłowym przy każdym wydarzeniu, trybem „Skąd to źródło?" oraz „Pracownią map" —
+10 poglądowych map konturowych SVG (w stylu arkuszy) z ćwiczeniami „wskaż na mapie" i pytaniami,
+z odnośnikami do oficjalnych map w Wikipedii/Wikimedia Commons przy każdej mapie.
 Filtr pozwala ćwiczyć pojedynczy dział, np. przed sprawdzianem. Bez zależności zewnętrznych.
