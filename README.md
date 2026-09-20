@@ -228,4 +228,7 @@ Wersja konkursowa `public/os-czasu-konkurs.html` (trening przed konkursem kurato
 pełna historia Polski 966–2004, ~115 wydarzeń z datami dziennymi, zaostrzona punktacja
 (100 pkt tylko za dokładny rok, chronologia 7 kart z bliskiego przedziału, dystraktory ±1–5 lat),
 wyniki przeliczane na szczeble konkursu (etap rejonowy → wojewódzki → finalista → laureat).
+Oś etapu szkolnego `public/os-czasu-etap-szkolny.html` (Mazowsze · MSCDN): zakres od cywilizacji
+starożytnych do 1797 r. zgodnie z programem merytorycznym konkursu, z obsługą lat p.n.e.
+(dwusegmentowa skala osi, dostrajanie roku przyciskami, wieki rzymskie z „p.n.e." w grze prawda/fałsz).
 Filtr pozwala ćwiczyć pojedynczy dział, np. przed sprawdzianem. Bez zależności zewnętrznych.

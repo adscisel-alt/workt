@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Oś Czasu — Etap Szkolny</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bona+Nova:ital,wght@0,400;0,700;1,400&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --tablica:#24322b; --tablica2:#1c2822; --kreda:#e9e4d2; --kreda-slaba:#b9b5a4;
+    --karta:#f2ecdc; --karta-tekst:#2c2a24; --karta-tekst2:#6b6552;
+    --pl:#c1272d; --pl-jasny:#e06a63; --sw:#3f6d99; --sw-jasny:#6d9bc9;
+    --zloto:#d9b96a; --dobrze:#4d8f5b; --zle:#b8433c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at 50% -10%, #2c3d34, var(--tablica) 55%, var(--tablica2));
+    background-color:var(--tablica);
+    color:var(--kreda); font-family:'Lato',system-ui,sans-serif; font-size:15px;
+    min-height:100vh;
+  }
+  /* ---------- nagłówek ---------- */
+  header{padding:22px clamp(14px,4vw,42px) 0; }
+  .naglowek-gorny{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 18px;}
+  h1{font-family:'Bona Nova',Georgia,serif;font-weight:700;margin:0;
+    font-size:clamp(26px,4.6vw,40px);letter-spacing:.03em;color:var(--kreda);}
+  h1 .zakres{color:var(--zloto);}
+  .podtytul{font-size:13.5px;color:var(--kreda-slaba);letter-spacing:.04em;}
+  .pasek-trybow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0 0;}
+  .tryb{font-family:'Bona Nova',Georgia,serif;font-size:16.5px;letter-spacing:.05em;
+    color:var(--kreda-slaba);background:none;border:1px solid rgba(233,228,210,.28);
+    border-radius:999px;padding:8px 20px;cursor:pointer;transition:.18s;}
+  .tryb:hover{color:var(--kreda);border-color:rgba(233,228,210,.6);}
+  .tryb.aktywny{color:var(--tablica2);background:var(--zloto);border-color:var(--zloto);font-weight:700;}
+  .tryb:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--zloto);outline-offset:2px;}
+  #wybor-dzialu{margin-left:auto;max-width:min(340px,90vw);background:var(--tablica2);color:var(--kreda);
+    border:1px solid rgba(233,228,210,.28);border-radius:8px;padding:8px 10px;font:inherit;font-size:13.5px;}
+  /* ---------- oś ---------- */
+  .os-okno{position:relative;margin:20px 0 0;overflow-x:auto;overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;cursor:grab;}
+  .os-okno.lapane{cursor:grabbing;}
+  .os-plotno{position:relative;height:580px;}
+  .os-linia{position:absolute;left:0;right:0;top:50%;height:2px;
+    background:linear-gradient(90deg,transparent,rgba(233,228,210,.75) 40px,rgba(233,228,210,.75) calc(100% - 40px),transparent);}
+  .kreska{position:absolute;top:50%;width:1px;height:10px;transform:translateY(-50%);background:rgba(233,228,210,.4);}
+  .kreska.dekada{height:22px;width:2px;background:rgba(233,228,210,.75);}
+  .rok-etykieta{position:absolute;top:calc(50% + 16px);transform:translateX(-50%);
+    font-weight:900;font-size:14px;letter-spacing:.06em;color:var(--kreda);}
+  .era{position:absolute;top:12px;bottom:12px;border-left:1px dashed rgba(217,185,106,.35);
+    border-right:1px dashed rgba(217,185,106,.35);background:rgba(217,185,106,.05);pointer-events:none;}
+  .era span{position:absolute;left:10px;bottom:6px;font-size:11px;letter-spacing:.22em;
+    color:rgba(217,185,106,.75);white-space:nowrap;font-weight:700;}
+  .pas-etykieta{position:sticky;left:0;z-index:3;pointer-events:none;width:0;}
+  .pas-etykieta b{position:absolute;left:10px;font-size:11px;letter-spacing:.24em;font-weight:900;white-space:nowrap;}
+  /* wydarzenia na osi */
+  .wyd{position:absolute;width:0;background:none;border:none;padding:0;cursor:pointer;color:inherit;font:inherit;}
+  .wyd .kropka{position:absolute;left:-6.5px;width:13px;height:13px;border-radius:50%;border:2px solid var(--tablica2);
+    box-shadow:0 0 0 2px rgba(233,228,210,.55);transition:.15s;}
+  .wyd.pl .kropka{background:var(--pl);}
+  .wyd.sw .kropka{background:var(--sw-jasny);}
+  .wyd .nitka{position:absolute;left:-.5px;top:0;bottom:0;width:1px;background:rgba(233,228,210,.3);}
+  .wyd .metka{position:absolute;left:0;transform:translateX(-50%);width:max-content;
+    font-size:11.5px;line-height:1.25;max-width:132px;padding:3px 7px;border-radius:5px;
+    color:var(--kreda);background:rgba(28,40,34,.85);border:1px solid rgba(233,228,210,.2);
+    text-align:center;transition:.15s;}
+  .wyd .metka b{display:block;font-size:11.5px;letter-spacing:.08em;}
+  .wyd.pl .metka b{color:var(--pl-jasny);}
+  .wyd.sw .metka b{color:var(--sw-jasny);}
+  .wyd:hover .kropka,.wyd.wybrane .kropka{transform:scale(1.45);box-shadow:0 0 0 3px var(--zloto);}
+  .wyd:hover .metka,.wyd.wybrane .metka{border-color:var(--zloto);color:#fff;}
+  .wyd.gora{bottom:50%;} .wyd.gora .kropka{bottom:-6.5px;} .wyd.gora .metka{bottom:100%;margin-bottom:3px;}
+  .wyd.dol{top:50%;} .wyd.dol .kropka{top:-6.5px;} .wyd.dol .metka{top:100%;margin-top:3px;}
+  .wyd{pointer-events:none;}
+  .wyd .kropka,.wyd .metka{pointer-events:auto;cursor:pointer;}
+  /* znacznik zgadywania */
+  .znacznik{position:absolute;top:16px;bottom:16px;width:2px;transform:translateX(-50%);pointer-events:none;}
+  .znacznik .slup{position:absolute;inset:0;width:2px;background:var(--zloto);}
+  .znacznik .banka{position:absolute;top:-4px;left:50%;transform:translateX(-50%);
+    background:var(--zloto);color:var(--tablica2);font-weight:900;font-size:14px;
+    padding:3px 10px;border-radius:999px;white-space:nowrap;}
+  .znacznik.prawda .slup{background:var(--dobrze);}
+  .znacznik.prawda .banka{background:var(--dobrze);color:#fff;top:auto;bottom:-4px;}
+  /* ---------- karty ---------- */
+  .karta{background:var(--karta);color:var(--karta-tekst);border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;}
+  .karta .pasek{height:6px;}
+  .karta.pl .pasek{background:var(--pl);} .karta.sw .pasek{background:var(--sw);}
+  .karta .srodek{padding:14px 18px 16px;}
+  .karta h3{font-family:'Bona Nova',Georgia,serif;font-size:20px;margin:0 0 2px;line-height:1.2;text-wrap:balance;}
+  .karta .data{font-weight:900;letter-spacing:.06em;font-size:13px;color:var(--karta-tekst2);}
+  .karta.pl .data{color:var(--pl);} .karta.sw .data{color:var(--sw);}
+  .karta p{margin:8px 0 0;line-height:1.5;font-size:14.5px;max-width:62ch;}
+  .chip{display:inline-block;margin-top:10px;font-size:11px;letter-spacing:.08em;font-weight:700;
+    color:var(--karta-tekst2);border:1px solid rgba(107,101,82,.4);border-radius:999px;padding:3px 10px;}
+  #szczegol{margin:18px clamp(14px,4vw,42px) 0;max-width:720px;}
+  #szczegol .zachecta{color:var(--kreda-slaba);font-size:13.5px;font-style:italic;}
+  .legenda{display:flex;gap:22px;flex-wrap:wrap;margin:14px clamp(14px,4vw,42px) 0;
+    font-size:12.5px;color:var(--kreda-slaba);letter-spacing:.04em;}
+  .legenda i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:-1px;}
+  .legenda .lp i{background:var(--pl);} .legenda .ls i{background:var(--sw-jasny);}
+  .skoki{display:flex;gap:8px;flex-wrap:wrap;margin:14px clamp(14px,4vw,42px) 0 0;}
+  .skoki button{background:none;border:1px solid rgba(233,228,210,.25);color:var(--kreda-slaba);
+    border-radius:6px;padding:5px 12px;font:inherit;font-size:12.5px;cursor:pointer;}
+  .skoki button:hover{color:var(--kreda);border-color:rgba(233,228,210,.6);}
+  /* ---------- widoki gier ---------- */
+  main{padding-bottom:40px;}
+  .plansza{margin:20px clamp(14px,4vw,42px) 0;}
+  .hud-gry{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:baseline;margin-bottom:14px;}
+  .hud-gry .duze{font-family:'Bona Nova',Georgia,serif;font-size:21px;color:var(--zloto);}
+  .hud-gry .info{color:var(--kreda-slaba);font-size:13.5px;}
+  .punkty{font-weight:900;font-variant-numeric:tabular-nums;}
+  .przycisk{font-family:'Bona Nova',Georgia,serif;font-size:17px;letter-spacing:.06em;cursor:pointer;
+    background:var(--zloto);color:var(--tablica2);border:none;border-radius:8px;padding:11px 26px;font-weight:700;}
+  .przycisk[disabled]{opacity:.35;cursor:default;}
+  .przycisk.drugi{background:none;color:var(--kreda);border:1px solid rgba(233,228,210,.4);}
+  .wynik-rundy{min-height:26px;margin:12px 0;font-size:16px;}
+  .wynik-rundy .ok{color:#8fce9d;font-weight:700;} .wynik-rundy .blad{color:#e8a19b;font-weight:700;}
+  /* chronologia */
+  #lista-chrono{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;max-width:680px;}
+  #lista-chrono li{display:flex;align-items:center;gap:12px;}
+  #lista-chrono .nr{font-family:'Bona Nova',Georgia,serif;font-size:18px;color:var(--kreda-slaba);width:24px;text-align:right;}
+  #lista-chrono .karta{flex:1;display:flex;align-items:center;}
+  #lista-chrono .karta .pasek{width:6px;height:auto;align-self:stretch;}
+  #lista-chrono .karta .srodek{padding:10px 14px;flex:1;}
+  #lista-chrono .karta h3{font-size:16.5px;}
+  #lista-chrono .karta .rok-odpowiedz{font-weight:900;font-size:14px;margin-left:auto;padding-left:12px;white-space:nowrap;}
+  #lista-chrono li.dobrze .karta{outline:3px solid var(--dobrze);}
+  #lista-chrono li.zle .karta{outline:3px solid var(--zle);}
+  .strzalki{display:flex;flex-direction:column;gap:4px;}
+  .strzalki button{background:var(--tablica2);border:1px solid rgba(233,228,210,.3);color:var(--kreda);
+    border-radius:6px;width:34px;height:30px;cursor:pointer;font-size:13px;}
+  .strzalki button:hover{border-color:var(--zloto);color:var(--zloto);}
+  .strzalki button[disabled]{opacity:.25;cursor:default;}
+  /* dostrajanie roku */
+  #strojenie{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 12px;
+    color:var(--kreda-slaba);font-size:13px;}
+  #strojenie button{background:var(--tablica2);border:1px solid rgba(233,228,210,.3);color:var(--kreda);
+    border-radius:6px;padding:5px 11px;cursor:pointer;font:inherit;font-variant-numeric:tabular-nums;}
+  #strojenie button:hover{border-color:var(--zloto);color:var(--zloto);}
+  /* prawda / fałsz */
+  #pf-zdanie{max-width:680px;}
+  #pf-zdanie .zdanie{font-family:'Bona Nova',Georgia,serif;font-size:22px;line-height:1.4;margin:0;text-wrap:balance;}
+  #pf-zdanie .zdanie b{color:var(--pl);}
+  .pf-przyciski{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+  .przycisk.tak{background:var(--dobrze);color:#fff;}
+  .przycisk.nie{background:var(--zle);color:#fff;}
+  .przycisk.tak[disabled],.przycisk.nie[disabled]{opacity:.3;}
+  /* podsumowanie */
+  .podsumowanie{max-width:520px;margin:26px auto;text-align:center;background:var(--karta);
+    color:var(--karta-tekst);border-radius:12px;padding:28px 26px;box-shadow:0 14px 40px rgba(0,0,0,.4);}
+  .podsumowanie h2{font-family:'Bona Nova',Georgia,serif;margin:0 0 4px;font-size:26px;}
+  .podsumowanie .ocena{font-family:'Bona Nova',Georgia,serif;font-size:64px;line-height:1;color:var(--pl);margin:12px 0 2px;}
+  .podsumowanie .slownie{font-size:15px;letter-spacing:.14em;font-weight:700;color:var(--karta-tekst2);}
+  .podsumowanie .rekord{margin-top:14px;font-size:13.5px;color:var(--karta-tekst2);}
+  .podsumowanie .przycisk{margin-top:20px;}
+  footer{padding:26px clamp(14px,4vw,42px) 34px;color:var(--kreda-slaba);font-size:12.5px;
+    line-height:1.7;border-top:1px solid rgba(233,228,210,.14);margin-top:26px;max-width:900px;}
+  footer b{color:var(--kreda);}
+  [hidden]{display:none!important;}
+  @media (max-width:640px){
+    .os-plotno{height:540px;}
+    .wyd .metka{max-width:118px;font-size:11px;}
+    #wybor-dzialu{margin-left:0;width:100%;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="naglowek-gorny">
+    <h1>Oś Czasu <span class="zakres">od starożytności do 1797</span></h1>
+    <div class="podtytul">Etap szkolny konkursu kuratoryjnego z historii (Mazowsze · MSCDN) · od cywilizacji starożytnych do schyłku XVIII wieku</div>
+  </div>
+  <div class="pasek-trybow" role="tablist" aria-label="Tryby">
+    <button class="tryb aktywny" data-widok="os" role="tab" aria-selected="true">Poznawaj oś</button>
+    <button class="tryb" data-widok="rok" role="tab" aria-selected="false">Gra: wskaż rok</button>
+    <button class="tryb" data-widok="chrono" role="tab" aria-selected="false">Gra: chronologia</button>
+    <button class="tryb" data-widok="pf" role="tab" aria-selected="false">Gra: prawda/fałsz</button>
+    <select id="wybor-dzialu" aria-label="Zakres materiału (dział podstawy programowej)"></select>
+  </div>
+</header>
+
+<main>
+  <!-- ============ WIDOK 1: POZNAWAJ ============ -->
+  <section id="widok-os">
+    <div class="legenda">
+      <span class="lp"><i></i>Ziemie polskie i sprawa polska</span>
+      <span class="ls"><i></i>Europa i świat</span>
+      <span>Kliknij wydarzenie, aby przeczytać opis. Oś można przewijać i przeciągać.</span>
+    </div>
+    <div class="os-okno" id="okno-os"><div class="os-plotno" id="plotno-os"></div></div>
+    <div class="skoki" id="skoki"></div>
+    <div id="szczegol"><div class="zachecta">☞ Wybierz wydarzenie na osi, aby zobaczyć jego kartę.</div></div>
+  </section>
+
+  <!-- ============ WIDOK 2: WSKAŻ ROK ============ -->
+  <section id="widok-rok" hidden>
+    <div class="plansza">
+      <div class="hud-gry">
+        <span class="duze">Wskaż rok</span>
+        <span class="info">Runda <span id="rok-runda" class="punkty">1</span> / <span id="rok-rund">8</span></span>
+        <span class="info">Punkty: <span id="rok-punkty" class="punkty">0</span></span>
+        <span class="info">Kliknij rok na osi, w razie potrzeby dostrój przyciskami i zatwierdź. Komplet punktów za dokładny rok (w starożytności ±5 lat).</span>
+      </div>
+      <div id="rok-karta"></div>
+    </div>
+    <div class="os-okno" id="okno-gra"><div class="os-plotno" id="plotno-gra"></div></div>
+    <div class="plansza">
+      <div class="wynik-rundy" id="rok-wynik" aria-live="polite"></div>
+      <div id="strojenie" hidden><span>Dostrój rok:</span>
+        <button data-d="-100">−100</button><button data-d="-10">−10</button><button data-d="-1">−1</button>
+        <button data-d="1">+1</button><button data-d="10">+10</button><button data-d="100">+100</button>
+      </div>
+      <button class="przycisk" id="rok-zatwierdz" disabled>Zatwierdź</button>
+      <button class="przycisk" id="rok-dalej" hidden>Dalej ➜</button>
+    </div>
+    <div class="plansza" id="rok-podsumowanie" hidden></div>
+  </section>
+
+  <!-- ============ WIDOK 3: CHRONOLOGIA ============ -->
+  <section id="widok-chrono" hidden>
+    <div class="plansza">
+      <div class="hud-gry">
+        <span class="duze">Chronologia</span>
+        <span class="info">Runda <span id="chrono-runda" class="punkty">1</span> / 3</span>
+        <span class="info">Punkty: <span id="chrono-punkty" class="punkty">0</span></span>
+        <span class="info">Ustaw wydarzenia od najwcześniejszego (1) do najpóźniejszego, strzałkami ▲▼.</span>
+      </div>
+      <ol id="lista-chrono"></ol>
+      <div class="wynik-rundy" id="chrono-wynik" aria-live="polite"></div>
+      <button class="przycisk" id="chrono-sprawdz">Sprawdź kolejność</button>
+      <button class="przycisk" id="chrono-dalej" hidden>Dalej ➜</button>
+    </div>
+    <div class="plansza" id="chrono-podsumowanie" hidden></div>
+  </section>
+
+  <!-- ============ WIDOK 4: PRAWDA / FAŁSZ ============ -->
+  <section id="widok-pf" hidden>
+    <div class="plansza">
+      <div class="hud-gry">
+        <span class="duze">Prawda czy fałsz?</span>
+        <span class="info">Runda <span id="pf-runda" class="punkty">1</span> / <span id="pf-rund">10</span></span>
+        <span class="info">Punkty: <span id="pf-punkty" class="punkty">0</span></span>
+        <span class="info">Oceń, czy poniższe zdanie jest prawdziwe.</span>
+      </div>
+      <div id="pf-zdanie"></div>
+      <div class="wynik-rundy" id="pf-wynik" aria-live="polite"></div>
+      <div class="pf-przyciski">
+        <button class="przycisk tak" id="pf-prawda">✔ PRAWDA</button>
+        <button class="przycisk nie" id="pf-falsz">✘ FAŁSZ</button>
+        <button class="przycisk" id="pf-dalej" hidden>Dalej ➜</button>
+      </div>
+      <div class="plansza" id="pf-podsumowanie" hidden style="margin:0"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <b>Zakres etapu szkolnego:</b> zgodnie z programem merytorycznym konkursu przedmiotowego z historii
+  dla uczniów klas IV–VIII szkół podstawowych województwa mazowieckiego (MKO/MSCDN) — od cywilizacji
+  starożytnych, przez Bizancjum i świat islamu, średniowieczną Europę i Polskę Piastów oraz Jagiellonów,
+  wielkie odkrycia geograficzne i Rzeczpospolitą Obojga Narodów, po walkę o utrzymanie niepodległości
+  w ostatnich latach XVIII wieku. Oś zawiera kanon dat odpytywanych w arkuszach etapu szkolnego
+  (w tym daty dzienne i „konkursowe smaczki”: statut kaliski, pokój w Budziszynie, unia horodelska,
+  pokój Grzymułtowskiego, Biblioteka Załuskich…). Program merytoryczny bieżącej edycji i arkusze
+  archiwalne znajdziesz na konkursy.kuratorium.waw.pl oraz konkursy.mscdn.pl (bank zadań) —
+  sprawdź tam dokładny zakres i literaturę swojej edycji. Wskazówka: w starożytności punktacja
+  ma tolerancję ±5 lat, od średniowiecza liczy się dokładny rok.
+</footer>
+
+<script>
+'use strict';
+/* =====================================================================
+   GRYWALNA OŚ CZASU — historia, klasa VII (1815–1939)
+   ===================================================================== */
+
+const DZIALY = [
+  'Cywilizacje starożytne',
+  'Średniowieczna Europa i świat',
+  'Polska pierwszych Piastów',
+  'Rozbicie dzielnicowe i zjednoczenie królestwa',
+  'Polska Jagiellonów (XIV–XV wiek)',
+  'Odkrycia, renesans i złoty wiek (XVI wiek)',
+  'Rzeczpospolita i Europa w XVII wieku',
+  'Wiek XVIII — do upadku Rzeczypospolitej',
+];
+
+/* rok, data (etykieta), tytuł, kat: pl|sw, dział (indeks), opis */
+const WYDARZENIA = [
+  [-2560, 'ok. 2560 p.n.e.', 'Wielka piramida w Gizie', 'sw', 0,
+   'Piramida Cheopsa — grobowiec faraona i do dziś symbol cywilizacji starożytnego Egiptu nad Nilem.'],
+  [-1750, 'ok. 1750 p.n.e.', 'Kodeks Hammurabiego', 'sw', 0,
+   'Babiloński zbiór praw wyryty na kamiennej steli; słynna zasada „oko za oko, ząb za ząb”.'],
+  [-776, '776 p.n.e.', 'Pierwsze igrzyska olimpijskie', 'sw', 0,
+   'Od tej daty Grecy liczyli czas. Igrzyska w Olimpii ku czci Zeusa łączyły skłócone greckie polis.'],
+  [-753, '753 p.n.e.', 'Legendarne założenie Rzymu', 'sw', 0,
+   'Według legendy Romulus założył miasto na siedmiu wzgórzach; od tej daty Rzymianie liczyli lata.'],
+  [-509, '509 p.n.e.', 'Początek republiki rzymskiej', 'sw', 0,
+   'Rzymianie wygnali ostatniego króla, Tarkwiniusza Pysznego. Władzę objęli wybierani konsulowie i senat.'],
+  [-490, '490 p.n.e.', 'Bitwa pod Maratonem', 'sw', 0,
+   'Ateńczycy pod wodzą Miltiadesa odparli pierwszą inwazję perską; stąd legenda o biegu maratońskim.'],
+  [-480, '480 p.n.e.', 'Termopile i Salamina', 'sw', 0,
+   'Król Sparty Leonidas z 300 wojownikami bronił wąwozu, a flota Temistoklesa rozbiła Persów pod Salaminą.'],
+  [-336, '336–323 p.n.e.', 'Podboje Aleksandra Wielkiego', 'sw', 0,
+   'Król Macedonii podbił imperium perskie i dotarł aż do Indii; jego podboje otworzyły epokę hellenistyczną.'],
+  [-218, '218 p.n.e.', 'Hannibal przekracza Alpy', 'sw', 0,
+   'Początek II wojny punickiej Rzymu z Kartaginą; po klęsce pod Kannami Rzym i tak wygrał wojnę.'],
+  [-44, '15 marca 44 p.n.e.', 'Zabójstwo Juliusza Cezara', 'sw', 0,
+   'Dyktator zginął w idy marcowe z rąk spiskowców, wśród których był Brutus.'],
+  [-31, '31 p.n.e.', 'Bitwa pod Akcjum', 'sw', 0,
+   'Oktawian pokonał flotę Antoniusza i Kleopatry; wkrótce jako August został pierwszym cesarzem Rzymu.'],
+  [1, 'początek naszej ery', 'Narodziny Jezusa z Nazaretu', 'sw', 0,
+   'Wydarzenie, od którego liczymy lata naszej ery — rachubę tę wprowadził mnich Dionizjusz Mały.'],
+  [313, '313', 'Edykt mediolański', 'sw', 0,
+   'Cesarz Konstantyn Wielki zapewnił chrześcijanom swobodę wyznania w całym imperium.'],
+  [395, '395', 'Podział cesarstwa rzymskiego', 'sw', 0,
+   'Po śmierci Teodozjusza Wielkiego imperium podzielono na część zachodnią i wschodnią (Bizancjum).'],
+  [476, '476', 'Upadek cesarstwa zachodniorzymskiego', 'sw', 0,
+   'Wódz germański Odoaker zdetronizował Romulusa Augustulusa — umowny koniec starożytności.'],
+
+  [527, '527–565', 'Panowanie Justyniana Wielkiego', 'sw', 1,
+   'Złoty wiek Bizancjum: kodyfikacja prawa rzymskiego (Kodeks Justyniana) i budowa Hagii Sophii.'],
+  [622, '622', 'Hidżra — wyjście Mahometa do Medyny', 'sw', 1,
+   'Początek ery muzułmańskiej. W ciągu stulecia islam ogarnął Bliski Wschód, Afrykę Północną i Hiszpanię.'],
+  [800, '25 grudnia 800', 'Koronacja Karola Wielkiego', 'sw', 1,
+   'Papież Leon III koronował króla Franków na cesarza — odnowienie cesarstwa na Zachodzie.'],
+  [962, '962', 'Cesarstwo Ottona I', 'sw', 1,
+   'Koronacja cesarska króla Niemiec Ottona I — początek Świętego Cesarstwa Rzymskiego.'],
+  [1054, '1054', 'Wielka schizma wschodnia', 'sw', 1,
+   'Wzajemne klątwy Rzymu i Konstantynopola podzieliły chrześcijaństwo na katolicyzm i prawosławie.'],
+  [1096, '1096', 'Początek wypraw krzyżowych', 'sw', 1,
+   'Po synodzie w Clermont ruszyła I krucjata; w 1099 r. krzyżowcy zdobyli Jerozolimę.'],
+  [1215, '1215', 'Wielka Karta Swobód', 'sw', 1,
+   'Król Anglii Jan bez Ziemi zagwarantował prawa baronom — początek ograniczania władzy monarchy.'],
+  [1337, '1337', 'Początek wojny stuletniej', 'sw', 1,
+   'Anglia i Francja rozpoczęły długi spór o tron francuski; bohaterką schyłku wojny była Joanna d’Arc.'],
+  [1450, 'ok. 1450', 'Wynalezienie druku', 'sw', 1,
+   'Jan Gutenberg skonstruował prasę drukarską z ruchomą czcionką — wiedza zaczęła krążyć po Europie.'],
+  [1453, '29 maja 1453', 'Upadek Konstantynopola', 'sw', 1,
+   'Mehmed II zdobył stolicę Bizancjum — symboliczny koniec średniowiecza.'],
+
+  [966, '966', 'Chrzest Polski', 'pl', 2,
+   'Mieszko I przyjął chrzest za pośrednictwem Czech (małżeństwo z Dobrawą). Polska weszła do świata łacińskiego.'],
+  [972, '24 czerwca 972', 'Bitwa pod Cedynią', 'pl', 2,
+   'Mieszko I z bratem Czciborem pokonał margrabiego Hodona, broniąc ujścia Odry.'],
+  [997, '997', 'Męczeńska śmierć św. Wojciecha', 'pl', 2,
+   'Biskup Wojciech zginął podczas misji w Prusach; Bolesław Chrobry wykupił jego ciało i złożył w Gnieźnie.'],
+  [1000, 'marzec 1000', 'Zjazd gnieźnieński', 'pl', 2,
+   'Cesarz Otton III przybył do grobu św. Wojciecha; utworzono arcybiskupstwo gnieźnieńskie.'],
+  [1018, '1018', 'Pokój w Budziszynie i wyprawa kijowska', 'pl', 2,
+   'Chrobry zakończył wojny z Niemcami, zatrzymał Milsko i Łużyce, a wjeżdżając do Kijowa wyszczerbił miecz o Złotą Bramę.'],
+  [1025, '1025', 'Koronacja Bolesława Chrobrego', 'pl', 2,
+   'Pierwsza koronacja królewska w Polsce; w tym samym roku koronował się też Mieszko II.'],
+  [1076, '1076', 'Koronacja Bolesława Śmiałego', 'pl', 2,
+   'Korona wróciła do Polski dzięki poparciu papieża; po skazaniu biskupa Stanisława (1079) król utracił tron.'],
+  [1109, '1109', 'Obrona Głogowa', 'pl', 2,
+   'Bolesław Krzywousty odparł najazd cesarza Henryka V; głogowianie nie poddali grodu mimo zakładników.'],
+  [1138, '1138', 'Statut Bolesława Krzywoustego', 'pl', 2,
+   'Testament podzielił Polskę między synów z zasadą senioratu — początek rozbicia dzielnicowego.'],
+
+  [1226, '1226', 'Sprowadzenie Krzyżaków', 'pl', 3,
+   'Konrad Mazowiecki nadał zakonowi ziemię chełmińską jako bazę do walki z pogańskimi Prusami.'],
+  [1241, '9 kwietnia 1241', 'Bitwa pod Legnicą', 'pl', 3,
+   'W starciu z Mongołami zginął Henryk II Pobożny — kres zjednoczeniowych planów Henryków śląskich.'],
+  [1264, '1264', 'Statut kaliski', 'pl', 3,
+   'Bolesław Pobożny nadal przywileje ludności żydowskiej: ochronę życia, mienia i swobodę handlu.'],
+  [1295, '26 czerwca 1295', 'Koronacja Przemysła II', 'pl', 3,
+   'Pierwsza od 219 lat koronacja królewska (w Gnieźnie); rok później król zginął w Rogoźnie.'],
+  [1308, '1308', 'Utrata Pomorza Gdańskiego', 'pl', 3,
+   'Krzyżacy, wezwani na pomoc przeciw Brandenburgii, opanowali Gdańsk i zagarnęli całe Pomorze.'],
+  [1320, '20 stycznia 1320', 'Koronacja Władysława Łokietka', 'pl', 3,
+   'Koronacja w katedrze wawelskiej zakończyła rozbicie dzielnicowe; odtąd koronowano w Krakowie.'],
+  [1331, '27 września 1331', 'Bitwa pod Płowcami', 'pl', 3,
+   'Łokietek starł się z Krzyżakami; wynik nierozstrzygnięty, ale zakon okazał się możliwy do pokonania.'],
+  [1343, '1343', 'Pokój kaliski', 'pl', 3,
+   'Kazimierz Wielki odzyskał Kujawy i ziemię dobrzyńską; Pomorze pozostało przy zakonie jako „jałmużna”.'],
+  [1364, '1364', 'Akademia Krakowska i uczta u Wierzynka', 'pl', 3,
+   'Kazimierz Wielki ufundował pierwszy polski uniwersytet i gościł monarchów Europy na zjeździe krakowskim.'],
+  [1370, '5 listopada 1370', 'Śmierć Kazimierza Wielkiego', 'pl', 3,
+   'Koniec dynastii Piastów na tronie polskim; rządy objął Ludwik Węgierski z Andegawenów.'],
+  [1374, '17 września 1374', 'Przywilej koszycki', 'pl', 3,
+   'Ludwik Węgierski w zamian za sukcesję córki obniżył szlachcie poradlne — pierwszy przywilej generalny.'],
+
+  [1385, '14 sierpnia 1385', 'Unia w Krewie', 'pl', 4,
+   'Jagiełło zobowiązał się przyjąć chrzest, poślubić Jadwigę i związać Litwę z Koroną.'],
+  [1410, '15 lipca 1410', 'Bitwa pod Grunwaldem', 'pl', 4,
+   'Jagiełło i Witold rozbili armię zakonu; poległ wielki mistrz Ulrich von Jungingen (I pokój toruński — 1411).'],
+  [1413, '1413', 'Unia horodelska', 'pl', 4,
+   'Zacieśnienie związku Polski i Litwy; polskie rody przyjęły do swoich herbów bojarów litewskich.'],
+  [1444, '10 listopada 1444', 'Bitwa pod Warną', 'pl', 4,
+   'Klęska krucjaty antytureckiej; zginął młody król Władysław III, zwany odtąd Warneńczykiem.'],
+  [1454, '1454', 'Początek wojny trzynastoletniej', 'pl', 4,
+   'Kazimierz Jagiellończyk inkorporował Prusy i nadał szlachcie przywileje cerekwicko-nieszawskie.'],
+  [1466, '19 października 1466', 'II pokój toruński', 'pl', 4,
+   'Powrót Pomorza Gdańskiego (Prusy Królewskie); Prusy Zakonne stały się lennem Polski.'],
+
+  [1492, '12 października 1492', 'Kolumb dopływa do Ameryki', 'sw', 5,
+   'Genueńczyk w służbie Hiszpanii, szukając Indii, dotarł do nowego kontynentu — początek wielkich odkryć.'],
+  [1498, '1498', 'Vasco da Gama w Indiach', 'sw', 5,
+   'Portugalczycy opłynęli Afrykę i otworzyli morski szlak korzenny do Azji.'],
+  [1517, '31 października 1517', 'Wystąpienie Marcina Lutra', 'sw', 5,
+   '95 tez ogłoszonych w Wittenberdze zapoczątkowało reformację.'],
+  [1519, '1519–1522', 'Wyprawa Magellana dookoła świata', 'sw', 5,
+   'Pierwsze opłynięcie Ziemi dowiodło jej kulistości; Magellan zginął w drodze na Filipinach.'],
+  [1525, '10 kwietnia 1525', 'Hołd pruski', 'pl', 5,
+   'Albrecht Hohenzollern złożył hołd lenny Zygmuntowi Staremu na rynku w Krakowie.'],
+  [1543, '1543', '„O obrotach sfer niebieskich”', 'pl', 5,
+   'Mikołaj Kopernik ogłosił teorię heliocentryczną — „wstrzymał Słońce, ruszył Ziemię”.'],
+  [1545, '1545–1563', 'Sobór trydencki', 'sw', 5,
+   'Odpowiedź Kościoła katolickiego na reformację: odnowa religijna i rozwój szkolnictwa jezuickiego.'],
+  [1569, '1 lipca 1569', 'Unia lubelska', 'pl', 5,
+   'Powstała Rzeczpospolita Obojga Narodów: wspólny sejm i król, odrębne urzędy, skarb i wojsko.'],
+  [1572, '7 lipca 1572', 'Śmierć Zygmunta Augusta', 'pl', 5,
+   'Bezpotomna śmierć ostatniego Jagiellona otworzyła epokę wolnych elekcji.'],
+  [1573, '28 stycznia 1573', 'Konfederacja warszawska i pierwsza elekcja', 'pl', 5,
+   'Szlachta zagwarantowała pokój religijny i wybrała pierwszego króla elekcyjnego — Henryka Walezego.'],
+  [1579, '1579–1582', 'Wyprawy moskiewskie Stefana Batorego', 'pl', 5,
+   'Połock, Wielkie Łuki i oblężenie Pskowa; rozejm w Jamie Zapolskim przywrócił Rzeczypospolitej Inflanty.'],
+  [1596, '1596', 'Unia brzeska i stolica w Warszawie', 'pl', 5,
+   'Część prawosławnych uznała zwierzchność papieża (unici), a Zygmunt III Waza przeniósł dwór do Warszawy.'],
+
+  [1605, '27 września 1605', 'Bitwa pod Kircholmem', 'pl', 6,
+   'Husaria hetmana Chodkiewicza rozbiła trzykrotnie liczniejszą armię szwedzką.'],
+  [1610, '4 lipca 1610', 'Kłuszyn i Polacy na Kremlu', 'pl', 6,
+   'Hetman Żółkiewski pokonał Rosjan; polska załoga zajęła Kreml, a carem obwołano królewicza Władysława.'],
+  [1618, '1618–1648', 'Wojna trzydziestoletnia', 'sw', 6,
+   'Konflikt religijno-polityczny spustoszył Rzeszę; zakończył go pokój westfalski.'],
+  [1620, 'wrzesień–październik 1620', 'Klęska pod Cecorą', 'pl', 6,
+   'W wojnie z Turcją zginął hetman Stanisław Żółkiewski.'],
+  [1621, 'wrzesień–październik 1621', 'Obrona Chocimia', 'pl', 6,
+   'Wojska Chodkiewicza powstrzymały ogromną armię sułtana Osmana II; granica na Dniestrze obroniona.'],
+  [1648, '1648', 'Powstanie Chmielnickiego', 'pl', 6,
+   'Wielki bunt Kozaków na Ukrainie; klęski pod Żółtymi Wodami i Korsuniem wstrząsnęły Rzecząpospolitą.'],
+  [1651, '28–30 czerwca 1651', 'Bitwa pod Beresteczkiem', 'pl', 6,
+   'Jedno z największych starć lądowych XVII-wiecznej Europy — zwycięstwo nad Kozakami i Tatarami.'],
+  [1655, '1655–1660', 'Potop szwedzki', 'pl', 6,
+   'Obrona Jasnej Góry, śluby lwowskie Jana Kazimierza i wojna szarpana Czarnieckiego; pokój w Oliwie.'],
+  [1673, '11 listopada 1673', 'II bitwa pod Chocimiem', 'pl', 6,
+   'Jan Sobieski rozgromił Turków; rok później wybrano go na króla.'],
+  [1683, '12 września 1683', 'Odsiecz wiedeńska', 'pl', 6,
+   'Jan III Sobieski na czele wojsk sprzymierzonych pokonał wezyra Kara Mustafę pod Wiedniem.'],
+  [1686, '1686', 'Pokój Grzymułtowskiego', 'pl', 6,
+   '„Wieczysty pokój” z Rosją zatwierdził utratę Kijowa i lewobrzeżnej Ukrainy.'],
+  [1689, '1689', 'Monarchia parlamentarna w Anglii', 'sw', 6,
+   'Po „chwalebnej rewolucji” Deklaracja praw oddała decydujący głos parlamentowi.'],
+
+  [1697, '1697', 'Unia polsko-saska', 'pl', 7,
+   'Elekcja Augusta II Mocnego z dynastii Wettynów związała Rzeczpospolitą z Saksonią.'],
+  [1700, '1700–1721', 'Wielka wojna północna', 'sw', 7,
+   'Szwecja przeciw Rosji, Danii i Saksonii; walki wyniszczały także ziemie Rzeczypospolitej.'],
+  [1717, '1 lutego 1717', 'Sejm Niemy', 'pl', 7,
+   'Pod osłoną wojsk rosyjskich ograniczono armię; początek rosyjskiego protektoratu nad Rzecząpospolitą.'],
+  [1733, '1733', 'Podwójna elekcja', 'pl', 7,
+   'Wybrano i Stanisława Leszczyńskiego, i Augusta III — o tronie przesądziła interwencja rosyjska.'],
+  [1740, '1740', 'Collegium Nobilium', 'pl', 7,
+   'Stanisław Konarski założył nowoczesną szkołę pijarów — zwiastun oświeceniowej reformy edukacji.'],
+  [1747, '1747', 'Biblioteka Załuskich', 'pl', 7,
+   'Bracia Załuscy otworzyli w Warszawie jedną z pierwszych bibliotek publicznych w Europie.'],
+  [1764, '7 września 1764', 'Elekcja Stanisława Augusta Poniatowskiego', 'pl', 7,
+   'Ostatni król Rzeczypospolitej, mecenas kultury i gospodarz „obiadów czwartkowych”.'],
+  [1765, '1765', 'Szkoła Rycerska i „Monitor”', 'pl', 7,
+   'Król założył szkołę kadetów (jej wychowankiem był Kościuszko) i patronował pismu polskiego oświecenia.'],
+  [1768, '1768–1772', 'Konfederacja barska', 'pl', 7,
+   'Zbrojny ruch szlachty przeciw kurateli Rosji; jego klęska stała się pretekstem do I rozbioru.'],
+  [1772, '5 sierpnia 1772', 'I rozbiór Polski', 'pl', 7,
+   'Rosja, Prusy i Austria zagarnęły ok. 30% terytorium; przeciw zatwierdzeniu protestował Tadeusz Rejtan.'],
+  [1773, '14 października 1773', 'Komisja Edukacji Narodowej', 'pl', 7,
+   'Pierwsze w Europie ministerstwo oświaty, finansowane z majątków skasowanych jezuitów.'],
+  [1776, '4 lipca 1776', 'Deklaracja niepodległości USA', 'sw', 7,
+   'Trzynaście kolonii zerwało z Wielką Brytanią; w wojnie wsławili się Kościuszko i Pułaski.'],
+  [1787, '1787', 'Konstytucja Stanów Zjednoczonych', 'sw', 7,
+   'Pierwsza spisana konstytucja świata: trójpodział władzy i urząd prezydenta (Jerzy Waszyngton).'],
+  [1788, '1788–1792', 'Sejm Wielki', 'pl', 7,
+   'Sejm Czteroletni uchwalił aukcję wojska do 100 tysięcy i prawo o miastach; dzieło zwieńczyła konstytucja.'],
+  [1789, '14 lipca 1789', 'Zdobycie Bastylii', 'sw', 7,
+   'Wybuch rewolucji francuskiej; wkrótce Deklaracja praw człowieka i obywatela.'],
+  [1791, '3 maja 1791', 'Konstytucja 3 maja', 'pl', 7,
+   'Pierwsza w Europie spisana konstytucja: zniesienie liberum veto i wolnej elekcji, trójpodział władzy.'],
+  [1792, '1792', 'Targowica i wojna z Rosją', 'pl', 7,
+   'Po zwycięstwie pod Zieleńcami ustanowiono order Virtuti Militari; przystąpienie króla do targowicy przekreśliło reformy.'],
+  [1793, '1793', 'II rozbiór Polski', 'pl', 7,
+   'Rosja i Prusy wymusiły na sejmie grodzieńskim zatwierdzenie drugiego rozbioru.'],
+  [1794, '24 marca 1794', 'Insurekcja kościuszkowska', 'pl', 7,
+   'Przysięga Kościuszki na rynku w Krakowie; Racławice (4 IV), uniwersał połaniecki (7 V), klęska pod Maciejowicami.'],
+  [1795, '24 października 1795', 'III rozbiór Polski', 'pl', 7,
+   'Rzeczpospolita zniknęła z mapy Europy; 25 listopada abdykował Stanisław August.'],
+  [1797, 'styczeń 1797', 'Legiony Dąbrowskiego i Mazurek', 'pl', 7,
+   'We Włoszech powstały Legiony Polskie; Józef Wybicki napisał dla nich „Mazurka Dąbrowskiego”.'],
+].map((w, i) => ({ id: i, rok: w[0], data: w[1], tytul: w[2], kat: w[3], dzial: w[4], opis: w[5] }));
+
+/* ---------------- ustawienia osi ---------------- */
+const ROK_START = -2600, ROK_KONIEC = 1797, ROK_SRODEK = 1450, PREFIKS = 'osesz-';
+const P1 = .62, P2 = 20, GRANICA = 950;      // px/rok: starożytność skompresowana, potem pełna skala
+const ROK_MIN = -2700, ROK_MAX = 1806, PAD = 60;
+const formatRok = r => r < 0 ? Math.abs(r) + ' p.n.e.' : String(r);
+const ERY = [
+  [-2700, 476, 'STAROŻYTNOŚĆ'],
+  [476, 1492, 'ŚREDNIOWIECZE'],
+  [1492, 1797, 'NOWOŻYTNOŚĆ'],
+];
+const rokDoX = r => PAD + (Math.min(r, GRANICA) - ROK_MIN) * P1 + Math.max(0, r - GRANICA) * P2;
+const xDoRok = x => {
+  const dx = x - PAD, prog = (GRANICA - ROK_MIN) * P1;
+  const r = Math.round(dx <= prog ? ROK_MIN + dx / P1 : GRANICA + (dx - prog) / P2);
+  return r === 0 ? 1 : r;
+};
+
+/* ---------------- filtr działów ---------------- */
+const wyborDzialu = document.getElementById('wybor-dzialu');
+wyborDzialu.innerHTML = '<option value="-1">Cały zakres etapu szkolnego</option>' +
+  DZIALY.map((d, i) => `<option value="${i}">Epoka: ${d}</option>`).join('');
+let filtrDzialu = -1;
+const pulaZdarzen = () => WYDARZENIA.filter(w => filtrDzialu < 0 || w.dzial === filtrDzialu);
+
+/* ---------------- budowanie osi ---------------- */
+function zbudujOs(plotno, { zWydarzeniami, naKlik }) {
+  plotno.innerHTML = '';
+  plotno.style.width = rokDoX(ROK_MAX) + PAD + 'px';
+  for (const [od, doR, nazwa] of ERY) {
+    const e = document.createElement('div');
+    e.className = 'era';
+    e.style.left = rokDoX(od) + 'px';
+    e.style.width = (rokDoX(doR) - rokDoX(od)) + 'px';
+    e.innerHTML = `<span>${nazwa}</span>`;
+    plotno.appendChild(e);
+  }
+  plotno.insertAdjacentHTML('beforeend', '<div class="os-linia"></div>');
+  const kreskaRoku = (r, duza) => {
+    const k = document.createElement('div');
+    k.className = 'kreska' + (duza ? ' dekada' : '');
+    k.style.left = rokDoX(r) + 'px';
+    plotno.appendChild(k);
+    if (duza) {
+      const e = document.createElement('div');
+      e.className = 'rok-etykieta'; e.textContent = formatRok(r);
+      e.style.left = rokDoX(r) + 'px';
+      plotno.appendChild(e);
+    }
+  };
+  for (let r = -2500; r < GRANICA; r += 50) { if (r === 0) continue; kreskaRoku(r, r % 500 === 0); }
+  for (let r = GRANICA; r <= ROK_MAX - 2; r++) kreskaRoku(r, r % 10 === 0);
+  if (zWydarzeniami) {
+    const wysokosci = [50, 108, 166, 224];
+    const pasma = { pl: wysokosci.map(() => -1e9), sw: wysokosci.map(() => -1e9) };
+    const zajete = {};                      // rozsuwa wydarzenia z tego samego roku
+    for (const w of [...pulaZdarzen()].sort((a, b) => a.rok - b.rok)) {
+      const klucz = w.rok + w.kat;
+      const przesun = (zajete[klucz] = (zajete[klucz] || 0) + 1) - 1;
+      const x = rokDoX(w.rok) + przesun * 14;
+      const rzedy = pasma[w.kat];               // pierwszy rząd, w którym etykieta się zmieści
+      let rzad = rzedy.findIndex(ost => x - ost >= 140);
+      if (rzad < 0) rzad = rzedy.indexOf(Math.min(...rzedy));
+      rzedy[rzad] = x;
+      const el = document.createElement('button');
+      el.className = `wyd ${w.kat} ${w.kat === 'pl' ? 'gora' : 'dol'}`;
+      el.style.left = x + 'px';
+      el.style.height = wysokosci[rzad] + 'px';
+      el.dataset.id = w.id;
+      el.setAttribute('aria-label', `${w.rok}: ${w.tytul}`);
+      el.innerHTML = `<span class="kropka"></span><span class="nitka"></span>
+        <span class="metka"><b>${formatRok(w.rok)}</b>${w.tytul}</span>`;
+      if (naKlik) el.addEventListener('click', () => naKlik(w, el));
+      plotno.appendChild(el);
+    }
+  }
+}
+/* przeciąganie osi myszą (dotyk przewija natywnie) */
+for (const okno of document.querySelectorAll('.os-okno')) {
+  let start = null;
+  okno.addEventListener('mousedown', e => {
+    start = { x: e.pageX, s: okno.scrollLeft }; okno.classList.add('lapane');
+  });
+  addEventListener('mousemove', e => { if (start) okno.scrollLeft = start.s - (e.pageX - start.x); });
+  addEventListener('mouseup', () => { start = null; okno.classList.remove('lapane'); });
+}
+
+/* ---------------- dźwięki (Web Audio) ---------------- */
+let audioCtx = null;
+function piknij(dobrze) {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = audioCtx.currentTime;
+    const nuty = dobrze ? [523, 659, 784] : [220, 174];
+    nuty.forEach((f, i) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t + i * .09);
+      g.gain.linearRampToValueAtTime(.12, t + i * .09 + .02);
+      g.gain.exponentialRampToValueAtTime(.001, t + i * .09 + .25);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t + i * .09); o.stop(t + i * .09 + .3);
+    });
+  } catch (e) { /* brak dźwięku nie psuje gry */ }
+}
+
+/* ---------------- pamięć rekordów ---------------- */
+function rekord(klucz, wynik) {
+  try {
+    const k = PREFIKS + klucz;
+    const stary = Number(localStorage.getItem(k) || 0);
+    if (wynik > stary) { localStorage.setItem(k, String(wynik)); return { naj: wynik, nowy: true }; }
+    return { naj: stary, nowy: false };
+  } catch (e) { return { naj: wynik, nowy: false }; }
+}
+function ocenaSzkolna(procent) {
+  if (procent >= 90) return ['🏆', 'LAUREAT KONKURSU'];
+  if (procent >= 80) return ['🥇', 'FINALISTA'];
+  if (procent >= 65) return ['✔', 'AWANS DO ETAPU WOJEWÓDZKIEGO'];
+  if (procent >= 50) return ['✔', 'AWANS DO ETAPU REJONOWEGO'];
+  return ['📚', 'TRENUJ DALEJ'];
+}
+function kartaHTML(w, { bezDaty } = {}) {
+  return `<div class="karta ${w.kat}"><div class="pasek"></div><div class="srodek">
+    ${bezDaty ? '' : `<div class="data">${w.data}</div>`}
+    <h3>${w.tytul}</h3>
+    ${bezDaty ? '' : `<p>${w.opis}</p>`}
+    <span class="chip">${DZIALY[w.dzial]}</span>
+  </div></div>`;
+}
+const losuj = (tab, n) => [...tab].sort(() => Math.random() - .5).slice(0, n);
+
+/* ---------------- widok 1: poznawaj ---------------- */
+const szczegol = document.getElementById('szczegol');
+let wybraneEl = null;
+function rysujOsNauki() {
+  zbudujOs(document.getElementById('plotno-os'), {
+    zWydarzeniami: true,
+    naKlik: (w, el) => {
+      wybraneEl?.classList.remove('wybrane');
+      (wybraneEl = el).classList.add('wybrane');
+      szczegol.innerHTML = kartaHTML(w);
+    },
+  });
+  szczegol.innerHTML = '<div class="zachecta">☞ Wybierz wydarzenie na osi, aby zobaczyć jego kartę.</div>';
+}
+{
+  const skoki = document.getElementById('skoki');
+  const SKOKI = [[-2500, 'Egipt i Mezopotamia'], [-750, 'Grecja i Rzym'], [1, 'Cesarstwo'],
+    [966, 'X–XII w.'], [1200, 'XIII w.'], [1300, 'XIV w.'], [1400, 'XV w.'],
+    [1500, 'XVI w.'], [1600, 'XVII w.'], [1700, 'XVIII w.']];
+  for (const [r, nazwa] of SKOKI) {
+    const b = document.createElement('button');
+    b.textContent = nazwa;
+    b.addEventListener('click', () => document.getElementById('okno-os')
+      .scrollTo({ left: rokDoX(r) - 120, behavior: 'smooth' }));
+    skoki.appendChild(b);
+  }
+}
+
+/* ---------------- widok 2: wskaż rok ---------------- */
+const graRok = { pula: [], nr: 0, punkty: 0, strzal: null, rozstrzygnieta: false };
+const RUNDY_ROK = 10;
+const elRok = {
+  karta: document.getElementById('rok-karta'), runda: document.getElementById('rok-runda'),
+  rund: document.getElementById('rok-rund'), punkty: document.getElementById('rok-punkty'),
+  wynik: document.getElementById('rok-wynik'), zatwierdz: document.getElementById('rok-zatwierdz'),
+  dalej: document.getElementById('rok-dalej'), podsum: document.getElementById('rok-podsumowanie'),
+  okno: document.getElementById('okno-gra'), plotno: document.getElementById('plotno-gra'),
+};
+function startGryRok() {
+  const pula = pulaZdarzen();
+  graRok.pula = losuj(pula, Math.min(RUNDY_ROK, pula.length));
+  graRok.nr = 0; graRok.punkty = 0;
+  elRok.rund.textContent = graRok.pula.length;
+  elRok.podsum.hidden = true;
+  rundaRok();
+}
+function rundaRok() {
+  graRok.strzal = null; graRok.rozstrzygnieta = false;
+  const w = graRok.pula[graRok.nr];
+  elRok.runda.textContent = graRok.nr + 1;
+  elRok.punkty.textContent = graRok.punkty;
+  elRok.karta.innerHTML = kartaHTML(w, { bezDaty: true });
+  elRok.wynik.textContent = '';
+  elRok.zatwierdz.hidden = false; elRok.zatwierdz.disabled = true;
+  elRok.dalej.hidden = true;
+  document.getElementById('strojenie').hidden = true;
+  zbudujOs(elRok.plotno, { zWydarzeniami: false });
+  elRok.okno.scrollTo({ left: rokDoX(ROK_SRODEK) - elRok.okno.clientWidth / 2 });
+  elRok.plotno.addEventListener('click', klikOsi);
+}
+function klikOsi(e) {
+  if (graRok.rozstrzygnieta) return;
+  const rect = elRok.plotno.getBoundingClientRect();
+  ustawStrzal(xDoRok(e.clientX - rect.left));
+}
+function ustawStrzal(rok) {
+  if (graRok.rozstrzygnieta) return;
+  if (rok === 0) rok = (graRok.strzal || 2) > 0 ? -1 : 1;    // rok zerowy nie istnieje
+  rok = Math.max(ROK_START, Math.min(ROK_KONIEC, rok));
+  graRok.strzal = rok;
+  elRok.plotno.querySelector('.znacznik:not(.prawda)')?.remove();
+  elRok.plotno.insertAdjacentHTML('beforeend',
+    `<div class="znacznik" style="left:${rokDoX(rok)}px"><div class="slup"></div><div class="banka">${formatRok(rok)}</div></div>`);
+  document.getElementById('strojenie').hidden = false;
+  elRok.zatwierdz.disabled = false;
+}
+document.querySelectorAll('#strojenie [data-d]').forEach(b =>
+  b.addEventListener('click', () => { if (graRok.strzal != null) ustawStrzal(graRok.strzal + Number(b.dataset.d)); }));
+elRok.zatwierdz.addEventListener('click', () => {
+  if (graRok.strzal == null || graRok.rozstrzygnieta) return;
+  graRok.rozstrzygnieta = true;
+  const w = graRok.pula[graRok.nr];
+  const roznica = Math.abs(graRok.strzal - w.rok);
+  const luz = w.rok < 500 ? 5 : 1;               // starożytność: tolerancja ×5
+  const eff = Math.ceil(roznica / luz);
+  const pkt = eff === 0 ? 100 : eff <= 1 ? 75 : eff <= 3 ? 50 : eff <= 5 ? 25 : eff <= 10 ? 10 : 0;
+  graRok.punkty += pkt;
+  elRok.punkty.textContent = graRok.punkty;
+  elRok.plotno.insertAdjacentHTML('beforeend',
+    `<div class="znacznik prawda" style="left:${rokDoX(w.rok)}px"><div class="slup"></div><div class="banka">${formatRok(w.rok)}</div></div>`);
+  elRok.okno.scrollTo({ left: rokDoX(w.rok) - elRok.okno.clientWidth / 2, behavior: 'smooth' });
+  const opis = eff === 0 ? 'Strzał w dziesiątkę!' : eff <= 3 ? 'Bardzo blisko!' :
+    eff <= 10 ? `Pomyłka o ${roznica} lat.` : `Aż o ${roznica} lat obok.`;
+  elRok.wynik.innerHTML = `<span class="${eff <= 3 ? 'ok' : 'blad'}">${opis}</span>
+    &nbsp;Poprawna data: <b>${w.data}</b> (+${pkt} pkt).&nbsp; ${w.opis}`;
+  piknij(eff <= 3);
+  elRok.karta.innerHTML = kartaHTML(w);
+  elRok.zatwierdz.hidden = true;
+  document.getElementById('strojenie').hidden = true;
+  elRok.dalej.hidden = false;
+  elRok.dalej.textContent = graRok.nr + 1 < graRok.pula.length ? 'Dalej ➜' : 'Zobacz wynik ➜';
+});
+elRok.dalej.addEventListener('click', () => {
+  if (++graRok.nr < graRok.pula.length) return rundaRok();
+  const max = graRok.pula.length * 100;
+  const proc = Math.round(graRok.punkty / max * 100);
+  const [ocena, slownie] = ocenaSzkolna(proc);
+  const r = rekord('rok' + filtrDzialu, graRok.punkty);
+  elRok.podsum.hidden = false;
+  elRok.podsum.innerHTML = `<div class="podsumowanie">
+    <h2>Koniec gry!</h2>
+    <div>Zdobyto <b>${graRok.punkty} / ${max}</b> punktów (${proc}%)</div>
+    <div class="ocena">${ocena}</div><div class="slownie">${slownie}</div>
+    <div class="rekord">${r.nowy ? '🏆 Nowy rekord w tej przeglądarce!' : `Rekord w tej przeglądarce: ${r.naj} pkt`}</div>
+    <button class="przycisk" id="rok-jeszcze">Zagraj jeszcze raz</button>
+  </div>`;
+  document.getElementById('rok-jeszcze').addEventListener('click', startGryRok);
+  elRok.podsum.scrollIntoView({ behavior: 'smooth' });
+});
+
+/* ---------------- widok 3: chronologia ---------------- */
+const graChrono = { runda: 0, punkty: 0, max: 0, uklad: [], sprawdzone: false };
+const elChrono = {
+  lista: document.getElementById('lista-chrono'), runda: document.getElementById('chrono-runda'),
+  punkty: document.getElementById('chrono-punkty'), wynik: document.getElementById('chrono-wynik'),
+  sprawdz: document.getElementById('chrono-sprawdz'), dalej: document.getElementById('chrono-dalej'),
+  podsum: document.getElementById('chrono-podsumowanie'),
+};
+const ILE_KART = 7, RUNDY_CHRONO = 3;
+function startGryChrono() {
+  graChrono.runda = 0; graChrono.punkty = 0; graChrono.max = 0;
+  elChrono.podsum.hidden = true;
+  rundaChrono();
+}
+function rundaChrono() {
+  const cala = pulaZdarzen();
+  const kotwica = cala[Math.random() * cala.length | 0];   // wydarzenia z bliskiego przedziału — trudniej!
+  const okno = kotwica.rok < 500 ? 400 : 60;
+  const bliskie = cala.filter(w => Math.abs(w.rok - kotwica.rok) <= okno);
+  const pula = bliskie.length >= ILE_KART ? bliskie : cala;
+  let dobor;
+  do { dobor = losuj(pula, Math.min(ILE_KART, pula.length)); }
+  while (new Set(dobor.map(w => w.rok)).size < dobor.length && pula.length > ILE_KART);
+  graChrono.uklad = dobor;
+  graChrono.max += dobor.length * 20;
+  graChrono.sprawdzone = false;
+  elChrono.runda.textContent = graChrono.runda + 1;
+  elChrono.punkty.textContent = graChrono.punkty;
+  elChrono.wynik.textContent = '';
+  elChrono.sprawdz.hidden = false; elChrono.dalej.hidden = true;
+  rysujChrono();
+}
+function rysujChrono() {
+  elChrono.lista.innerHTML = '';
+  graChrono.uklad.forEach((w, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="nr">${i + 1}.</span>
+      <div class="karta ${w.kat}"><div class="pasek"></div><div class="srodek" style="display:flex;align-items:center;gap:10px">
+        <h3 style="margin:0">${w.tytul}</h3>
+        <span class="rok-odpowiedz" data-rok></span>
+      </div></div>
+      <span class="strzalki">
+        <button aria-label="Przesuń wyżej" data-ruch="-1" ${i === 0 ? 'disabled' : ''}>▲</button>
+        <button aria-label="Przesuń niżej" data-ruch="1" ${i === graChrono.uklad.length - 1 ? 'disabled' : ''}>▼</button>
+      </span>`;
+    li.querySelectorAll('[data-ruch]').forEach(b => b.addEventListener('click', () => {
+      if (graChrono.sprawdzone) return;
+      const j = i + Number(b.dataset.ruch);
+      [graChrono.uklad[i], graChrono.uklad[j]] = [graChrono.uklad[j], graChrono.uklad[i]];
+      rysujChrono();
+    }));
+    elChrono.lista.appendChild(li);
+  });
+}
+elChrono.sprawdz.addEventListener('click', () => {
+  if (graChrono.sprawdzone) return;
+  graChrono.sprawdzone = true;
+  const wzor = [...graChrono.uklad].sort((a, b) => a.rok - b.rok || a.id - b.id);
+  let trafione = 0;
+  [...elChrono.lista.children].forEach((li, i) => {
+    const dobrze = graChrono.uklad[i].id === wzor[i].id;
+    li.classList.add(dobrze ? 'dobrze' : 'zle');
+    li.querySelector('[data-rok]').textContent = graChrono.uklad[i].data;
+    li.querySelector('[data-rok]').style.color = dobrze ? 'var(--dobrze)' : 'var(--zle)';
+    if (dobrze) trafione++;
+  });
+  const pkt = trafione * 20;
+  graChrono.punkty += pkt;
+  elChrono.punkty.textContent = graChrono.punkty;
+  elChrono.wynik.innerHTML = trafione === graChrono.uklad.length
+    ? `<span class="ok">Idealna kolejność! +${pkt} pkt</span>`
+    : `<span class="${trafione >= 3 ? 'ok' : 'blad'}">Na właściwym miejscu: ${trafione} z ${graChrono.uklad.length} (+${pkt} pkt).</span> Poprawną kolejność wyznaczają pokazane daty.`;
+  piknij(trafione >= 4);
+  elChrono.sprawdz.hidden = true;
+  elChrono.dalej.hidden = false;
+  elChrono.dalej.textContent = graChrono.runda + 1 < RUNDY_CHRONO ? 'Dalej ➜' : 'Zobacz wynik ➜';
+});
+elChrono.dalej.addEventListener('click', () => {
+  if (++graChrono.runda < RUNDY_CHRONO) return rundaChrono();
+  const max = graChrono.max;
+  const proc = Math.round(graChrono.punkty / max * 100);
+  const [ocena, slownie] = ocenaSzkolna(proc);
+  const r = rekord('chrono' + filtrDzialu, graChrono.punkty);
+  elChrono.podsum.hidden = false;
+  elChrono.podsum.innerHTML = `<div class="podsumowanie">
+    <h2>Koniec gry!</h2>
+    <div>Zdobyto <b>${graChrono.punkty} / ${max}</b> punktów (${proc}%)</div>
+    <div class="ocena">${ocena}</div><div class="slownie">${slownie}</div>
+    <div class="rekord">${r.nowy ? '🏆 Nowy rekord w tej przeglądarce!' : `Rekord w tej przeglądarce: ${r.naj} pkt`}</div>
+    <button class="przycisk" id="chrono-jeszcze">Zagraj jeszcze raz</button>
+  </div>`;
+  document.getElementById('chrono-jeszcze').addEventListener('click', startGryChrono);
+  elChrono.podsum.scrollIntoView({ behavior: 'smooth' });
+});
+
+/* ---------------- widok 4: prawda / fałsz ---------------- */
+const RZYM = { 1:'I',2:'II',3:'III',4:'IV',5:'V',6:'VI',7:'VII',8:'VIII',9:'IX',10:'X',11:'XI',12:'XII',
+  13:'XIII',14:'XIV',15:'XV',16:'XVI',17:'XVII',18:'XVIII',19:'XIX',20:'XX',21:'XXI',22:'XXII',
+  23:'XXIII',24:'XXIV',25:'XXV',26:'XXVI' };
+const wiekC = r => r < 0 ? -(Math.floor((-r - 1) / 100) + 1) : Math.floor((r - 1) / 100) + 1;
+const tekstWieku = c => RZYM[Math.abs(c)] + (c < 0 ? ' wiek p.n.e.' : ' wiek');
+const RUNDY_PF = 10;
+const graPF = { nr: 0, punkty: 0, zdanie: null, rozstrzygnieta: false };
+const elPF = {
+  runda: document.getElementById('pf-runda'), rund: document.getElementById('pf-rund'),
+  punkty: document.getElementById('pf-punkty'), zdanie: document.getElementById('pf-zdanie'),
+  wynik: document.getElementById('pf-wynik'), prawda: document.getElementById('pf-prawda'),
+  falsz: document.getElementById('pf-falsz'), dalej: document.getElementById('pf-dalej'),
+  podsum: document.getElementById('pf-podsumowanie'),
+};
+function losujZdaniePF() {
+  const pula = pulaZdarzen();
+  const w = pula[Math.random() * pula.length | 0];
+  const rozneLata = new Set(pula.map(z => z.rok)).size > 1;
+  const typ = rozneLata ? (Math.random() * 3 | 0) : (Math.random() < .5 ? 0 : 2);
+  const maBycPrawda = Math.random() < .5;
+  if (typ === 0) {                                   // zgadywanie roku
+    let rok = w.rok;
+    if (!maBycPrawda) {
+      const luz = w.rok < 500 ? 5 : 1;
+      const przes = (1 + Math.random() * 5 | 0) * luz * (Math.random() < .5 ? -1 : 1);
+      rok = Math.max(ROK_START, Math.min(ROK_KONIEC, w.rok + przes));
+      if (rok === w.rok || rok === 0) rok = w.rok - 3 * luz;
+    }
+    return { kat: w.kat, prawda: maBycPrawda,
+      tekst: `${w.tytul} — to rok <b>${formatRok(rok)}</b>.`,
+      wyjasnienie: `${w.tytul}: <b>${w.data}</b>. ${w.opis}` };
+  }
+  if (typ === 1) {                                   // kolejność dwóch wydarzeń
+    const sasiedzi = pula.filter(z => z.rok !== w.rok && Math.abs(z.rok - w.rok) <= 40);
+    const zbior = sasiedzi.length ? sasiedzi : pula.filter(z => z.rok !== w.rok);
+    const b = zbior[Math.random() * zbior.length | 0];
+    const [wczesniej, pozniej] = w.rok < b.rok ? [w, b] : [b, w];
+    const [pierwsze, drugie] = maBycPrawda ? [wczesniej, pozniej] : [pozniej, wczesniej];
+    return { kat: pierwsze.kat, prawda: maBycPrawda,
+      tekst: `Wydarzenie „${pierwsze.tytul}” miało miejsce <b>wcześniej</b> niż „${drugie.tytul}”.`,
+      wyjasnienie: `„${wczesniej.tytul}” — <b>${formatRok(wczesniej.rok)}</b>, a „${pozniej.tytul}” — <b>${formatRok(pozniej.rok)}</b>.` };
+  }
+  let c = wiekC(w.rok);                              // przypisanie do wieku (także p.n.e.)
+  if (!maBycPrawda) {
+    const sasiednie = [c - 1, c + 1].map(x => x === 0 ? (c > 0 ? -1 : 1) : x).filter(x => RZYM[Math.abs(x)]);
+    c = sasiednie[Math.random() * sasiednie.length | 0];
+  }
+  return { kat: w.kat, prawda: maBycPrawda,
+    tekst: `${w.tytul} — to <b>${tekstWieku(c)}</b>.`,
+    wyjasnienie: `${w.tytul}: <b>${w.data}</b>, czyli ${tekstWieku(wiekC(w.rok))}. Pamiętaj o liczeniu wieków (uwaga na epokę przed naszą erą!) — rok ${formatRok(w.rok)} należy do ${tekstWieku(wiekC(w.rok))}.` };
+}
+function startGryPF() {
+  graPF.nr = 0; graPF.punkty = 0;
+  elPF.rund.textContent = RUNDY_PF;
+  elPF.podsum.hidden = true;
+  rundaPF();
+}
+function rundaPF() {
+  graPF.rozstrzygnieta = false;
+  graPF.zdanie = losujZdaniePF();
+  elPF.runda.textContent = graPF.nr + 1;
+  elPF.punkty.textContent = graPF.punkty;
+  elPF.zdanie.innerHTML = `<div class="karta ${graPF.zdanie.kat}"><div class="pasek"></div>
+    <div class="srodek"><p class="zdanie">${graPF.zdanie.tekst}</p></div></div>`;
+  elPF.wynik.textContent = '';
+  elPF.prawda.disabled = elPF.falsz.disabled = false;
+  elPF.prawda.hidden = elPF.falsz.hidden = false;
+  elPF.dalej.hidden = true;
+}
+function odpowiedzPF(odp) {
+  if (graPF.rozstrzygnieta) return;
+  graPF.rozstrzygnieta = true;
+  const trafiona = odp === graPF.zdanie.prawda;
+  if (trafiona) graPF.punkty += 10;
+  elPF.punkty.textContent = graPF.punkty;
+  elPF.wynik.innerHTML = `<span class="${trafiona ? 'ok' : 'blad'}">${trafiona ? 'Dobrze! +10 pkt.' : 'Niestety nie.'}</span>
+    &nbsp;To zdanie jest <b>${graPF.zdanie.prawda ? 'prawdziwe' : 'fałszywe'}</b>. ${graPF.zdanie.wyjasnienie}`;
+  piknij(trafiona);
+  elPF.prawda.disabled = elPF.falsz.disabled = true;
+  elPF.dalej.hidden = false;
+  elPF.dalej.textContent = graPF.nr + 1 < RUNDY_PF ? 'Dalej ➜' : 'Zobacz wynik ➜';
+}
+elPF.prawda.addEventListener('click', () => odpowiedzPF(true));
+elPF.falsz.addEventListener('click', () => odpowiedzPF(false));
+elPF.dalej.addEventListener('click', () => {
+  if (++graPF.nr < RUNDY_PF) return rundaPF();
+  const max = RUNDY_PF * 10;
+  const proc = Math.round(graPF.punkty / max * 100);
+  const [ocena, slownie] = ocenaSzkolna(proc);
+  const r = rekord('pf' + filtrDzialu, graPF.punkty);
+  elPF.prawda.hidden = elPF.falsz.hidden = elPF.dalej.hidden = true;
+  elPF.wynik.textContent = '';
+  elPF.zdanie.innerHTML = '';
+  elPF.podsum.hidden = false;
+  elPF.podsum.innerHTML = `<div class="podsumowanie">
+    <h2>Koniec gry!</h2>
+    <div>Zdobyto <b>${graPF.punkty} / ${max}</b> punktów (${proc}%)</div>
+    <div class="ocena">${ocena}</div><div class="slownie">${slownie}</div>
+    <div class="rekord">${r.nowy ? '🏆 Nowy rekord w tej przeglądarce!' : `Rekord w tej przeglądarce: ${r.naj} pkt`}</div>
+    <button class="przycisk" id="pf-jeszcze">Zagraj jeszcze raz</button>
+  </div>`;
+  document.getElementById('pf-jeszcze').addEventListener('click', startGryPF);
+});
+
+/* ---------------- przełączanie widoków i filtra ---------------- */
+const widoki = { os: document.getElementById('widok-os'), rok: document.getElementById('widok-rok'), chrono: document.getElementById('widok-chrono'), pf: document.getElementById('widok-pf') };
+let aktywnyWidok = 'os';
+function pokazWidok(nazwa) {
+  aktywnyWidok = nazwa;
+  for (const [n, sekcja] of Object.entries(widoki)) sekcja.hidden = n !== nazwa;
+  document.querySelectorAll('.tryb').forEach(b => {
+    const wybrany = b.dataset.widok === nazwa;
+    b.classList.toggle('aktywny', wybrany);
+    b.setAttribute('aria-selected', wybrany);
+  });
+  if (nazwa === 'os') rysujOsNauki();
+  if (nazwa === 'rok') startGryRok();
+  if (nazwa === 'chrono') startGryChrono();
+  if (nazwa === 'pf') startGryPF();
+}
+document.querySelectorAll('.tryb').forEach(b =>
+  b.addEventListener('click', () => pokazWidok(b.dataset.widok)));
+wyborDzialu.addEventListener('change', () => {
+  filtrDzialu = Number(wyborDzialu.value);
+  pokazWidok(aktywnyWidok);
+});
+pokazWidok('os');
+document.getElementById('okno-os').scrollTo({ left: 0 });
+</script>
+</body>
+</html>
