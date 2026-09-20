@@ -1329,7 +1329,7 @@ const MAPY = [
     zadania: [
       { typ: 'klik', cel: [480, 505], r: 42, polecenie: 'Wskaż <b>Rzym</b> — stolicę cesarstwa zachodniego.', nazwa: 'Rzym' },
       { typ: 'klik', cel: [826, 527], r: 44, polecenie: 'Wskaż <b>Konstantynopol</b> — stolicę cesarstwa wschodniego.', nazwa: 'Konstantynopol' },
-      { typ: 'klik', cel: [622, 640], r: 50, polecenie: 'Wskaż czerwoną <b>linię podziału cesarstwa z 395 r.</b>', nazwa: 'linia podziału z 395 r.' },
+      { typ: 'klik', linia: [[602, 408], [593, 432], [576, 492], [578, 560], [580, 650], [584, 760]], r: 36, polecenie: 'Kliknij w dowolnym miejscu czerwoną przerywaną <b>linię podziału cesarstwa z 395 r.</b>', nazwa: 'linia podziału z 395 r.' },
       { typ: 'abcd', pytanie: 'Co wydarzyło się w 476 roku?',
         opcje: ['upadek cesarstwa zachodniorzymskiego', 'upadek cesarstwa wschodniorzymskiego', 'podział cesarstwa na dwie części', 'edykt mediolański'], poprawna: 0,
         wyjasnienie: 'Odoaker zdetronizował Romulusa Augustulusa; Bizancjum przetrwało do 1453 r.' },
@@ -1338,7 +1338,7 @@ const MAPY = [
     opis: 'Mapa monarchii Karola Wielkiego z marchiami (pogranicznymi okręgami wojskowymi) i ziemiami zależnymi. Na wschodzie — Słowianie i Awarowie, na południu emirat Kordoby.',
     szukaj: 'Carolingian Empire 814 map', art: 'Karol_Wielki',
     zadania: [
-      { typ: 'klik', cel: [258, 170], r: 38, polecenie: 'Wskaż <b>Akwizgran</b> — ulubioną siedzibę Karola Wielkiego.', nazwa: 'Akwizgran' },
+      { typ: 'klik', cel: [297, 181], r: 48, polecenie: 'Wskaż <b>Akwizgran</b> — ulubioną siedzibę Karola Wielkiego.', nazwa: 'Akwizgran' },
       { typ: 'klik', cel: [492, 537], r: 34, polecenie: 'Wskaż miasto, w którym <b>25 grudnia 800 r.</b> papież koronował Karola na cesarza.', nazwa: 'Rzym' },
       { typ: 'klik', cel: [168, 498], r: 46, polecenie: 'Wskaż <b>Marchię Hiszpańską</b> — pogranicze ze światem islamu.', nazwa: 'Marchia Hiszpańska' },
       { typ: 'abcd', pytanie: 'Kto koronował Karola Wielkiego na cesarza?',
@@ -1349,7 +1349,7 @@ const MAPY = [
     opis: 'Mapa państwa polskiego za Mieszka I i Bolesława Chrobrego: żółty rdzeń państwa, pomarańczowe ziemie przyłączone przez Chrobrego (m.in. Milsko z Budziszynem), szare — utracone.',
     szukaj: 'Poland 1025 map Boleslaw Chrobry', art: 'Bolesław_I_Chrobry',
     zadania: [
-      { typ: 'klik', cel: [258, 390], r: 36, polecenie: 'Wskaż gród, w którym w <b>1000 r.</b> odbył się zjazd z udziałem Ottona III.', nazwa: 'Gniezno' },
+      { typ: 'klik', cel: [280, 385], r: 48, polecenie: 'Wskaż gród, w którym w <b>1000 r.</b> odbył się zjazd z udziałem Ottona III.', nazwa: 'Gniezno' },
       { typ: 'klik', cel: [92, 447], r: 40, polecenie: 'Wskaż <b>Budziszyn</b> — miejsce pokoju z 1018 r., po którym Milsko i Łużyce zostały przy Polsce.', nazwa: 'Budziszyn' },
       { typ: 'klik', cel: [752, 489], r: 40, polecenie: 'Wskaż <b>Kijów</b> — cel wyprawy Chrobrego z 1018 r. (wyszczerbiony Szczerbiec!).', nazwa: 'Kijów' },
       { typ: 'abcd', pytanie: 'Szarym kolorem oznaczono na mapie ziemie…',
@@ -1360,9 +1360,12 @@ const MAPY = [
     opis: 'Statut Krzywoustego podzielił Polskę między synów. Senior — najstarszy z rodu — miał władać niedziedzicznym pasem ziem od Pomorza przez Gniezno i Łęczycę po Kraków.',
     szukaj: 'Testament Krzywoustego 1138 map', art: 'Testament_Bolesława_Krzywoustego',
     zadania: [
-      { typ: 'klik', cel: [660, 460], r: 90, polecenie: 'Wskaż <b>dzielnicę senioralną</b> — czerwony pas ziem seniora.', nazwa: 'dzielnica senioralna' },
-      { typ: 'klik', cel: [1024, 797], r: 95, polecenie: 'Wskaż dzielnicę <b>sandomierską</b>.', nazwa: 'dzielnica sandomierska' },
-      { typ: 'klik', cel: [483, 730], r: 90, polecenie: 'Wskaż dzielnicę <b>śląską</b> z Wrocławiem.', nazwa: 'dzielnica śląska' },
+      { typ: 'klik', obszar: [[520, 140], [610, 40], [700, 25], [760, 40], [790, 90], [780, 200], [760, 320], [705, 345], [700, 430], [655, 470], [645, 560], [705, 600], [760, 650], [770, 710], [820, 760], [900, 815], [940, 850], [900, 900], [820, 930], [795, 1000], [755, 1030], [715, 995], [705, 900], [740, 815], [700, 750], [650, 680], [620, 610], [605, 520], [565, 470], [590, 430], [560, 300], [535, 210]],
+        polecenie: 'Wskaż <b>dzielnicę senioralną</b> — kliknij w dowolnym miejscu jej obszaru.', nazwa: 'dzielnica senioralna' },
+      { typ: 'klik', obszar: [[1000, 590], [1080, 500], [1150, 480], [1200, 510], [1230, 600], [1240, 700], [1200, 800], [1150, 880], [1080, 920], [1010, 880], [960, 830], [950, 760], [970, 690], [960, 620]],
+        polecenie: 'Wskaż dzielnicę <b>sandomierską</b> — kliknij w jej obszar.', nazwa: 'dzielnica sandomierska' },
+      { typ: 'klik', obszar: [[290, 520], [380, 490], [470, 520], [560, 560], [600, 610], [640, 660], [700, 740], [740, 790], [700, 860], [640, 950], [580, 1000], [520, 960], [460, 900], [380, 830], [330, 760], [300, 680], [280, 600]],
+        polecenie: 'Wskaż dzielnicę <b>śląską</b> z Wrocławiem — kliknij w jej obszar.', nazwa: 'dzielnica śląska' },
       { typ: 'abcd', pytanie: 'Na czym polegała zasada senioratu?',
         opcje: ['władzę zwierzchnią sprawuje najstarszy z rodu Piastów', 'każdy syn dziedziczy równą część na własność', 'o władzy decyduje wiec możnych', 'tron przypada najmłodszemu synowi'], poprawna: 0,
         wyjasnienie: 'Senior władał dzielnicą senioralną i reprezentował całe państwo; zasadę szybko złamano.' },
@@ -1416,7 +1419,7 @@ const MAPY = [
     opis: 'Infografika trzech rozbiorów: odcienie zieleni — Rosja, szarości — Prusy, czerwieni — Austria (osobny odcień dla każdego roku). Przyjrzyj się legendzie: Austria nie ma koloru przy roku 1793!',
     szukaj: 'Partitions of Poland map 1772 1793 1795', art: 'Rozbiory_Polski',
     zadania: [
-      { typ: 'klik', cel: [217, 554], r: 28, polecenie: 'Wskaż <b>Warszawę</b> — po III rozbiorze znalazła się (uwaga!) w zaborze pruskim.', nazwa: 'Warszawa' },
+      { typ: 'klik', cel: [217, 554], r: 40, polecenie: 'Wskaż <b>Warszawę</b> — po III rozbiorze znalazła się (uwaga!) w zaborze pruskim.', nazwa: 'Warszawa' },
       { typ: 'klik', cel: [326, 685], r: 30, polecenie: 'Wskaż miasto, które już po <b>I rozbiorze</b> zostało stolicą austriackiej Galicji.', nazwa: 'Lwów' },
       { typ: 'klik', cel: [343, 495], r: 28, polecenie: 'Wskaż <b>Grodno</b> — miejsce sejmu, który w 1793 r. zatwierdził II rozbiór.', nazwa: 'Grodno' },
       { typ: 'klik', cel: [227, 655], r: 28, polecenie: 'Wskaż <b>Kraków</b> — zagarnięty przez Austrię w III rozbiorze.', nazwa: 'Kraków' },
@@ -1528,6 +1531,30 @@ function zaznaczAktywneKlik() {
     if (aktywne) znaleziono = true;
   });
 }
+function wPoligonie(x, y, pts) {
+  let c = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i], [xj, yj] = pts[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+}
+function odlOdOdcinka(x, y, [x1, y1], [x2, y2]) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const t = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy || 1)));
+  return Math.hypot(x - x1 - t * dx, y - y1 - t * dy);
+}
+function odlOdLamanej(x, y, pts) {
+  let min = 1e9;
+  for (let i = 0; i < pts.length - 1; i++) min = Math.min(min, odlOdOdcinka(x, y, pts[i], pts[i + 1]));
+  return min;
+}
+function rysujCel(z, gr, kolor, przerywana) {
+  const kreska = przerywana ? `stroke-dasharray="${gr * 1.5} ${gr * 1.2}"` : '';
+  if (z.obszar) return `<polygon points="${z.obszar.map(p => p.join(',')).join(' ')}" fill="${kolor}" fill-opacity=".14" stroke="${kolor}" stroke-width="${gr}" ${kreska}/>`;
+  if (z.linia) return `<polyline points="${z.linia.map(p => p.join(',')).join(' ')}" fill="none" stroke="${kolor}" stroke-width="${gr * 2}" stroke-linecap="round" ${kreska}/>`;
+  return `<circle cx="${z.cel[0]}" cy="${z.cel[1]}" r="${z.r * .55}" fill="none" stroke="${kolor}" stroke-width="${gr}" ${kreska}/>`;
+}
 function klikMapy(e) {
   const m = aktualnaMapa, stan = stanMap[m.id];
   const i = m.zadania.findIndex((z, j) => z.typ === 'klik' && !stan.has(j));
@@ -1541,9 +1568,11 @@ function klikMapy(e) {
   const g = elMapy.svg.querySelector('#mapa-znaczniki');
   const gr = W / 800 * 4;                       // grubość znaczników w skali mapy
   const el = elMapy.zadania.children[i];
-  const trafiony = Math.hypot(x - z.cel[0], y - z.cel[1]) <= z.r;
+  const trafiony = z.obszar ? wPoligonie(x, y, z.obszar)
+    : z.linia ? odlOdLamanej(x, y, z.linia) <= z.r
+    : Math.hypot(x - z.cel[0], y - z.cel[1]) <= z.r;
   if (trafiony) {
-    g.innerHTML += `<circle cx="${z.cel[0]}" cy="${z.cel[1]}" r="${z.r * .55}" fill="none" stroke="#4d8f5b" stroke-width="${gr}"/>`;
+    g.innerHTML += rysujCel(z, gr, '#4d8f5b', false);
     el.querySelector('.status').innerHTML = `<span class="ok">Dobrze — to ${z.nazwa}!</span>`;
     stan.add(i); el.classList.add('zaliczone');
     piknij(true);
@@ -1551,7 +1580,7 @@ function klikMapy(e) {
     z._proby = (z._proby || 0) + 1;
     g.innerHTML += `<path transform="translate(${x},${y})" d="M${-gr * 1.6},${-gr * 1.6} L${gr * 1.6},${gr * 1.6} M${-gr * 1.6},${gr * 1.6} L${gr * 1.6},${-gr * 1.6}" stroke="#b8433c" stroke-width="${gr * .9}" stroke-linecap="round"/>`;
     if (z._proby >= 3) {
-      g.innerHTML += `<circle cx="${z.cel[0]}" cy="${z.cel[1]}" r="${z.r * .55}" fill="none" stroke="#d9b96a" stroke-width="${gr}" stroke-dasharray="${gr * 1.5} ${gr * 1.2}"/>`;
+      g.innerHTML += rysujCel(z, gr, '#d9b96a', true);
       el.querySelector('.status').innerHTML = `<span class="blad">Prawidłowe miejsce zaznaczono na złoto</span> — to ${z.nazwa}. Zapamiętaj je!`;
       stan.add(i); el.classList.add('zaliczone');
     } else {
