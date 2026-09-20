@@ -153,6 +153,17 @@
   .przycisk.tak{background:var(--dobrze);color:#fff;}
   .przycisk.nie{background:var(--zle);color:#fff;}
   .przycisk.tak[disabled],.przycisk.nie[disabled]{opacity:.3;}
+  /* skąd to źródło */
+  #zr-cytat .karta{max-width:680px;}
+  #zr-cytat .cytat cite{color:var(--karta-tekst2);opacity:.75;}
+  #zr-odpowiedzi{display:flex;flex-direction:column;gap:8px;max-width:680px;margin-top:14px;}
+  #zr-odpowiedzi .odp{text-align:left;font:inherit;font-size:15px;padding:11px 16px;border-radius:8px;
+    background:var(--tablica2);border:1px solid rgba(233,228,210,.3);color:var(--kreda);cursor:pointer;}
+  #zr-odpowiedzi .odp:hover{border-color:var(--zloto);}
+  #zr-odpowiedzi .odp.dobra{outline:3px solid var(--dobrze);}
+  #zr-odpowiedzi .odp.zla{outline:3px solid var(--zle);}
+  #zr-odpowiedzi .odp[disabled]{cursor:default;}
+  #zr-karta{margin:14px 0;max-width:720px;}
   /* podsumowanie */
   .podsumowanie{max-width:520px;margin:26px auto;text-align:center;background:var(--karta);
     color:var(--karta-tekst);border-radius:12px;padding:28px 26px;box-shadow:0 14px 40px rgba(0,0,0,.4);}
@@ -186,6 +197,7 @@
     <button class="tryb" data-widok="rok" role="tab" aria-selected="false">Gra: wskaż rok</button>
     <button class="tryb" data-widok="chrono" role="tab" aria-selected="false">Gra: chronologia</button>
     <button class="tryb" data-widok="pf" role="tab" aria-selected="false">Gra: prawda/fałsz</button>
+    <button class="tryb" data-widok="zr" role="tab" aria-selected="false">Gra: skąd to źródło?</button>
     <select id="wybor-dzialu" aria-label="Zakres materiału (dział podstawy programowej)"></select>
   </div>
 </header>
@@ -261,6 +273,24 @@
         <button class="przycisk" id="pf-dalej" hidden>Dalej ➜</button>
       </div>
       <div class="plansza" id="pf-podsumowanie" hidden style="margin:0"></div>
+    </div>
+  </section>
+
+  <!-- ============ WIDOK 5: SKĄD TO ŹRÓDŁO ============ -->
+  <section id="widok-zr" hidden>
+    <div class="plansza">
+      <div class="hud-gry">
+        <span class="duze">Skąd to źródło?</span>
+        <span class="info">Runda <span id="zr-runda" class="punkty">1</span> / <span id="zr-rund">10</span></span>
+        <span class="info">Punkty: <span id="zr-punkty" class="punkty">0</span></span>
+        <span class="info">Przeczytaj tekst źródłowy i wskaż wydarzenie, którego dotyczy.</span>
+      </div>
+      <div id="zr-cytat"></div>
+      <div id="zr-odpowiedzi"></div>
+      <div class="wynik-rundy" id="zr-wynik" aria-live="polite"></div>
+      <div id="zr-karta"></div>
+      <button class="przycisk" id="zr-dalej" hidden>Dalej ➜</button>
+      <div class="plansza" id="zr-podsumowanie" hidden style="margin:0"></div>
     </div>
   </section>
 </main>
@@ -1142,8 +1172,86 @@ elPF.dalej.addEventListener('click', () => {
   document.getElementById('pf-jeszcze').addEventListener('click', startGryPF);
 });
 
+/* ---------------- widok 5: skąd to źródło ---------------- */
+const RUNDY_ZR = 10;
+const graZR = { cele: [], nr: 0, punkty: 0, rozstrzygnieta: false };
+const elZR = {
+  runda: document.getElementById('zr-runda'), rund: document.getElementById('zr-rund'),
+  punkty: document.getElementById('zr-punkty'), cytat: document.getElementById('zr-cytat'),
+  odp: document.getElementById('zr-odpowiedzi'), wynik: document.getElementById('zr-wynik'),
+  karta: document.getElementById('zr-karta'), dalej: document.getElementById('zr-dalej'),
+  podsum: document.getElementById('zr-podsumowanie'),
+};
+function startGryZR() {
+  const pula = pulaZdarzen();
+  graZR.cele = losuj(pula, Math.min(RUNDY_ZR, pula.length));
+  graZR.nr = 0; graZR.punkty = 0;
+  elZR.rund.textContent = graZR.cele.length;
+  elZR.podsum.hidden = true;
+  rundaZR();
+}
+function rundaZR() {
+  graZR.rozstrzygnieta = false;
+  const w = graZR.cele[graZR.nr];
+  elZR.runda.textContent = graZR.nr + 1;
+  elZR.punkty.textContent = graZR.punkty;
+  /* cytat bez atrybucji i bez koloru pasma — nic nie podpowiada */
+  elZR.cytat.innerHTML = `<div class="karta"><div class="pasek"></div><div class="srodek">
+    <blockquote class="cytat" style="margin-top:0">${w.cytat}
+    <cite>autora i pochodzenie źródła poznasz po odpowiedzi</cite></blockquote></div></div>`;
+  const inne = pulaZdarzen().filter(z => z.id !== w.id);
+  const zTegoDzialu = inne.filter(z => z.dzial === w.dzial);
+  const dystraktory = losuj(zTegoDzialu.length >= 3 ? zTegoDzialu : inne, 3);
+  elZR.odp.innerHTML = '';
+  for (const o of losuj([w, ...dystraktory], 4)) {
+    const b = document.createElement('button');
+    b.className = 'odp'; b.textContent = o.tytul; b.dataset.id = o.id;
+    b.addEventListener('click', () => odpowiedzZR(o, b, w));
+    elZR.odp.appendChild(b);
+  }
+  elZR.wynik.textContent = ''; elZR.karta.innerHTML = '';
+  elZR.dalej.hidden = true;
+}
+function odpowiedzZR(o, przycisk, w) {
+  if (graZR.rozstrzygnieta) return;
+  graZR.rozstrzygnieta = true;
+  const dobrze = o.id === w.id;
+  if (dobrze) graZR.punkty += 10;
+  elZR.punkty.textContent = graZR.punkty;
+  for (const b of elZR.odp.querySelectorAll('.odp')) {
+    b.disabled = true;
+    if (Number(b.dataset.id) === w.id) b.classList.add('dobra');
+  }
+  if (!dobrze) przycisk.classList.add('zla');
+  elZR.wynik.innerHTML = dobrze ? '<span class="ok">Dobrze! +10 pkt.</span>'
+    : '<span class="blad">To nie to wydarzenie — poprawna odpowiedź na zielono.</span>';
+  piknij(dobrze);
+  elZR.karta.innerHTML = kartaHTML(w);
+  elZR.dalej.hidden = false;
+  elZR.dalej.textContent = graZR.nr + 1 < graZR.cele.length ? 'Dalej ➜' : 'Zobacz wynik ➜';
+}
+elZR.dalej.addEventListener('click', () => {
+  if (++graZR.nr < graZR.cele.length) return rundaZR();
+  const max = graZR.cele.length * 10;
+  const proc = Math.round(graZR.punkty / max * 100);
+  const [ocena, slownie] = ocenaSzkolna(proc);
+  const r = rekord('zr' + filtrDzialu, graZR.punkty);
+  elZR.cytat.innerHTML = ''; elZR.odp.innerHTML = '';
+  elZR.wynik.textContent = ''; elZR.karta.innerHTML = '';
+  elZR.dalej.hidden = true;
+  elZR.podsum.hidden = false;
+  elZR.podsum.innerHTML = `<div class="podsumowanie">
+    <h2>Koniec gry!</h2>
+    <div>Zdobyto <b>${graZR.punkty} / ${max}</b> punktów (${proc}%)</div>
+    <div class="ocena">${ocena}</div><div class="slownie">${slownie}</div>
+    <div class="rekord">${r.nowy ? '🏆 Nowy rekord w tej przeglądarce!' : `Rekord w tej przeglądarce: ${r.naj} pkt`}</div>
+    <button class="przycisk" id="zr-jeszcze">Zagraj jeszcze raz</button>
+  </div>`;
+  document.getElementById('zr-jeszcze').addEventListener('click', startGryZR);
+});
+
 /* ---------------- przełączanie widoków i filtra ---------------- */
-const widoki = { os: document.getElementById('widok-os'), rok: document.getElementById('widok-rok'), chrono: document.getElementById('widok-chrono'), pf: document.getElementById('widok-pf') };
+const widoki = { os: document.getElementById('widok-os'), rok: document.getElementById('widok-rok'), chrono: document.getElementById('widok-chrono'), pf: document.getElementById('widok-pf'), zr: document.getElementById('widok-zr') };
 let aktywnyWidok = 'os';
 function pokazWidok(nazwa) {
   aktywnyWidok = nazwa;
@@ -1157,6 +1265,7 @@ function pokazWidok(nazwa) {
   if (nazwa === 'rok') startGryRok();
   if (nazwa === 'chrono') startGryChrono();
   if (nazwa === 'pf') startGryPF();
+  if (nazwa === 'zr') startGryZR();
 }
 document.querySelectorAll('.tryb').forEach(b =>
   b.addEventListener('click', () => pokazWidok(b.dataset.widok)));
