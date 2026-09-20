@@ -196,3 +196,11 @@ npm test          # test e2e (Playwright): pełny przepływ + walidacja pliku .d
 - Zdjęcia i dane są przechowywane **wyłącznie lokalnie** w przeglądarce danego urządzenia.
   Po wyczyszczeniu danych przeglądarki zostaną usunięte — eksportuj protokół do `.docx`,
   aby zachować kopię.
+
+## Gry historyczne — osobne repozytorium
+
+Grywalne osie czasu i Forum Romanum zostały przeniesione do repozytorium
+[adscisel-alt/gry-historyczne](https://github.com/adscisel-alt/gry-historyczne)
+i są publikowane niezależnie pod adresem
+https://adscisel-alt.github.io/gry-historyczne/ — ten adres (workt) serwuje
+wyłącznie aplikację protokołów.
