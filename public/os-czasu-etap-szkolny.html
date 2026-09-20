@@ -172,10 +172,10 @@
   .mapa-naglowek h3{margin:0;}
   #mapa-opis{margin:6px 0 10px;font-size:13.5px;color:var(--karta-tekst2);max-width:70ch;}
   .mapa-svg-box svg{display:block;width:100%;height:auto;border-radius:6px;cursor:crosshair;}
-  .mapa-sekcja{font-size:11px;letter-spacing:.2em;font-weight:900;text-transform:uppercase;
-    color:var(--karta-tekst2);margin:10px 0 6px;}
-  .mapa-oficjalna{display:block;width:100%;height:auto;border-radius:6px;
+  .mapa-klik{position:relative;cursor:crosshair;}
+  .mapa-klik img{display:block;width:100%;height:auto;border-radius:6px;
     border:1px solid rgba(107,101,82,.35);}
+  .mapa-klik .mapa-nakladka{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
   .mapa-atrybucja{font-size:11px;color:var(--karta-tekst2);margin:5px 0 2px;line-height:1.5;}
   .m-miasto{font:700 13px Lato,sans-serif;fill:#2c2a24;paint-order:stroke;stroke:#f0e9d6;stroke-width:3px;}
   .m-etyk{font:italic 13px 'Bona Nova',Georgia,serif;fill:#5a5142;}
@@ -1428,117 +1428,61 @@ const MAPY = [
         opcje: ['Milsko i Łużyce', 'Pomorze Gdańskie', 'Śląsk i Morawy', 'Prusy'], poprawna: 0,
         wyjasnienie: 'Pokój w Budziszynie zakończył długie wojny z cesarstwem niemieckim.' },
     ] },
-  { id: 'dzielnice', dzial: 3, tytul: 'Rozbicie dzielnicowe', okres: 'po 1138 roku',
-    opis: 'Statut Krzywoustego podzielił Polskę między synów. Senior — najstarszy z rodu — miał władać niedziedziczną dzielnicą senioralną z Krakowem i zwierzchnością nad Pomorzem.',
+  { id: 'dzielnice', dzial: 3, tytul: 'Rozbicie dzielnicowe', okres: 'po 1138 roku', wym: [1280, 1073],
+    opis: 'Statut Krzywoustego podzielił Polskę między synów. Senior — najstarszy z rodu — miał władać niedziedzicznym pasem ziem od Pomorza przez Gniezno i Łęczycę po Kraków.',
     szukaj: 'Testament Krzywoustego 1138 map', art: 'Testament_Bolesława_Krzywoustego',
-    svg: svgMapa({
-      alt: 'Podział Polski po 1138 roku',
-      lady: [LAD_EU], rzeki: RZEKI_PL,
-      regiony: [
-        { d: 'M160,200 C220,180 280,190 300,235 C295,285 250,310 195,300 C160,270 150,230 160,200 Z', k: KM.nb },
-        { d: 'M305,240 C355,225 395,250 400,300 C400,370 380,430 340,460 C300,450 285,390 290,330 C292,295 295,265 305,240 Z', k: KM.cz },
-        { d: 'M310,175 C380,160 450,175 475,220 C465,260 410,275 355,265 L310,235 Z', k: KM.zi },
-        { d: 'M180,310 C225,300 260,320 260,365 C250,410 205,425 165,410 C150,370 155,335 180,310 Z', k: KM.zl },
-        { d: 'M405,300 C455,285 505,300 515,345 C505,395 455,415 410,400 C395,360 395,325 405,300 Z', k: KM.fi },
-        { d: 'M200,140 C280,120 380,125 440,145 C420,170 340,180 270,175 C235,170 210,158 200,140 Z', k: KM.sz },
-      ],
-      miasta: [[330, 430, 'Kraków'], [230, 250, 'Poznań'], [390, 205, 'Płock'], [215, 370, 'Wrocław'], [460, 355, 'Sandomierz'], [330, 300, 'Łęczyca', 10, -4]],
-      etykiety: [[240, 60, 'Morze Bałtyckie', 'woda'], [175, 230, 'wielkopolska'], [300, 350, 'SENIORALNA', 'duza'], [355, 195, 'mazowiecka'], [175, 350, 'śląska'], [430, 330, 'sandomierska'], [290, 160, 'Pomorze (zwierzchność seniora)']],
-      legenda: [[KM.cz, 'dzielnica senioralna'], [KM.nb, 'wielkopolska'], [KM.zi, 'mazowiecka'], [KM.zl, 'śląska'], [KM.fi, 'sandomierska']],
-    }),
     zadania: [
-      { typ: 'klik', cel: [340, 370], r: 60, polecenie: 'Wskaż <b>dzielnicę senioralną</b> — pas ziem z Krakowem przeznaczony dla seniora.', nazwa: 'dzielnica senioralna' },
+      { typ: 'klik', cel: [660, 460], r: 90, polecenie: 'Wskaż <b>dzielnicę senioralną</b> — czerwony pas ziem seniora.', nazwa: 'dzielnica senioralna' },
+      { typ: 'klik', cel: [1024, 797], r: 95, polecenie: 'Wskaż dzielnicę <b>sandomierską</b>.', nazwa: 'dzielnica sandomierska' },
+      { typ: 'klik', cel: [483, 730], r: 90, polecenie: 'Wskaż dzielnicę <b>śląską</b> z Wrocławiem.', nazwa: 'dzielnica śląska' },
       { typ: 'abcd', pytanie: 'Na czym polegała zasada senioratu?',
         opcje: ['władzę zwierzchnią sprawuje najstarszy z rodu Piastów', 'każdy syn dziedziczy równą część na własność', 'o władzy decyduje wiec możnych', 'tron przypada najmłodszemu synowi'], poprawna: 0,
-        wyjasnienie: 'Senior władał dzielnicą krakowską i reprezentował całe państwo; zasada szybko została złamana.' },
+        wyjasnienie: 'Senior władał dzielnicą senioralną i reprezentował całe państwo; zasadę szybko złamano.' },
     ] },
-  { id: 'kazimierz', dzial: 3, tytul: 'Polska Kazimierza Wielkiego', okres: '1333–1370',
-    opis: 'Odrodzone królestwo bez Śląska i Pomorza, za to powiększone o Ruś Halicką ze Lwowem. „Zastał Polskę drewnianą, a zostawił murowaną”.',
+  { id: 'kazimierz', dzial: 3, tytul: 'Polska Kazimierza Wielkiego', okres: '1333–1370', wym: [1500, 1426],
+    opis: 'Odrodzone królestwo bez Śląska i Pomorza, za to powiększone o Ruś Halicką ze Lwowem. Zwróć uwagę na lata inkorporacji poszczególnych ziem podane na mapie.',
     szukaj: 'Poland Casimir the Great 1370 map', art: 'Kazimierz_III_Wielki',
-    svg: svgMapa({
-      alt: 'Polska za Kazimierza Wielkiego',
-      lady: [LAD_EU], rzeki: RZEKI_PL,
-      regiony: [{ d: 'M225,215 C300,195 380,205 420,240 C445,280 440,340 420,390 C395,440 340,465 290,455 C240,445 210,400 205,340 C202,290 208,245 225,215 Z', k: KM.cz },
-                { d: 'M420,340 C480,320 550,335 575,380 C565,425 510,450 455,440 C425,415 412,375 420,340 Z', k: KM.zl },
-                { d: 'M150,310 C195,295 230,315 230,355 C222,400 180,415 145,400 C132,362 135,332 150,310 Z', k: KM.sz },
-                { d: 'M215,135 C295,115 390,120 450,140 C430,165 345,178 275,172 C240,167 225,152 215,135 Z', k: KM.sz }],
-      miasta: [[330, 425, 'Kraków'], [250, 250, 'Poznań'], [500, 400, 'Lwów'], [215, 365, 'Wrocław'], [340, 150, 'Gdańsk']],
-      etykiety: [[240, 60, 'Morze Bałtyckie', 'woda'], [150, 345, 'Śląsk (Czechy)'], [275, 148, 'Pomorze (zakon)'], [455, 375, 'Ruś Halicka'], [610, 200, 'Litwa']],
-      legenda: [[KM.cz, 'Królestwo Polskie'], [KM.zl, 'przyłączona Ruś Halicka'], [KM.sz, 'ziemie poza królestwem']],
-    }),
     zadania: [
-      { typ: 'klik', cel: [500, 400], r: 48, polecenie: 'Wskaż <b>Lwów</b> — główny gród przyłączonej przez Kazimierza Rusi Halickiej.', nazwa: 'Lwów' },
+      { typ: 'klik', cel: [1016, 1035], r: 48, polecenie: 'Wskaż <b>Lwów</b> — główny gród ziemi halickiej przyłączonej w 1349 r.', nazwa: 'Lwów' },
+      { typ: 'klik', cel: [575, 982], r: 45, polecenie: 'Wskaż <b>stolicę</b> państwa Kazimierza Wielkiego.', nazwa: 'Kraków' },
+      { typ: 'klik', cel: [240, 840], r: 85, polecenie: 'Wskaż <b>księstwa śląskie</b> — na mapie opisane jako lenna czeskie.', nazwa: 'Śląsk (lenna czeskie)' },
       { typ: 'abcd', pytanie: 'Co ustalono w pokoju kaliskim z 1343 roku?',
         opcje: ['Kujawy i ziemia dobrzyńska wracają do Polski, Pomorze zostaje przy zakonie', 'Pomorze Gdańskie wraca do Polski', 'Śląsk wraca do Polski', 'zakon płaci Polsce coroczny trybut'], poprawna: 0,
         wyjasnienie: 'Pomorze zapisano zakonowi jako „wieczystą jałmużnę” — spór odżył w XV wieku.' },
     ] },
-  { id: 'grunwald', dzial: 4, tytul: 'Wielka wojna z zakonem', okres: '1409–1411',
-    opis: 'Połączone siły Polski Jagiełły i Litwy Witolda ruszyły na stolicę zakonu — Malbork. Po drodze, 15 lipca 1410 r., rozegrała się bitwa pod Grunwaldem.',
+  { id: 'grunwald', dzial: 4, tytul: 'Wielka wojna z zakonem', okres: '1409–1411', wym: [960, 1139],
+    opis: 'Mapa kampanii 1410 roku: zielona trasa to marsz armii polsko-litewskiej (przeprawa pod Czerwińskiem), czerwona — wojska zakonu. Czytaj daty dzienne w dymkach!',
     szukaj: 'Battle of Grunwald 1410 campaign map', art: 'Bitwa_pod_Grunwaldem',
-    svg: svgMapa({
-      alt: 'Państwo zakonu krzyżackiego i kampania grunwaldzka',
-      lady: [LAD_EU], rzeki: RZEKI_PL,
-      regiony: [{ d: 'M300,150 C370,130 450,130 500,155 C520,185 510,225 475,250 C420,268 350,262 315,235 C295,205 292,175 300,150 Z', k: KM.sz },
-                { d: 'M230,250 C330,225 430,240 480,280 C500,330 480,400 440,440 C360,465 270,455 225,420 C195,370 200,300 230,250 Z', k: KM.cz },
-                { d: 'M480,180 C560,155 650,165 700,200 C710,260 680,330 630,360 C560,370 505,330 490,280 Z', k: KM.nb }],
-      bitwy: [[400, 210]],
-      trasy: [{ d: 'M350,380 C370,330 385,270 398,222', k: '#8e2f23' }],
-      miasta: [[360, 165, 'Malbork'], [400, 210, 'Grunwald (15 VII 1410)', 12, 14], [320, 225, 'Toruń', -58, 14], [345, 135, 'Gdańsk', 10, -4], [335, 400, 'Czerwińsk (przeprawa)', 10, 12]],
-      etykiety: [[240, 55, 'Morze Bałtyckie', 'woda'], [330, 190, 'PAŃSTWO ZAKONU', 'duza'], [290, 330, 'KRÓLESTWO POLSKIE', 'duza'], [560, 240, 'WIELKIE KSIĘSTWO LITEWSKIE', 'duza']],
-      legenda: [[KM.sz, 'państwo zakonu krzyżackiego'], [KM.cz, 'Korona'], [KM.nb, 'Litwa'], ['#8e2f23', 'marsz armii Jagiełły']],
-    }),
     zadania: [
-      { typ: 'klik', cel: [400, 210], r: 42, polecenie: 'Wskaż pole bitwy z <b>15 lipca 1410 roku</b>.', nazwa: 'Grunwald' },
-      { typ: 'klik', cel: [360, 165], r: 40, polecenie: 'Wskaż <b>stolicę zakonu</b>, której po bitwie nie udało się zdobyć.', nazwa: 'Malbork' },
-      { typ: 'abcd', pytanie: 'Co Polska odzyskała na mocy II pokoju toruńskiego (1466)?',
-        opcje: ['Pomorze Gdańskie z Malborkiem i Warmią (Prusy Królewskie)', 'całe Prusy z Królewcem', 'Śląsk', 'Inflanty'], poprawna: 0,
-        wyjasnienie: 'Reszta ziem zakonu (Prusy Zakonne) stała się lennem Polski.' },
+      { typ: 'klik', cel: [688, 585], r: 40, polecenie: 'Wskaż oznaczone krzyżykiem pole bitwy z <b>15 lipca 1410 r.</b>', nazwa: 'Grunwald (Tannenberg)' },
+      { typ: 'klik', cel: [400, 318], r: 38, polecenie: 'Wskaż <b>stolicę zakonu</b>, oblężoną po bitwie bez powodzenia.', nazwa: 'Malbork (Marienburg)' },
+      { typ: 'klik', cel: [690, 1012], r: 44, polecenie: 'Wskaż <b>Czerwińsk</b>, gdzie armia polska przeprawiła się przez Wisłę mostem łyżwowym.', nazwa: 'Czerwińsk' },
+      { typ: 'abcd', pytanie: 'Kiedy zawarto I pokój toruński, kończący wielką wojnę z zakonem?',
+        opcje: ['1 lutego 1411 r.', '15 lipca 1410 r.', '19 października 1466 r.', '10 kwietnia 1525 r.'], poprawna: 0,
+        wyjasnienie: 'Mimo zwycięstwa zyski były skromne: Żmudź dla Litwy (dożywotnio) i ziemia dobrzyńska dla Polski.' },
     ] },
-  { id: 'ron', dzial: 5, tytul: 'Rzeczpospolita Obojga Narodów', okres: 'po unii lubelskiej 1569',
-    opis: 'Państwo „obojga narodów”: Korona i Litwa ze wspólnym sejmem i królem. Na sejmie lubelskim Podlasie, Wołyń i Ukraina naddnieprzańska przeszły z Litwy do Korony.',
+  { id: 'ron', dzial: 5, tytul: 'Rzeczpospolita Obojga Narodów', okres: 'po unii lubelskiej 1569', wym: [1280, 1004],
+    opis: 'Mapa województw z 1569 r.: kremowa Korona, żółta Litwa, kreskowane lenna (Prusy Książęce, Kurlandia). Na sejmie lubelskim Podlasie, Wołyń, Bracławszczyzna i Kijowszczyzna przeszły z Litwy do Korony.',
     szukaj: 'Polish-Lithuanian Commonwealth 1569 map', art: 'Unia_lubelska',
-    svg: svgMapa({
-      alt: 'Rzeczpospolita Obojga Narodów po 1569',
-      lady: [LAD_EU], rzeki: RZEKI_PL,
-      regiony: [{ d: 'M215,220 C310,195 420,205 480,235 C530,270 560,340 550,410 C530,465 440,490 350,480 C270,470 215,430 200,370 C190,310 195,255 215,220 Z', k: KM.cz },
-                { d: 'M470,120 C560,95 660,105 710,145 C725,200 705,265 655,300 C590,320 520,300 490,255 C470,215 462,160 470,120 Z', k: KM.nb },
-                { d: 'M430,100 C480,80 540,82 575,100 C560,122 505,130 465,124 Z', k: KM.zl }],
-      granice: ['M480,235 C500,280 515,330 520,390'],
-      miasta: [[360, 300, 'Warszawa'], [330, 430, 'Kraków'], [560, 190, 'Wilno'], [640, 400, 'Kijów'], [345, 140, 'Gdańsk'], [500, 300, 'Lublin (1569)', 10, 14]],
-      etykiety: [[240, 55, 'Morze Bałtyckie', 'woda'], [265, 265, 'KORONA', 'duza'], [545, 155, 'LITWA', 'duza'], [455, 95, 'Inflanty'], [590, 440, 'Ukraina (do Korony po 1569)']],
-      legenda: [[KM.cz, 'Korona Królestwa Polskiego'], [KM.nb, 'Wielkie Księstwo Litewskie'], [KM.zl, 'Inflanty (wspólne)']],
-    }),
     zadania: [
-      { typ: 'klik', cel: [560, 190], r: 44, polecenie: 'Wskaż <b>stolicę Wielkiego Księstwa Litewskiego</b>.', nazwa: 'Wilno' },
-      { typ: 'klik', cel: [500, 300], r: 40, polecenie: 'Wskaż miasto, w którym w <b>1569 r.</b> zawarto unię realną polsko-litewską.', nazwa: 'Lublin' },
+      { typ: 'klik', cel: [552, 408], r: 42, polecenie: 'Wskaż <b>stolicę Wielkiego Księstwa Litewskiego</b>.', nazwa: 'Wilno' },
+      { typ: 'klik', cel: [809, 743], r: 46, polecenie: 'Wskaż <b>Kijów</b> — stolicę województwa przeniesionego w 1569 r. z Litwy do Korony.', nazwa: 'Kijów' },
+      { typ: 'klik', cel: [419, 694], r: 38, polecenie: 'Wskaż miasto, w którym w <b>1569 r.</b> zawarto unię realną.', nazwa: 'Lublin' },
+      { typ: 'klik', cel: [225, 422], r: 38, polecenie: 'Wskaż <b>Gdańsk</b> — największy port Rzeczypospolitej.', nazwa: 'Gdańsk' },
       { typ: 'abcd', pytanie: 'Co po unii lubelskiej pozostało ODRĘBNE dla Korony i Litwy?',
         opcje: ['wojsko, skarb, urzędy i prawo', 'sejm', 'władca', 'polityka zagraniczna'], poprawna: 0,
         wyjasnienie: 'Wspólne były: monarcha, sejm i polityka zagraniczna; osobne — urzędy, skarb, wojsko i sądownictwo.' },
     ] },
-  { id: 'odkrycia', dzial: 5, tytul: 'Wielkie odkrycia geograficzne', okres: '1492–1522',
-    opis: 'Trzy przełomowe wyprawy: Kolumb przez Atlantyk (1492), Vasco da Gama wokół Afryki do Indii (1498) i wyprawa Magellana — pierwsze opłynięcie Ziemi (1519–1522).',
-    szukaj: 'Age of Discovery voyages map Columbus Gama Magellan', art: 'Wielkie_odkrycia_geograficzne',
-    svg: svgMapa({
-      alt: 'Trasy wielkich wypraw odkrywczych',
-      lady: ['M45,60 C125,48 185,80 195,130 C205,172 165,200 145,232 L95,262 C62,222 30,150 45,60 Z',
-             'M140,272 C182,260 212,292 207,342 C202,402 177,452 152,472 C130,432 118,352 125,310 Z',
-             'M375,72 C418,60 458,70 468,100 C450,122 418,132 388,126 C372,106 368,86 375,72 Z',
-             'M378,150 C430,140 470,162 480,212 C490,272 462,332 432,362 C400,332 368,252 371,200 Z',
-             'M480,62 C572,50 682,72 722,112 C742,152 702,192 652,202 C602,212 542,182 502,142 C482,112 475,86 480,62 Z',
-             'M598,205 l32,62 26,-58 Z', 'M655,330 c42,-12 74,10 63,46 c-32,20 -72,4 -63,-46 Z'],
-      trasy: [{ d: 'M385,122 C310,140 240,165 185,190', k: '#8e2f23' },
-              { d: 'M392,130 C388,210 385,290 400,330 C415,362 432,370 448,362 C465,340 470,300 472,260 C520,240 570,232 612,228', k: '#3f6d99' },
-              { d: 'M380,128 C300,180 220,290 170,420 C200,450 230,445 250,430 C400,470 560,430 700,360 C710,300 700,262 688,232 C600,180 480,150 395,132', k: '#a8892e', p: 1 }],
-      miasta: [[388, 124, 'Hiszpania i Portugalia', -40, -12], [180, 192, 'Karaiby (1492)', 10, -6], [448, 366, 'przyl. Dobrej Nadziei', 8, 18], [617, 226, 'Indie (1498)'], [693, 300, 'Filipiny (†Magellan)', -150, 16]],
-      etykiety: [[80, 300, 'Ameryka'], [408, 300, 'Afryka'], [590, 100, 'Azja'], [250, 70, 'OCEAN ATLANTYCKI', 'woda'], [120, 500, 'OCEAN SPOKOJNY →', 'woda']],
-      legenda: [['#8e2f23', 'Kolumb 1492'], ['#3f6d99', 'Vasco da Gama 1498'], ['#a8892e', 'wyprawa Magellana 1519–1522']],
-    }),
+  { id: 'odkrycia', dzial: 5, tytul: 'Wielkie odkrycia geograficzne', okres: '1492–1522', wym: [960, 820],
+    opis: 'Mapa trasy pierwszej wyprawy Kolumba (1492–1493) oraz posiadłości Hiszpanii i Portugalii w XVI wieku. Zwróć uwagę, jak wielka część świata była wciąż „nieznana Europejczykom”.',
+    szukaj: 'Age of Discovery voyages map Columbus', art: 'Wielkie_odkrycia_geograficzne',
     zadania: [
-      { typ: 'klik', cel: [448, 362], r: 46, polecenie: 'Wskaż <b>przylądek Dobrej Nadziei</b>, który opłynął Vasco da Gama w drodze do Indii.', nazwa: 'przylądek Dobrej Nadziei' },
-      { typ: 'klik', cel: [180, 192], r: 46, polecenie: 'Wskaż rejon, do którego w <b>1492 r.</b> dotarł Krzysztof Kolumb.', nazwa: 'Karaiby' },
+      { typ: 'klik', cel: [415, 170], r: 36, polecenie: 'Wskaż port <b>Palos</b>, z którego 3 sierpnia 1492 r. wypłynęły Santa Maria, Niña i Pinta.', nazwa: 'Palos' },
+      { typ: 'klik', cel: [178, 232], r: 48, polecenie: 'Wskaż rejon wysp, do których <b>12 października 1492 r.</b> dotarła wyprawa.', nazwa: 'Karaiby' },
+      { typ: 'klik', cel: [492, 452], r: 38, polecenie: 'Wskaż <b>Przylądek Dobrej Nadziei</b> na trasie portugalskiej do Indii.', nazwa: 'przylądek Dobrej Nadziei' },
       { typ: 'abcd', pytanie: 'Która wyprawa jako pierwsza opłynęła Ziemię dookoła?',
         opcje: ['wyprawa Magellana (1519–1522)', 'druga wyprawa Kolumba', 'wyprawa Vasco da Gamy', 'wyprawa Amerigo Vespucciego'], poprawna: 0,
-        wyjasnienie: 'Z pięciu okrętów wróciła jedna „Victoria”; sam Magellan zginął na Filipinach.' },
+        wyjasnienie: 'Z pięciu okrętów wróciła jedna — „Victoria”; sam Magellan zginął na Filipinach.' },
     ] },
   { id: 'rozbiory', dzial: 7, tytul: 'Rozbiory Rzeczypospolitej', okres: '1772 · 1793 · 1795',
     opis: 'W trzech rozbiorach Rosja, Prusy i Austria podzieliły całe państwo. Po trzecim rozbiorze (1795) Rzeczpospolita zniknęła z mapy Europy na 123 lata.',
@@ -1602,17 +1546,21 @@ function wybierzMape(m, przycisk) {
   if (przycisk) przycisk.style.borderColor = 'var(--zloto)';
   elMapy.tytul.textContent = m.tytul;
   elMapy.okres.textContent = m.okres;
-  elMapy.opis.textContent = m.opis + ' (Mapa poglądowa — schemat do ćwiczeń.)';
+  elMapy.opis.textContent = m.opis + (OBRAZY_MAP[m.id] ? '' : ' (Mapa poglądowa — schemat do ćwiczeń.)');
   const oficjalna = OBRAZY_MAP[m.id];
-  elMapy.svg.innerHTML = (oficjalna
-    ? `<div class="mapa-sekcja">Mapa źródłowa</div>
-       <img class="mapa-oficjalna" src="${oficjalna}" alt="Mapa źródłowa: ${m.tytul}" loading="lazy">
-       <div class="mapa-atrybucja">${ATRYBUCJE_MAP[m.id]}</div>
-       <div class="mapa-sekcja">Mapa ćwiczeniowa — tu klikaj</div>`
-    : '') + m.svg;
+  if (oficjalna) {
+    const [W, H] = m.wym;
+    elMapy.svg.innerHTML = `<div class="mapa-klik">
+        <img src="${oficjalna}" alt="Mapa: ${m.tytul}" draggable="false">
+        <svg class="mapa-nakladka" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><g id="mapa-znaczniki"></g></svg>
+      </div>
+      <div class="mapa-atrybucja">${ATRYBUCJE_MAP[m.id]}</div>`;
+  } else {
+    elMapy.svg.innerHTML = m.svg;
+  }
   elMapy.zrodla.innerHTML = `Oficjalne mapy: <a href="https://pl.wikipedia.org/wiki/${m.art}" target="_blank" rel="noopener">artykuł „${m.art.replaceAll('_', ' ')}” (Wikipedia)</a> ·
     <a href="https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(m.szukaj)}&title=Special:MediaSearch&type=image" target="_blank" rel="noopener">Wikimedia Commons</a>`;
-  elMapy.svg.querySelector('svg').addEventListener('click', klikMapy);
+  (elMapy.svg.querySelector('.mapa-klik') || elMapy.svg.querySelector('svg')).addEventListener('click', klikMapy);
   rysujZadaniaMapy();
 }
 function rysujZadaniaMapy() {
@@ -1660,23 +1608,25 @@ function klikMapy(e) {
   const i = m.zadania.findIndex((z, j) => z.typ === 'klik' && !stan.has(j));
   if (i < 0) return;
   const z = m.zadania[i];
-  const svg = elMapy.svg.querySelector('svg');
-  const rect = svg.getBoundingClientRect();
-  const x = (e.clientX - rect.left) / rect.width * 800;
-  const y = (e.clientY - rect.top) / rect.height * 520;
-  const g = svg.querySelector('#mapa-znaczniki');
+  const [W, H] = m.wym || [800, 520];
+  const pow = elMapy.svg.querySelector('.mapa-klik') || elMapy.svg.querySelector('svg');
+  const rect = pow.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width * W;
+  const y = (e.clientY - rect.top) / rect.height * H;
+  const g = elMapy.svg.querySelector('#mapa-znaczniki');
+  const gr = W / 800 * 4;                       // grubość znaczników w skali mapy
   const el = elMapy.zadania.children[i];
   const trafiony = Math.hypot(x - z.cel[0], y - z.cel[1]) <= z.r;
   if (trafiony) {
-    g.innerHTML += `<circle cx="${z.cel[0]}" cy="${z.cel[1]}" r="${z.r * .55}" fill="none" stroke="#4d8f5b" stroke-width="4"/>`;
+    g.innerHTML += `<circle cx="${z.cel[0]}" cy="${z.cel[1]}" r="${z.r * .55}" fill="none" stroke="#4d8f5b" stroke-width="${gr}"/>`;
     el.querySelector('.status').innerHTML = `<span class="ok">Dobrze — to ${z.nazwa}!</span>`;
     stan.add(i); el.classList.add('zaliczone');
     piknij(true);
   } else {
     z._proby = (z._proby || 0) + 1;
-    g.innerHTML += `<path transform="translate(${x},${y})" d="M-6,-6 L6,6 M-6,6 L6,-6" stroke="#b8433c" stroke-width="3.5" stroke-linecap="round"/>`;
+    g.innerHTML += `<path transform="translate(${x},${y})" d="M${-gr * 1.6},${-gr * 1.6} L${gr * 1.6},${gr * 1.6} M${-gr * 1.6},${gr * 1.6} L${gr * 1.6},${-gr * 1.6}" stroke="#b8433c" stroke-width="${gr * .9}" stroke-linecap="round"/>`;
     if (z._proby >= 3) {
-      g.innerHTML += `<circle cx="${z.cel[0]}" cy="${z.cel[1]}" r="${z.r * .55}" fill="none" stroke="#d9b96a" stroke-width="4" stroke-dasharray="6 5"/>`;
+      g.innerHTML += `<circle cx="${z.cel[0]}" cy="${z.cel[1]}" r="${z.r * .55}" fill="none" stroke="#d9b96a" stroke-width="${gr}" stroke-dasharray="${gr * 1.5} ${gr * 1.2}"/>`;
       el.querySelector('.status').innerHTML = `<span class="blad">Prawidłowe miejsce zaznaczono na złoto</span> — to ${z.nazwa}. Zapamiętaj je!`;
       stan.add(i); el.classList.add('zaliczone');
     } else {
