@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Koło 1–18</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #f3f1fa;
+    --panel: #ffffff;
+    --ink: #1c1830;
+    --muted: #6a6485;
+    --line: #dcd7ec;
+    --accent: #5b3fd1;
+    --accent-ink: #ffffff;
+    --hub: #1c1830;
+    --pointer: #1c1830;
+    --shadow: 0 18px 40px -18px rgba(40, 24, 110, .35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #13111d;
+      --panel: #1d1a2b;
+      --ink: #f0edfa;
+      --muted: #a39cc0;
+      --line: #322d48;
+      --accent: #8f78ff;
+      --accent-ink: #13111d;
+      --hub: #f0edfa;
+      --pointer: #f0edfa;
+      --shadow: 0 18px 40px -18px rgba(0, 0, 0, .7);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #13111d;
+    --panel: #1d1a2b;
+    --ink: #f0edfa;
+    --muted: #a39cc0;
+    --line: #322d48;
+    --accent: #8f78ff;
+    --accent-ink: #13111d;
+    --hub: #f0edfa;
+    --pointer: #f0edfa;
+    --shadow: 0 18px 40px -18px rgba(0, 0, 0, .7);
+  }
+
+  html, body { min-height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 "Figtree", system-ui, sans-serif;
+  }
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 24px 40px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 32px;
+    align-items: center;
+  }
+  @media (max-width: 760px) {
+    .wrap { grid-template-columns: 1fr; gap: 20px; }
+  }
+
+  .stage { position: relative; width: 100%; max-width: 520px; margin: 0 auto; aspect-ratio: 1; }
+  canvas { width: 100%; height: 100%; display: block; }
+  .pointer {
+    position: absolute; left: 50%; top: -6px; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 18px solid transparent; border-right: 18px solid transparent;
+    border-top: 34px solid var(--pointer);
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,.25));
+    z-index: 2;
+  }
+  .pointer.bump { animation: bump .12s ease-out; }
+  @keyframes bump { 50% { transform: translateX(-50%) rotate(-10deg); } }
+
+  .side { display: flex; flex-direction: column; gap: 20px; }
+  h1 {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    font-weight: 800; font-size: clamp(28px, 5vw, 40px); line-height: 1.05;
+    margin: 0; text-wrap: balance; letter-spacing: -.01em;
+  }
+  .sub { margin: 6px 0 0; color: var(--muted); }
+
+  .result {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+    display: flex; align-items: center; gap: 18px;
+  }
+  .result .num {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800;
+    font-size: 64px; line-height: 1; min-width: 2ch; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .result .label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+  .result .hint { color: var(--muted); font-size: 14px; }
+  .result.pop .num { animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop { from { transform: scale(.4); opacity: 0; } }
+
+  .btn {
+    appearance: none; border: 0; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink);
+    font: 600 18px/1 "Figtree", system-ui, sans-serif;
+    padding: 18px 24px; border-radius: 14px; width: 100%;
+    transition: transform .1s, filter .15s;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .55; cursor: default; filter: none; }
+  .btn:focus-visible, .ghost:focus-visible, input:focus-visible + .sw { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .ghost {
+    appearance: none; background: transparent; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px;
+    font: 500 14px "Figtree", system-ui, sans-serif; cursor: pointer;
+  }
+  .ghost:hover { border-color: var(--muted); }
+
+  .opts { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+  .toggle { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px; }
+  .toggle input { position: absolute; opacity: 0; pointer-events: none; }
+  .sw { width: 40px; height: 24px; border-radius: 12px; background: var(--line); position: relative; transition: background .2s; flex: none; }
+  .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--panel); transition: transform .2s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .toggle input:checked + .sw { background: var(--accent); }
+  .toggle input:checked + .sw::after { transform: translateX(16px); }
+
+  .hist h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; }
+  .chip {
+    min-width: 32px; height: 32px; padding: 0 8px; border-radius: 16px;
+    display: inline-grid; place-items: center; font-weight: 600; font-size: 14px;
+    font-variant-numeric: tabular-nums; color: #fff;
+  }
+  .empty { color: var(--muted); font-size: 14px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .result.pop .num, .pointer.bump { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<main class="wrap">
+  <div class="stage">
+    <div class="pointer" id="pointer"></div>
+    <canvas id="wheel" width="1040" height="1040" aria-label="Koło z numerami od 1 do 18"></canvas>
+  </div>
+
+  <div class="side">
+    <div>
+      <h1>Koło losujące 1–18</h1>
+      <p class="sub">Kliknij „Losuj” albo samo koło. Wskaźnik na górze pokaże wynik.</p>
+    </div>
+
+    <div class="result" id="result" aria-live="polite">
+      <div class="num" id="num">?</div>
+      <div>
+        <div class="label">Wylosowano</div>
+        <div class="hint" id="hint">Jeszcze nic nie wylosowano</div>
+      </div>
+    </div>
+
+    <button class="btn" id="spin" type="button">Losuj</button>
+
+    <div class="opts">
+      <label class="toggle" for="remove">
+        <input type="checkbox" id="remove">
+        <span class="sw"></span>
+        Usuwaj wylosowane numery
+      </label>
+      <button class="ghost" id="reset" type="button">Od nowa</button>
+    </div>
+
+    <div class="hist">
+      <h2>Historia</h2>
+      <div class="chips" id="chips"><span class="empty">Brak losowań</span></div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  const MAX = 18;
+  const COLORS = ["#e2445c", "#f08c2e", "#e8c21a", "#2fb67c", "#2d8fd5", "#7b4fd6"];
+  const TEXT_ON = ["#fff", "#fff", "#2a2200", "#fff", "#fff", "#fff"];
+  const colorOf = n => COLORS[(n - 1) % COLORS.length];
+  const textOf = n => TEXT_ON[(n - 1) % COLORS.length];
+
+  const canvas = document.getElementById("wheel");
+  const ctx = canvas.getContext("2d");
+  const spinBtn = document.getElementById("spin");
+  const resetBtn = document.getElementById("reset");
+  const removeCb = document.getElementById("remove");
+  const numEl = document.getElementById("num");
+  const hintEl = document.getElementById("hint");
+  const resultEl = document.getElementById("result");
+  const chipsEl = document.getElementById("chips");
+  const pointerEl = document.getElementById("pointer");
+
+  let numbers = Array.from({ length: MAX }, (_, i) => i + 1);
+  let rotation = 0;
+  let spinning = false;
+  let history = [];
+  let audio = null;
+
+  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  function draw() {
+    const W = canvas.width, c = W / 2, R = c - 16;
+    const n = numbers.length;
+    const seg = (Math.PI * 2) / n;
+    ctx.clearRect(0, 0, W, W);
+
+    ctx.save();
+    ctx.translate(c, c);
+    ctx.beginPath();
+    ctx.arc(0, 0, R + 10, 0, Math.PI * 2);
+    ctx.fillStyle = css("--hub");
+    ctx.fill();
+
+    ctx.rotate(rotation);
+    for (let i = 0; i < n; i++) {
+      const a0 = -Math.PI / 2 + i * seg;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, R, a0, a0 + seg);
+      ctx.closePath();
+      ctx.fillStyle = colorOf(numbers[i]);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,.55)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.rotate(a0 + seg / 2);
+      ctx.translate(R * 0.8, 0);
+      ctx.rotate(Math.PI / 2);
+      ctx.fillStyle = textOf(numbers[i]);
+      const size = Math.min(64, Math.max(34, 700 / n));
+      ctx.font = `800 ${size}px "Bricolage Grotesque", system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(numbers[i]), 0, 0);
+      ctx.restore();
+    }
+    ctx.restore();
+
+    // piasta
+    ctx.beginPath();
+    ctx.arc(c, c, R * 0.13, 0, Math.PI * 2);
+    ctx.fillStyle = css("--hub");
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(c, c, R * 0.06, 0, Math.PI * 2);
+    ctx.fillStyle = css("--bg");
+    ctx.fill();
+  }
+
+  function tick() {
+    pointerEl.classList.remove("bump");
+    void pointerEl.offsetWidth;
+    pointerEl.classList.add("bump");
+    if (!audio) return;
+    const t = audio.currentTime;
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = "square"; o.frequency.value = 1400;
+    g.gain.setValueAtTime(0.05, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+    o.connect(g).connect(audio.destination);
+    o.start(t); o.stop(t + 0.035);
+  }
+
+  function spin() {
+    if (spinning || numbers.length === 0) return;
+    try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; }
+
+    spinning = true;
+    spinBtn.disabled = true;
+    resetBtn.disabled = true;
+    removeCb.disabled = true;
+
+    const n = numbers.length;
+    const seg = (Math.PI * 2) / n;
+    const idx = Math.floor(Math.random() * n);
+    // kąt na kole (od góry, zgodnie z ruchem wskazówek), który ma trafić pod wskaźnik
+    const local = (idx + 0.15 + Math.random() * 0.7) * seg;
+    const targetMod = (Math.PI * 2 - local) % (Math.PI * 2);
+    const curMod = ((rotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    let delta = targetMod - curMod;
+    if (delta < 0) delta += Math.PI * 2;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const turns = reduce ? 1 : 5 + Math.floor(Math.random() * 3);
+    delta += turns * Math.PI * 2;
+
+    const start = rotation, dur = reduce ? 1200 : 5200 + Math.random() * 1200;
+    const t0 = performance.now();
+    let lastSeg = Math.floor(start / seg);
+    const ease = t => 1 - Math.pow(1 - t, 4);
+
+    function frame(now) {
+      const p = Math.min(1, (now - t0) / dur);
+      rotation = start + delta * ease(p);
+      const s = Math.floor(rotation / seg);
+      if (s !== lastSeg) { lastSeg = s; tick(); }
+      draw();
+      if (p < 1) requestAnimationFrame(frame);
+      else finish(idx);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function finish(idx) {
+    const won = numbers[idx];
+    history.unshift(won);
+    numEl.textContent = won;
+    numEl.style.color = colorOf(won);
+    resultEl.classList.remove("pop"); void resultEl.offsetWidth; resultEl.classList.add("pop");
+
+    if (removeCb.checked) {
+      numbers.splice(idx, 1);
+      const left = numbers.length;
+      hintEl.textContent = left ? `Zostało numerów: ${left}` : "Wszystkie numery wylosowane";
+    } else {
+      hintEl.textContent = `Losowanie nr ${history.length}`;
+    }
+    renderHistory();
+
+    spinning = false;
+    spinBtn.disabled = numbers.length === 0;
+    resetBtn.disabled = false;
+    removeCb.disabled = false;
+    // krótka pauza, by było widać wynik, zanim pole zniknie z koła
+    if (removeCb.checked) setTimeout(() => { if (!spinning) draw(); }, 700);
+  }
+
+  function renderHistory() {
+    chipsEl.innerHTML = "";
+    if (!history.length) {
+      chipsEl.innerHTML = '<span class="empty">Brak losowań</span>';
+      return;
+    }
+    history.forEach(n => {
+      const s = document.createElement("span");
+      s.className = "chip";
+      s.style.background = colorOf(n);
+      s.style.color = textOf(n);
+      s.textContent = n;
+      chipsEl.appendChild(s);
+    });
+  }
+
+  function reset() {
+    if (spinning) return;
+    numbers = Array.from({ length: MAX }, (_, i) => i + 1);
+    history = [];
+    numEl.textContent = "?";
+    numEl.style.color = "";
+    hintEl.textContent = "Jeszcze nic nie wylosowano";
+    spinBtn.disabled = false;
+    renderHistory();
+    draw();
+  }
+
+  spinBtn.addEventListener("click", spin);
+  canvas.addEventListener("click", spin);
+  resetBtn.addEventListener("click", reset);
+  document.addEventListener("keydown", e => {
+    if ((e.code === "Space" || e.code === "Enter") && document.activeElement === document.body) { e.preventDefault(); spin(); }
+  });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", draw);
+  new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  draw();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+})();
+</script>
+</body>
+</html>
