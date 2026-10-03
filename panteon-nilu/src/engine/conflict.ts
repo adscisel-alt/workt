@@ -10,7 +10,7 @@ import {
   boardFiguresOf, buildSites, canEndMoveOn, figuresInRegion, figureStrength, majorityCount, playersInRegion,
 } from './queries';
 import type { BattleCardId, BattleState, Figure, FigureId, GameState, HexKey, MonumentType, PlayerId } from './types';
-import { godName, log, schedule } from './util';
+import { entityOf, godName, log, schedule } from './util';
 
 const BUILD_COST = 3;
 
@@ -20,7 +20,7 @@ const ctx = (state: GameState, player: PlayerId): CardContext => ({ state, playe
 // ---------- Konflikt ----------
 
 export function startConflict(state: GameState): void {
-  const holder = state.turn.player;
+  const holder = entityOf(state, state.turn.player);
   state.conflict = { tiebreaker: { holder, faceUp: true } };
   log(state, `${godName(state, holder)} bierze żeton rozstrzygający remis.`, holder);
   schedule(

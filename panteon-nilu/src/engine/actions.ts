@@ -7,7 +7,7 @@ import {
   aimOptions, availableActions, boardFiguresOf, canPlace, followersGain, moveOptions, nextUnlock, summonOptions,
 } from './queries';
 import type { Figure, FigureId, GameState, HexKey, PlayerId, Task } from './types';
-import { godName, log, schedule } from './util';
+import { entityOf, godName, log, schedule } from './util';
 
 const ACTION_NAMES: Record<ActionType, string> = {
   move: 'Ruch',
@@ -17,7 +17,7 @@ const ACTION_NAMES: Record<ActionType, string> = {
 };
 
 export function chooseAction(state: GameState, action: ActionType): void {
-  const p = state.turn.player;
+  const p = entityOf(state, state.turn.player);
   const track = state.rules.actionTracks[action];
   state.actionTracks[action]++;
   state.turn.actions.push(action);
@@ -28,7 +28,7 @@ export function chooseAction(state: GameState, action: ActionType): void {
 }
 
 export function resolveAction(state: GameState, action: ActionType): void {
-  const p = state.turn.player;
+  const p = entityOf(state, state.turn.player);
   switch (action) {
     case 'move': {
       if (canStillMove(state, p, [])) state.pending = { kind: 'move', player: p, moved: [] };

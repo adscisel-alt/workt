@@ -19,8 +19,10 @@ export const poolFiguresOf = (state: GameState, p: PlayerId): Figure[] =>
 
 // ---------- Tura i akcje ----------
 
-export function actionsPerTurn(_state: GameState, _p: PlayerId): number {
-  return 2; // TODO etap 5: bóg połączony ma 1 akcję
+/** Liczba akcji w turze: miejsce sterujące połączonym bogiem ma tylko 1 akcję (s. 26). */
+export function actionsPerTurn(state: GameState, seat: PlayerId): number {
+  const p = state.players[seat];
+  return p.mergedInto !== undefined || p.mergedWith !== undefined ? 1 : 2;
 }
 
 /** Akcje dostępne teraz: pierwsza dowolna, druga w niższym wierszu panelu. */

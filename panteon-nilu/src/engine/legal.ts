@@ -94,6 +94,11 @@ export function legalMoves(state: GameState): Move[] {
         { type: 'worshipful', player, use: true },
         { type: 'worshipful', player, use: false },
       ];
+    case 'mergeGuardians':
+      return [
+        ...pending.candidates.map((figure): Move => ({ type: 'mergeGuardian', player, figure })),
+        { type: 'mergeGuardian', player, figure: null },
+      ];
     case 'mummyReturn': {
       const radiant = canMakeRadiant(state, player) ? [false, true] : [false];
       return mummyReturnTargets(state, pending.figure).flatMap((to) =>

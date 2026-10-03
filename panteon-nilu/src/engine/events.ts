@@ -1,10 +1,11 @@
 import { controlMonumentCandidates } from './queries';
 import { startCaravan } from './caravan';
+import { forgetGods, mergeGods } from './merge';
 import { startConflict } from './conflict';
 import { devotionAscending } from './devotion';
 import type { EventType } from '../config/rules';
 import type { GameState, MonumentId } from './types';
-import { godName, log, schedule } from './util';
+import { entityOf, godName, log, schedule, seatsOf } from './util';
 
 const EVENT_NAMES: Record<EventType, string> = {
   controlMonument: 'Przejęcie monumentu',
@@ -20,7 +21,7 @@ export function advanceEvent(state: GameState): void {
 }
 
 export function resolveEvent(state: GameState, event: EventType): void {
-  const p = state.turn.player;
+  const p = entityOf(state, state.turn.player);
   switch (event) {
     case 'controlMonument': {
       const candidates = controlMonumentCandidates(state, p);
@@ -40,11 +41,13 @@ export function resolveEvent(state: GameState, event: EventType): void {
 /** Skutki pola toru po rozstrzygnięciu wydarzenia (łączenie, eliminacja — etap 5; koniec gry). */
 export function afterEvent(state: GameState, index: number): void {
   const after = state.rules.eventTrack[index].after;
+  if (after === 'mergeGods' && state.playerCount >= state.rules.merge.minPlayers) mergeGods(state);
+  if (after === 'eliminateRed') forgetGods(state);
   if (after === 'endGame' || index === state.rules.eventTrack.length - 1) endGameByDevotion(state);
 }
 
 export function takeMonument(state: GameState, monument: MonumentId): void {
-  const p = state.turn.player;
+  const p = entityOf(state, state.turn.player);
   const m = state.monuments[monument];
   if (m.owner !== null) {
     state.players[m.owner].ankhPool++;
@@ -62,7 +65,7 @@ export function endGameByDevotion(state: GameState): void {
   if (state.result) return;
   const order = devotionAscending(state);
   const best = order[order.length - 1];
-  state.result = { winners: [best], reason: `Koniec toru wydarzeń — najwięcej oddania ma ${godName(state, best)}.` };
+  state.result = { winners: seatsOf(state, best), reason: `Koniec toru wydarzeń — najwięcej oddania ma ${godName(state, best)}.` };
   state.pending = null;
   state.queue = [];
   log(state, state.result.reason);

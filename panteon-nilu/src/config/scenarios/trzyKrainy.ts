@@ -1,11 +1,11 @@
 import type { ScenarioDef } from './types';
 
 // Własny scenariusz (nie odwzorowuje planszy wydawcy): Delta na północy (1),
-// Zachód (2) i Wschód (3) rozdzielone Nilem. TODO: rozstawienia dla 3–5 graczy (etap 5).
+// Zachód (2) i Wschód (3) rozdzielone Nilem. Rozstawienia dla 2–5 graczy.
 export const TRZY_KRAINY: ScenarioDef = {
   id: 'trzy-krainy',
   name: 'Trzy Krainy',
-  playerCounts: [2],
+  playerCounts: [2, 3, 4, 5],
   grid: [
     'W  W  W  F1 F1 D1 D1 W  W',
     'W  F1 F1 F1 W  F1 D1 D1 W',
@@ -32,6 +32,24 @@ export const TRZY_KRAINY: ScenarioDef = {
     2: [
       { god: [2, 5], warriors: [[1, 6]], monuments: [{ type: 'temple', at: [2, 3] }] },
       { god: [6, 5], warriors: [[7, 5]], monuments: [{ type: 'pyramid', at: [6, 7] }] },
+    ],
+    3: [
+      { god: [2, 5], warriors: [[1, 6]], monuments: [{ type: 'temple', at: [2, 3] }] },
+      { god: [6, 5], warriors: [[7, 5]], monuments: [{ type: 'pyramid', at: [6, 7] }] },
+      { god: [6, 1], warriors: [[6, 0]], monuments: [{ type: 'temple', at: [1, 1] }] },
+    ],
+    4: [
+      { god: [2, 7], warriors: [[3, 8]], monuments: [{ type: 'temple', at: [2, 6] }] },
+      { god: [6, 6], warriors: [[7, 7]], monuments: [{ type: 'pyramid', at: [6, 8] }] },
+      { god: [6, 1], warriors: [[6, 0]], monuments: [{ type: 'temple', at: [7, 1] }] },
+      { god: [1, 2], warriors: [[0, 2]], monuments: [{ type: 'obelisk', at: [2, 1] }] },
+    ],
+    5: [
+      { god: [2, 7], warriors: [[3, 8]], monuments: [{ type: 'temple', at: [2, 6] }] },
+      { god: [6, 6], warriors: [[7, 7]], monuments: [{ type: 'pyramid', at: [6, 8] }] },
+      { god: [6, 1], warriors: [[6, 0]], monuments: [{ type: 'temple', at: [7, 1] }] },
+      { god: [1, 2], warriors: [[0, 2]], monuments: [{ type: 'obelisk', at: [2, 1] }] },
+      { god: [1, 3], warriors: [[2, 4]], monuments: [{ type: 'pyramid', at: [0, 4] }] },
     ],
   },
 };

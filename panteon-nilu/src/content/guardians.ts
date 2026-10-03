@@ -20,7 +20,8 @@ const is = (f: Figure, id: GuardianId, owner: PlayerId) => f.guardian === id && 
 /** Kocia mumia: każdy poza właścicielem traci 1 oddania (jednocześnie). */
 function catMummyCurse(state: GameState, owner: PlayerId) {
   const losses: Partial<Record<PlayerId, number>> = {};
-  for (const p of state.players) if (p.id !== owner && !p.eliminated) losses[p.id] = -1;
+  // Bóg połączony to jeden byt — traci 1 oddania raz (FAQ).
+  for (const p of state.players) if (p.id !== owner && !p.eliminated && p.mergedInto === undefined) losses[p.id] = -1;
   log(state, `Kocia mumia ${godName(state, owner)} ginie — pozostali tracą 1 oddania.`, owner);
   changeDevotionSimultaneous(state, losses, 'klątwa kociej mumii');
 }

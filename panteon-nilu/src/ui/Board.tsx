@@ -120,6 +120,11 @@ export function Board({ state, interaction, selectedFigure, regionTint, onHex, o
             selected={selectedFigure === f.id}
             selectable={interaction.selectableFigures.has(f.id)}
             radiant={state.abilities.radiant.includes(f.id)}
+            partnerColor={
+              f.kind === 'god' && state.players[f.owner].mergedWith !== undefined
+                ? GODS[state.players[state.players[f.owner].mergedWith!].god].color
+                : undefined
+            }
             onClick={() => interaction.selectableFigures.has(f.id) && onFigure(f.id)}
           />
         ))}
@@ -202,8 +207,8 @@ function MonumentShape({ m, color, selectable, onClick }: { m: Monument; color: 
 }
 
 function FigureShape({
-  f, color, selected, selectable, radiant, onClick,
-}: { f: Figure; color: string; selected: boolean; selectable: boolean; radiant: boolean; onClick(): void }) {
+  f, color, selected, selectable, radiant, partnerColor, onClick,
+}: { f: Figure; color: string; selected: boolean; selectable: boolean; radiant: boolean; partnerColor?: string; onClick(): void }) {
   const c = hexCenter(f.pos!);
   const cls = `figure${selectable ? ' figure-selectable' : ''}${selected ? ' figure-selected' : ''}`;
   const label = f.kind === 'guardian' ? GUARDIANS[f.guardian!].name : f.kind === 'god' ? 'Bóg' : 'Wojownik';
@@ -211,6 +216,7 @@ function FigureShape({
     <g transform={`translate(${c.x},${c.y})`} className={cls} onClick={onClick} data-figure={f.id}>
       <title>{`${label}${radiant ? ' (promienny)' : ''}`}</title>
       {radiant && <circle r={f.kind === 'god' ? 21 : 15} className="sun-ring" />}
+      {partnerColor && <circle r={19} fill={partnerColor} className="partner-base" />}
       {f.kind === 'god' && (
         <>
           <circle r={16} fill={color} />

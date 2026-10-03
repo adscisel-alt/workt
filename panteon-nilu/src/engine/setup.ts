@@ -99,6 +99,7 @@ export function createGame(opts: NewGameOptions): GameState {
     hand: [...ALL_BATTLE_CARDS],
     used: [],
     eliminated: false,
+    extraGods: [],
   }));
   state.devotionSeqCounter = n;
 
@@ -116,6 +117,11 @@ export function createGame(opts: NewGameOptions): GameState {
     }
   });
 
+  for (const f of Object.values(state.figures)) {
+    if (f.pos !== null && (!(f.pos in state.map.terrain) || state.map.terrain[f.pos] === 'water')) {
+      throw new Error(`Figurka ${f.id} poza lądem: ${f.pos}`);
+    }
+  }
   const occupied = new Set<HexKey>();
   for (const pos of [
     ...Object.values(state.figures).map((f) => f.pos),
@@ -156,6 +162,7 @@ export function createGame(opts: NewGameOptions): GameState {
   state.conflict = null;
   state.battle = null;
   state.abilities = { radiant: [], underworld: [], amunTokenUp: true };
+  state.mergeGuardians = [];
   state.turn = { player: 0, actions: [], triggered: null };
   state.turnNumber = 1;
   state.pending = { kind: 'chooseAction', player: 0 };

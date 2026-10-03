@@ -17,12 +17,18 @@ function checkInvariants(s: GameState) {
     expect(occupied.has(m.pos), `pole ${m.pos} zajęte podwójnie`).toBe(false);
     occupied.set(m.pos, m.id);
   }
-  for (const p of s.players) {
+  // tylko samodzielni bogowie (połączeni „niżsi” i zapomniani nie mają kart ani żetonów)
+  for (const p of s.players.filter((x) => !x.eliminated && x.mergedInto === undefined)) {
     expect(p.followers).toBeGreaterThanOrEqual(0);
     expect([...p.hand, ...p.used].sort()).toEqual([...ALL_BATTLE_CARDS].sort());
     expect(p.hand.length).toBeGreaterThan(0);
     const onMonuments = Object.values(s.monuments).filter((m) => m.owner === p.id).length;
     expect(p.ankhPool + onMonuments).toBe(s.rules.ankhTokensPerGod - s.rules.dashboardSlots);
+  }
+  // wchłonięci i zapomniani nie mają figurek na planszy ani monumentów
+  for (const p of s.players.filter((x) => x.eliminated || x.mergedInto !== undefined)) {
+    expect(Object.values(s.figures).some((f) => f.owner === p.id)).toBe(false);
+    expect(Object.values(s.monuments).some((m) => m.owner === p.id)).toBe(false);
   }
   if (!s.result) expect(legalMoves(s).length).toBeGreaterThan(0);
 }
@@ -43,9 +49,9 @@ describe('losowe rozgrywki (tylko legalne ruchy z generatora)', () => {
       expect(JSON.parse(JSON.stringify(s))).toEqual(s);
     }
     expect(s.result).not.toBeNull();
-    // koniec po 5. konflikcie albo wcześniej — gdy ktoś dotarł na szczyt toru oddania
+    // koniec po 5. konflikcie, po zapomnieniu bogów (4. konflikt) albo gdy ktoś dotarł na szczyt
     const topReached = s.players.some((p) => p.devotion === s.rules.devotion.top);
-    expect(s.conflictsResolved === 5 || topReached).toBe(true);
+    expect(s.conflictsResolved === 5 || s.conflictsResolved === 4 || topReached).toBe(true);
   });
 
   it.each([2, 3, 4, 5] as const)('inni strażnicy (Satet, Apep, Skorpion), %i graczy: bez błędów do końca gry', (n) => {
@@ -71,6 +77,18 @@ describe('losowe rozgrywki (tylko legalne ruchy z generatora)', () => {
       checkInvariants(s);
     }
     expect(s.result).not.toBeNull();
+  });
+
+  it.each([3, 4, 5])('Trzy Krainy, %i graczy: łączenie i zapomnienie w trakcie losowej partii', (n) => {
+    let s = newGame({ scenario: 'trzy-krainy', gods: GODS5.slice(0, n), seed: 40 + n }, true);
+    let merged = false;
+    for (let chunk = 0; chunk < 150 && !s.result; chunk++) {
+      s = randomPlayout(s, 900 + chunk * n, 40).state;
+      checkInvariants(s);
+      merged ||= s.players.some((p) => p.mergedInto !== undefined);
+    }
+    expect(s.result).not.toBeNull();
+    if (s.conflictsResolved >= 3) expect(merged).toBe(true);
   });
 
   it('determinizm: to samo ziarno i te same ruchy dają identyczny stan', () => {

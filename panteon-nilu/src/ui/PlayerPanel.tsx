@@ -3,11 +3,28 @@ import { BATTLE_CARDS } from '../content/battleCards';
 import { GODS } from '../content/gods';
 import { GUARDIANS } from '../content/guardians';
 import { isInRed } from '../engine/devotion';
+import { godName } from '../engine/util';
 import type { GameState, PlayerId } from '../engine/types';
 
 export function PlayerPanel({ state, player, active }: { state: GameState; player: PlayerId; active: boolean }) {
   const p = state.players[player];
   const god = GODS[p.god];
+  if (p.eliminated || p.mergedInto !== undefined) {
+    return (
+      <section className="player player-out" style={{ borderColor: god.color }} data-player={player}>
+        <header>
+          <span className="swatch" style={{ background: god.color }} />
+          <strong>{god.name}</strong>
+          {active && <span className="badge">tura</span>}
+        </header>
+        <p className="small">
+          {p.eliminated
+            ? 'Zapomniany — odpadł z gry.'
+            : `Połączony: gra jako ${godName(state, player)} (1 akcja na turę, wspólne figurki, wyznawcy i karty).`}
+        </p>
+      </section>
+    );
+  }
   const figs = Object.values(state.figures).filter((f) => f.owner === player);
   const pool = figs.filter((f) => f.pos === null && f.trappedBy === undefined);
   const monuments = Object.values(state.monuments).filter((m) => m.owner === player).length;
@@ -15,7 +32,7 @@ export function PlayerPanel({ state, player, active }: { state: GameState; playe
     <section className={`player${active ? ' player-active' : ''}`} style={{ borderColor: god.color }} data-player={player}>
       <header>
         <span className="swatch" style={{ background: god.color }} />
-        <strong>{god.name}</strong> <span className="muted">{god.epithet}</span>
+        <strong>{godName(state, player)}</strong> <span className="muted">{p.extraGods.length ? 'bóg połączony' : god.epithet}</span>
         {active && <span className="badge">tura</span>}
       </header>
       <div className="stats">
@@ -26,8 +43,12 @@ export function PlayerPanel({ state, player, active }: { state: GameState; playe
         <span title="Żetony ankh w puli">Ankh <b>{p.ankhPool}</b></span>
         <span title="Kontrolowane monumenty">Monumenty <b>{monuments}</b></span>
       </div>
-      <p className="ability">{god.ability}</p>
-      {god.status && <div className="status">{god.status(state, player)}</div>}
+      {[p.god, ...p.extraGods].map((g) => (
+        <div key={g}>
+          <p className="ability">{GODS[g].ability}</p>
+          {GODS[g].status && <div className="status">{GODS[g].status!(state, player)}</div>}
+        </div>
+      ))}
       <div className="row">
         <span className="muted">Pula:</span>{' '}
         {pool.length === 0 ? '—' : summarizePool(pool.map((f) => (f.kind === 'guardian' ? GUARDIANS[f.guardian!].name : f.kind === 'god' ? 'bóg' : 'wojownik')))}

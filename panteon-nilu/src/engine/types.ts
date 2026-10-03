@@ -55,7 +55,14 @@ export interface PlayerState {
   devotionSeq: number;
   hand: BattleCardId[];
   used: BattleCardId[];
+  /** Zapomniany (wyeliminowany) — nie ma już tur ani figurek. */
   eliminated: boolean;
+  /** Bóg „niższy” po połączeniu: gra dalej jako część boga `mergedInto` (1 akcja na turę). */
+  mergedInto?: PlayerId;
+  /** Bóg „wyższy” po połączeniu: miejsce partnera. */
+  mergedWith?: PlayerId;
+  /** Dodatkowe zdolności bogów wchłoniętych przy połączeniu. */
+  extraGods: GodId[];
 }
 
 export interface TurnState {
@@ -89,7 +96,8 @@ export type Pending =
   | { kind: 'isisProtect'; player: PlayerId; candidates: FigureId[] }
   | { kind: 'underworld'; player: PlayerId; region: number }
   | { kind: 'worshipful'; player: PlayerId }
-  | { kind: 'mummyReturn'; player: PlayerId; figure: FigureId };
+  | { kind: 'mummyReturn'; player: PlayerId; figure: FigureId }
+  | { kind: 'mergeGuardians'; player: PlayerId; candidates: FigureId[] };
 
 export interface ConflictState {
   /** Żeton rozstrzygający remis: bierze go gracz, który wyzwolił konflikt. */
@@ -189,7 +197,8 @@ export type Move =
   | { type: 'isisProtect'; player: PlayerId; figure: FigureId | null }
   | { type: 'underworld'; player: PlayerId; from: HexKey | null; to: HexKey | null }
   | { type: 'worshipful'; player: PlayerId; use: boolean }
-  | { type: 'mummyReturn'; player: PlayerId; figure: FigureId; to: HexKey; radiant: boolean };
+  | { type: 'mummyReturn'; player: PlayerId; figure: FigureId; to: HexKey; radiant: boolean }
+  | { type: 'mergeGuardian'; player: PlayerId; figure: FigureId | null };
 
 export interface LogEntry {
   n: number;
@@ -221,6 +230,8 @@ export interface GameState {
   conflictsResolved: number;
   conflict: ConflictState | null;
   battle: BattleState | null;
+  /** Strażnicy niższego boga czekający na przejęcie przy połączeniu. */
+  mergeGuardians: FigureId[];
   /** Stan zdolności bogów (każdy bóg występuje w grze najwyżej raz). */
   abilities: {
     /** Ra: figurki ze słońcem (promienne). */

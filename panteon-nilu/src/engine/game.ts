@@ -10,6 +10,7 @@ import {
   protectAsk, protectFigure, resolveRegion, selectCard, skipBuild, useTiebreaker, worshipful,
 } from './conflict';
 import { caravan, caravanKeep, caravanSwap } from './caravan';
+import { mergeGuardian } from './merge';
 import { advanceEvent, afterEvent, resolveEvent, takeMonument } from './events';
 import { isLegal } from './legal';
 import type { GameState, Move, Task } from './types';
@@ -74,6 +75,8 @@ function dispatch(state: GameState, m: Move): void {
       return worshipful(state, m.player, m.use);
     case 'mummyReturn':
       return mummyReturn(state, m.figure, m.to, m.radiant);
+    case 'mergeGuardian':
+      return mergeGuardian(state, m.player, m.figure);
   }
 }
 

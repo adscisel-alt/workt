@@ -159,3 +159,5 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: 
 .hex-tint-b { filter: sepia(0.6) hue-rotate(180deg) saturate(1.6); }
 .toggle { display: flex; gap: 6px; align-items: center; font-size: 13px; margin: 6px 0; }
 .status { font-size: 12px; margin-top: 4px; }
+.player-out { opacity: 0.6; }
+.partner-base { stroke: #fff; stroke-width: 1.5; }

@@ -1,5 +1,7 @@
 import type { ActionType, EventType } from '../config/rules';
+import { GODS } from '../content/gods';
 import { GUARDIANS } from '../content/guardians';
+import { godName } from '../engine/util';
 import type { GameState, MonumentType } from '../engine/types';
 
 export const ACTION_LABEL: Record<ActionType, string> = {
@@ -35,4 +37,11 @@ export function figureLabel(state: GameState, id: string): string {
   if (f.kind === 'guardian') return GUARDIANS[f.guardian!].name;
   if (f.kind === 'god') return 'Bóg';
   return f.trappedBy !== undefined ? 'Wojownik (uwięziony — 1 wyznawca)' : 'Wojownik';
+}
+
+/** Nazwa miejsca przy stole: po połączeniu „Izyda (gra jako Ra-Izyda)”. */
+export function seatLabel(state: GameState, seat: number): string {
+  const p = state.players[seat];
+  const own = GODS[p.god].name;
+  return p.mergedInto !== undefined ? `${own} (gra jako ${godName(state, seat)})` : godName(state, seat);
 }

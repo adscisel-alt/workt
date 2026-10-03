@@ -1,11 +1,11 @@
 import { sumHook } from './hooks';
 import type { GameState, PlayerId } from './types';
-import { godName, log } from './util';
+import { godName, log, seatsOf } from './util';
 
 /** Gracze od najmniejszego do największego oddania (stos rozstrzyga remis pola). */
 export function devotionAscending(state: GameState): PlayerId[] {
   return state.players
-    .filter((p) => !p.eliminated)
+    .filter((p) => !p.eliminated && p.mergedInto === undefined)
     .sort((a, b) => a.devotion - b.devotion || a.devotionSeq - b.devotionSeq)
     .map((p) => p.id);
 }
@@ -29,7 +29,7 @@ export function changeDevotion(state: GameState, p: PlayerId, delta: number, rea
   player.devotionSeq = ++state.devotionSeqCounter;
   log(state, `${godName(state, p)}: ${delta > 0 ? '+' : ''}${after - before} oddania (${reason}) → ${after}.`, p);
   if (after === state.rules.devotion.top) {
-    state.result = { winners: [p], reason: `${godName(state, p)} osiąga szczyt toru oddania.` };
+    state.result = { winners: seatsOf(state, p), reason: `${godName(state, p)} osiąga szczyt toru oddania.` };
     state.pending = null;
     log(state, state.result.reason, p);
   }

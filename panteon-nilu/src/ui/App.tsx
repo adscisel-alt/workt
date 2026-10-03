@@ -50,7 +50,7 @@ function GameScreen({ state, setState, onNew }: { state: GameState; setState(s: 
     }
   };
 
-  const activeIds = pending ? ('waiting' in pending ? pending.waiting : [pending.player]) : [];
+  const activeIds = [...(pending ? ('waiting' in pending ? pending.waiting : [pending.player]) : []), state.turn.player];
 
   return (
     <div className="app">
@@ -112,7 +112,7 @@ function GameScreen({ state, setState, onNew }: { state: GameState; setState(s: 
             <p>{state.result.reason}</p>
             <p>
               Zwycięzca:{' '}
-              {state.result.winners.length ? state.result.winners.map((w) => GODS[state.players[w].god].name).join(' i ') : 'nikt'}
+              {state.result.winners.length ? state.result.winners.map((w) => GODS[state.players[w].god].name).join(' i ') : 'nikt — przegrywają wszyscy'}
             </p>
             <button onClick={onNew}>Nowa gra</button>
           </div>
@@ -125,25 +125,34 @@ function GameScreen({ state, setState, onNew }: { state: GameState; setState(s: 
 const GOD_IDS = Object.keys(GODS) as GodId[];
 
 function NewGame({ onStart }: { onStart(s: GameState): void }) {
-  const scenarios = Object.values(SCENARIOS).filter((s) => s.playerCounts.includes(2));
-  const [gods, setGods] = useState<GodId[]>(['amun', 'ra']);
-  const [scenario, setScenario] = useState(scenarios[0].id);
+  const [count, setCount] = useState(2);
+  const [gods, setGods] = useState<GodId[]>(GOD_IDS.slice(0, 5));
+  const scenarios = Object.values(SCENARIOS).filter((s) => s.playerCounts.includes(count));
+  const [scenarioPick, setScenario] = useState(scenarios[0]?.id);
+  const scenario = scenarios.some((s) => s.id === scenarioPick) ? scenarioPick : scenarios[0]?.id;
   const [seed, setSeed] = useState(() => String(Math.floor(Math.random() * 1e6)));
-  const valid = gods[0] !== gods[1];
+  const chosen = gods.slice(0, count);
+  const valid = new Set(chosen).size === count && !!scenario;
   return (
     <div className="newgame">
       <h1>Panteon Nilu</h1>
-      <p className="muted">Gra strategiczna dla 2 bogów przy jednym urządzeniu (hot-seat).</p>
-      {[0, 1].map((i) => (
+      <p className="muted">Gra strategiczna dla 2–5 bogów przy jednym urządzeniu (hot-seat).</p>
+      <label>
+        Liczba graczy
+        <select value={count} onChange={(e) => setCount(Number(e.target.value))} data-player-count>
+          {[2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+        </select>
+      </label>
+      {chosen.map((g, i) => (
         <label key={i}>
           Gracz {i + 1}
           <select
-            value={gods[i]}
-            onChange={(e) => setGods(i === 0 ? [e.target.value as GodId, gods[1]] : [gods[0], e.target.value as GodId])}
+            value={g}
+            onChange={(e) => setGods(gods.map((x, j) => (j === i ? (e.target.value as GodId) : x)))}
             data-god-select={i}
           >
-            {GOD_IDS.map((g) => (
-              <option key={g} value={g}>{GODS[g].name} — {GODS[g].epithet}</option>
+            {GOD_IDS.map((id) => (
+              <option key={id} value={id}>{GODS[id].name} — {GODS[id].epithet}</option>
             ))}
           </select>
         </label>
@@ -159,7 +168,7 @@ function NewGame({ onStart }: { onStart(s: GameState): void }) {
         <input value={seed} onChange={(e) => setSeed(e.target.value)} />
       </label>
       {!valid && <p className="error">Każdy gracz musi mieć innego boga.</p>}
-      <button disabled={!valid} onClick={() => onStart(createGame({ scenario, gods, seed }))} data-start>
+      <button disabled={!valid} onClick={() => onStart(createGame({ scenario: scenario!, gods: chosen, seed }))} data-start>
         Rozpocznij
       </button>
     </div>

@@ -1,5 +1,6 @@
 import { BATTLE_CARDS } from '../content/battleCards';
 import { GODS } from '../content/gods';
+import { godName } from '../engine/util';
 import type { GameState } from '../engine/types';
 
 /** Jawne informacje o trwającej bitwie (odkryte karty, siła). */
@@ -12,7 +13,7 @@ export function BattlePanel({ state }: { state: GameState }) {
       <h3>Konflikt{b ? ` — bitwa w regionie ${b.token}` : ''}</h3>
       {tb && (
         <p className="small">
-          Żeton remisu: {GODS[state.players[tb.holder].god].name} ({tb.faceUp ? 'dostępny' : 'zużyty'})
+          Żeton remisu: {godName(state, tb.holder)} ({tb.faceUp ? 'dostępny' : 'zużyty'})
         </p>
       )}
       {b && (
@@ -23,7 +24,7 @@ export function BattlePanel({ state }: { state: GameState }) {
             return (
               <li key={p}>
                 <span className="swatch" style={{ background: GODS[state.players[p].god].color }} />
-                {GODS[state.players[p].god].name}:{' '}
+                {godName(state, p)}:{' '}
                 {cards ? cards.map((c) => BATTLE_CARDS[c].name).join(' + ') : waiting ? 'wybiera…' : 'karta zakryta'}
                 {b.strengths[p] !== undefined && <b> · siła {b.strengths[p]}</b>}
               </li>

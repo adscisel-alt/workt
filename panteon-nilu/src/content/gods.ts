@@ -54,6 +54,17 @@ export const GODS: Record<GodId, GodDef> = {
       },
       figureStrength: ({ state, owner, figure, base }) =>
         figure.kind === 'god' ? base + Math.min(GOD_LIMITS.anubisMaxBonus, trappedBy(state, owner).length) : base,
+      // Anubis wchłonięty: uwięzieni wojownicy wyższego boga wracają do jego puli, pozostali zostają w pułapce (s. 30).
+      onMergedInto: ({ state, owner, higher }) => {
+        for (const f of trappedBy(state, owner)) {
+          if (f.owner === higher) delete f.trappedBy;
+          else f.trappedBy = higher;
+        }
+      },
+      // Anubis zapomniany: uwięzieni wracają do pul swoich właścicieli.
+      onForgotten: ({ state, owner }) => {
+        for (const f of trappedBy(state, owner)) delete f.trappedBy;
+      },
     },
   },
   isis: {
@@ -79,6 +90,9 @@ export const GODS: Record<GodId, GodDef> = {
       canPlaceOn: ({ state, owner, figure, hex }) =>
         !((figure === null || figure.owner !== owner) && state.abilities.underworld.includes(hex)),
       terrainOverride: ({ state, hex }) => (state.abilities.underworld.includes(hex) ? 'none' : undefined),
+      onForgotten: ({ state }) => {
+        state.abilities.underworld = []; // wrota znikają z gry (s. 30)
+      },
       afterBattle: [
         {
           phase: AFTER_PHASE.lost,
@@ -107,6 +121,9 @@ export const GODS: Record<GodId, GodDef> = {
       regionRewardBonus: ({ state, owner, region }) =>
         figuresInRegion(state, region, owner).some((f) => state.abilities.radiant.includes(f.id)) ? 1 : 0,
       onFigureKilled: ({ state, figure }) => {
+        state.abilities.radiant = state.abilities.radiant.filter((id) => id !== figure.id);
+      },
+      onFigureRemoved: ({ state, figure }) => {
         state.abilities.radiant = state.abilities.radiant.filter((id) => id !== figure.id);
       },
     },

@@ -84,6 +84,12 @@ export interface EffectHooks {
   onFigureKilled?(ctx: With<{ figure: Figure; inResolution: boolean }>): void;
   /** Zginęli wojownicy (pytani wszyscy gracze). */
   onWarriorsKilled?(ctx: With<{ figures: Figure[] }>): void;
+  /** Figurka usunięta z gry (połączenie, zapomnienie) — nie jest to śmierć (pytani wszyscy). */
+  onFigureRemoved?(ctx: With<{ figure: Figure }>): void;
+  /** Ten bóg zostaje wchłonięty przy połączeniu przez `higher` (wołane dla efektów niższego boga). */
+  onMergedInto?(ctx: With<{ higher: PlayerId }>): void;
+  /** Ten bóg zostaje zapomniany (wołane dla jego efektów przed usunięciem). */
+  onForgotten?(ctx: HookContext): void;
 }
 
 export interface EffectSource {
@@ -94,8 +100,9 @@ export interface EffectSource {
 /** Wszystkie aktywne efekty gracza: zdolność boga, odblokowane moce, posiadani strażnicy. */
 export function activeEffects(state: GameState, owner: PlayerId): EffectSource[] {
   const p = state.players[owner];
-  if (p.eliminated) return [];
-  const out: EffectSource[] = [GODS[p.god]];
+  if (p.eliminated || p.mergedInto !== undefined) return [];
+  // Bóg połączony ma zdolności obu bogów (s. 25, krok 6).
+  const out: EffectSource[] = [GODS[p.god], ...p.extraGods.map((g) => GODS[g])];
   for (const power of p.unlocked) out.push(ANKH_POWERS[power]);
   const guardianTypes = new Set(
     Object.values(state.figures)
@@ -106,7 +113,9 @@ export function activeEffects(state: GameState, owner: PlayerId): EffectSource[]
   return out;
 }
 
-const livePlayers = (state: GameState) => state.players.filter((p) => !p.eliminated).map((p) => p.id);
+/** Samodzielni bogowie w grze (bez zapomnianych i wchłoniętych przy połączeniu). */
+const livePlayers = (state: GameState) =>
+  state.players.filter((p) => !p.eliminated && p.mergedInto === undefined).map((p) => p.id);
 
 export function sumHook(
   state: GameState,

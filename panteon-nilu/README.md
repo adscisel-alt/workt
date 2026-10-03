@@ -60,11 +60,18 @@ Miejsca, gdzie instrukcja i FAQ nie mówią wprost, kto decyduje albo jak dokła
 - **Karawana**: linia to ścieżka po krawędziach heksów, której oba końce dotykają rzeki, wody, wielbłąda
   lub brzegu mapy; musi podzielić region na dokładnie dwa, każdy ≥ 6 pól lądowych.
 
+## Łączenie bogów (etap 5) — model
+
+Po połączeniu oba miejsca przy stole grają dalej w swojej kolejności (po 1 akcji), ale sterują jednym
+bogiem: „wyższym” (`mergedWith`), który ma wspólne figurki, wyznawców, karty i moce oraz zdolności obu
+bogów (`extraGods`). Miejsce „niższe” ma `mergedInto`. Decyzje połączonego boga należą do wyższego
+miejsca (instrukcja: przy sporze rozstrzyga gracz wyższego boga).
+
 ## Etapy
 
 1. ✅ Silnik: mapa, regiony, sąsiedztwo, 4 akcje, tory, przejęcie monumentu.
 2. ✅ Konflikt: dominacja, bitwa (5 kroków), 7 kart, żeton remisu.
 3. ✅ UI hot-seat dla 2 graczy: plansza SVG, podświetlanie legalnych ruchów, panele graczy, tory, dziennik, ukryty wybór kart i ofert plagi.
 4. ✅ Karawana, 12 mocy ankh, 6 strażników, zdolności 5 bogów.
-5. Łączenie i eliminacja bogów, 3–5 graczy.
+5. ✅ Łączenie bogów (po 3. konflikcie), zapomniani bogowie (po 4.), rozstawienia dla 3–5 graczy.
 6. Bot, zapis i wczytanie.

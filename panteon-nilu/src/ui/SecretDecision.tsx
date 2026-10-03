@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BATTLE_CARDS } from '../content/battleCards';
 import { GODS } from '../content/gods';
+import { godName } from '../engine/util';
 import type { BattleCardId, GameState, Move, PlayerId } from '../engine/types';
 
 interface Props {
@@ -18,7 +19,7 @@ interface Props {
  * potem wybór widoczny tylko dla decydującego gracza.
  */
 export function SecretDecision({ view, player, legal, revealed, onReveal, dispatch }: Props) {
-  const god = GODS[view.players[player].god];
+  const god = { ...GODS[view.players[player].god], name: godName(view, player) };
   const kind = view.pending?.kind;
   if (!revealed) {
     return (

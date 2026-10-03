@@ -1,10 +1,10 @@
 import { ANKH_POWERS } from '../content/ankhPowers';
-import { GODS } from '../content/gods';
 import type { ActionType } from '../config/rules';
 import { DIRECTIONS, parseHex } from '../engine/hex';
 import type { GameState, HexKey, MonumentType, Move } from '../engine/types';
 import type { Interaction, Selection } from './interaction';
-import { ACTION_HINT, ACTION_LABEL, MONUMENT_LABEL, figureLabel } from './labels';
+import { godName } from '../engine/util';
+import { ACTION_HINT, ACTION_LABEL, MONUMENT_LABEL, figureLabel, seatLabel } from './labels';
 
 interface Props {
   state: GameState;
@@ -28,7 +28,7 @@ function direction(from: HexKey, to: HexKey): string {
 export function ActionPanel({ state, legal, sel, interaction, setSel, dispatch }: Props) {
   const pending = state.pending;
   if (!pending || 'waiting' in pending) return null;
-  const who = GODS[state.players[pending.player].god].name;
+  const who = pending.kind === 'chooseAction' ? seatLabel(state, pending.player) : godName(state, pending.player);
   const player = pending.player;
   const of = <T extends Move['type']>(t: T) => legal.filter((m): m is Extract<Move, { type: T }> => m.type === t);
   const radiantToggle = (moves: { radiant: boolean }[]) =>
@@ -232,6 +232,16 @@ export function ActionPanel({ state, legal, sel, interaction, setSel, dispatch }
       return (
         <Box title={`${who}: Uwielbienie`}>
           <Choices legal={legal} dispatch={dispatch} label={(m) => ((m as { use: boolean }).use ? 'Poświęć 2 wyznawców za 1 oddania' : 'Nie')} />
+        </Box>
+      );
+    case 'mergeGuardians':
+      return (
+        <Box title={`${who}: strażnicy wchłoniętego boga`}>
+          <p>Brakuje podstawek na wszystkich. Wybierz, których zatrzymać — pozostali opuszczą grę.</p>
+          <Choices legal={legal} dispatch={dispatch} label={(m) => {
+            const f = (m as { figure: string | null }).figure;
+            return f ? `Zatrzymaj: ${figureLabel(state, f)}` : 'Koniec wyboru';
+          }} />
         </Box>
       );
     case 'mummyReturn':

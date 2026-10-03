@@ -8,3 +8,4 @@ export * from './types';
 export { devotionAscending, isInRed } from './devotion';
 export { IllegalMoveError } from './util';
 export { viewFor } from './view';
+export { entityOf, godName, isEntity, seatsOf } from './util';

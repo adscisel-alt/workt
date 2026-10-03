@@ -3,7 +3,7 @@
 import { edgeKey, neighborKeys } from './hex';
 import { computeRegions, isLand, isOnBoard, isWater } from './map';
 import type { EdgeKey, GameState, HexKey, MapState, PlayerId } from './types';
-import { godName, log } from './util';
+import { entityOf, godName, log } from './util';
 
 type VertexKey = string;
 
@@ -86,7 +86,7 @@ export function caravanOptions(state: GameState): EdgeKey[][] {
 }
 
 export function startCaravan(state: GameState): void {
-  const p = state.turn.player;
+  const p = entityOf(state, state.turn.player);
   if (caravanOptions(state).length) state.pending = { kind: 'caravan', player: p };
   else log(state, `${godName(state, p)} nie może poprowadzić karawany.`, p);
 }

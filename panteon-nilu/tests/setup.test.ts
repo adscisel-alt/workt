@@ -65,6 +65,6 @@ describe('przygotowanie gry', () => {
   it('odrzuca złą liczbę graczy, powtórzonego boga i nieobsługiwany scenariusz', () => {
     expect(() => newGame({ gods: ['amun'] })).toThrow();
     expect(() => newGame({ gods: ['amun', 'amun'] })).toThrow();
-    expect(() => newGame({ scenario: 'trzy-krainy', gods: ['amun', 'ra', 'isis'] })).toThrow();
+    expect(() => newGame({ scenario: { ...TEST_SCENARIO, playerCounts: [2] }, gods: ['amun', 'ra', 'isis'] })).toThrow();
   });
 });

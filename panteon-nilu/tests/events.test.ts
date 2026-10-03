@@ -5,6 +5,10 @@ import { act, clearBoard, newGame, play } from './helpers';
 /** Wyzwala kolejne wydarzenie akcją Wyznawcy aktywnego gracza i rozstrzyga ewentualne decyzje. */
 function triggerNext(s: GameState): GameState {
   s = structuredClone(s);
+  // przed 4. konfliktem wyprowadzamy bogów z czerwonej strefy, żeby nikt nie został zapomniany
+  if (s.rules.eventTrack[s.eventIndex + 1]?.after === 'eliminateRed') {
+    for (const p of s.players) p.devotion = Math.max(p.devotion, s.rules.devotion.redMax + 1);
+  }
   s.actionTracks.followers = s.rules.actionTracks.followers.length - 2;
   s = play(s, act(s.turn.player, 'followers'));
   while (s.pending && s.pending.kind !== 'chooseAction') s = applyMove(s, legalMoves(s)[0]);
@@ -30,7 +34,7 @@ describe('tor wydarzeń', () => {
     let s = newGame();
     while (s.eventIndex < s.rules.eventTrack.length - 2) s = triggerNext(s);
     s = clearBoard(structuredClone(s));
-    s.players[1].devotion = 7;
+    s.players[1].devotion = 25;
     s = triggerNext(s);
     expect(s.result?.winners).toEqual([1]);
     expect(legalMoves(s)).toEqual([]);
