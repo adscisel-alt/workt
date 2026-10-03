@@ -1,6 +1,11 @@
 import {
   afterAction, chooseAction, endMove, moveFigure, resetMarker, resolveAction, summonFigure, unlockPower,
 } from './actions';
+import {
+  battleAfter, battleBuild, battleEnd, battleMajority, battlePlague, battleResolution, battleReveal, battleSettle,
+  buildFor, buildMonument, conflictEnd, conflictStart, plagueBid, plagueBidStart, plagueResolve, resolveRegion,
+  selectCard, skipBuild, useTiebreaker,
+} from './conflict';
 import { advanceEvent, afterEvent, resolveEvent, takeMonument } from './events';
 import { isLegal } from './legal';
 import type { GameState, Move, Task } from './types';
@@ -29,6 +34,21 @@ export function applyMove(state: GameState, move: Move): GameState {
     case 'controlMonument':
       takeMonument(next, move.monument);
       break;
+    case 'selectCard':
+      selectCard(next, move.player, move.card);
+      break;
+    case 'build':
+      buildMonument(next, move.player, move.monument, move.at);
+      break;
+    case 'skipBuild':
+      skipBuild(next, move.player);
+      break;
+    case 'plagueBid':
+      plagueBid(next, move.player, move.amount);
+      break;
+    case 'useTiebreaker':
+      useTiebreaker(next, move.use);
+      break;
   }
   runQueue(next);
   return next;
@@ -50,6 +70,34 @@ function runTask(state: GameState, task: Task): void {
       return resetMarker(state, task.action);
     case 'endTurn':
       return endTurn(state);
+    case 'conflictStart':
+      return conflictStart(state);
+    case 'resolveRegion':
+      return resolveRegion(state, task.token);
+    case 'conflictEnd':
+      return conflictEnd(state);
+    case 'battleReveal':
+      return battleReveal(state);
+    case 'battleBuild':
+      return battleBuild(state);
+    case 'buildFor':
+      return buildFor(state, task.player);
+    case 'battlePlague':
+      return battlePlague(state);
+    case 'plagueBid':
+      return plagueBidStart(state);
+    case 'plagueResolve':
+      return plagueResolve(state);
+    case 'battleMajority':
+      return battleMajority(state);
+    case 'battleResolution':
+      return battleResolution(state);
+    case 'battleSettle':
+      return battleSettle(state);
+    case 'battleAfter':
+      return battleAfter(state);
+    case 'battleEnd':
+      return battleEnd(state);
   }
 }
 

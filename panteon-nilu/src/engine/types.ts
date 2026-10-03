@@ -61,13 +61,47 @@ export interface TurnState {
   triggered: ActionType | null;
 }
 
-/** Decyzja, na którą silnik czeka. */
+/**
+ * Decyzja, na którą silnik czeka. `player` — decyzja jednego gracza;
+ * `waiting` — decyzja jednoczesna (tajna), czekamy na wszystkich z listy.
+ */
 export type Pending =
   | { kind: 'chooseAction'; player: PlayerId }
   | { kind: 'move'; player: PlayerId; moved: FigureId[] }
   | { kind: 'summon'; player: PlayerId }
   | { kind: 'unlock'; player: PlayerId; level: 1 | 2 | 3 }
-  | { kind: 'controlMonument'; player: PlayerId; candidates: MonumentId[] };
+  | { kind: 'controlMonument'; player: PlayerId; candidates: MonumentId[] }
+  | { kind: 'selectCards'; waiting: PlayerId[] }
+  | { kind: 'build'; player: PlayerId }
+  | { kind: 'plagueBid'; waiting: PlayerId[] }
+  | { kind: 'tiebreaker'; player: PlayerId };
+
+export interface ConflictState {
+  /** Żeton rozstrzygający remis: bierze go gracz, który wyzwolił konflikt. */
+  tiebreaker: { holder: PlayerId; faceUp: boolean };
+}
+
+export interface BattleState {
+  token: number;
+  region: number;
+  /** Gracze z co najmniej 1 figurką w regionie na początku bitwy. */
+  participants: PlayerId[];
+  /** Tajnie wybrane karty (ukrywane w widoku gracza do odkrycia). */
+  selected: Partial<Record<PlayerId, BattleCardId[]>>;
+  revealed: Partial<Record<PlayerId, BattleCardId[]>>;
+  /** Uczestnicy licytacji plagi (obecni w regionie na początku kroku plagi). */
+  plagueBidders: PlayerId[];
+  /** Tajne oferty bieżącej licytacji plagi. */
+  bids: Partial<Record<PlayerId, number>>;
+  /** Figurki chronione Powodzią przed śmiercią w rozstrzygnięciu. */
+  floodProtected: FigureId[];
+  /** Liczba poległych figurek każdego gracza w tej bitwie (dla Cudu). */
+  killed: Partial<Record<PlayerId, number>>;
+  strengths: Partial<Record<PlayerId, number>>;
+  /** Gracze remisujący o zwycięstwo (gdy remis). */
+  tied: PlayerId[];
+  tiebreakUsed: boolean;
+}
 
 /** Zaplanowany krok silnika (kolejka — w pełni serializowalna). */
 export type Task =
@@ -77,7 +111,21 @@ export type Task =
   | { t: 'resetMarker'; action: ActionType }
   | { t: 'resolveEvent'; event: EventType }
   | { t: 'afterEvent'; index: number }
-  | { t: 'endTurn' };
+  | { t: 'endTurn' }
+  | { t: 'conflictStart' }
+  | { t: 'resolveRegion'; token: number }
+  | { t: 'conflictEnd' }
+  | { t: 'battleReveal' }
+  | { t: 'battleBuild' }
+  | { t: 'buildFor'; player: PlayerId }
+  | { t: 'battlePlague' }
+  | { t: 'plagueBid' }
+  | { t: 'plagueResolve' }
+  | { t: 'battleMajority' }
+  | { t: 'battleResolution' }
+  | { t: 'battleSettle' }
+  | { t: 'battleAfter' }
+  | { t: 'battleEnd' };
 
 export type Move =
   | { type: 'chooseAction'; player: PlayerId; action: ActionType }
@@ -85,7 +133,12 @@ export type Move =
   | { type: 'endMove'; player: PlayerId }
   | { type: 'summon'; player: PlayerId; figure: FigureId; to: HexKey }
   | { type: 'unlockPower'; player: PlayerId; power: AnkhPowerId }
-  | { type: 'controlMonument'; player: PlayerId; monument: MonumentId };
+  | { type: 'controlMonument'; player: PlayerId; monument: MonumentId }
+  | { type: 'selectCard'; player: PlayerId; card: BattleCardId }
+  | { type: 'build'; player: PlayerId; monument: MonumentType; at: HexKey }
+  | { type: 'skipBuild'; player: PlayerId }
+  | { type: 'plagueBid'; player: PlayerId; amount: number }
+  | { type: 'useTiebreaker'; player: PlayerId; use: boolean };
 
 export interface LogEntry {
   n: number;
@@ -115,6 +168,8 @@ export interface GameState {
   /** -1 = znacznik na polu startowym toru wydarzeń. */
   eventIndex: number;
   conflictsResolved: number;
+  conflict: ConflictState | null;
+  battle: BattleState | null;
   devotionSeqCounter: number;
   turn: TurnState;
   turnNumber: number;

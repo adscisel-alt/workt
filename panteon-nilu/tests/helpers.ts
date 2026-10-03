@@ -91,3 +91,26 @@ export function randomPlayout(state: GameState, seed: number, maxMoves: number):
   }
   return { state: s, moves };
 }
+
+// ---------- Konflikt ----------
+
+import { startConflict } from '../src/engine/conflict';
+import { runQueue } from '../src/engine/game';
+import type { BattleCardId } from '../src/engine/types';
+
+/** Uruchamia wydarzenie Konflikt od razu (gracz `holder` wyzwala je i bierze żeton remisu). */
+export function conflictNow(state: GameState, holder = 0): GameState {
+  const s = structuredClone(state);
+  s.turn.player = holder;
+  s.pending = null;
+  startConflict(s);
+  runQueue(s);
+  return s;
+}
+
+export const card = (player: number, c: BattleCardId): Move => ({ type: 'selectCard', player, card: c });
+export const bid = (player: number, amount: number): Move => ({ type: 'plagueBid', player, amount });
+
+/** Pole w regionie 1 (lewa część planszy testowej) / regionie 2 (prawa). */
+export const R1 = { fertile: [k(0, 0), k(1, 0), k(0, 1), k(1, 1), k(0, 3)], desert: [k(0, 4), k(1, 4), k(2, 4), k(0, 5)] };
+export const R2 = { desert: [k(5, 0), k(6, 0), k(5, 1), k(6, 1)], fertile: [k(5, 4), k(6, 4), k(5, 5), k(6, 5)] };

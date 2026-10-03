@@ -3,8 +3,10 @@ import { powersOfLevel } from '../content/ankhPowers';
 import type { ActionType } from '../config/rules';
 import { allowedByAll, sumHook } from './hooks';
 import { neighborKeys } from './hex';
-import { adjacentHexes, areAdjacent, isEmptyLand, isOnBoard } from './map';
-import type { AnkhPowerId, Figure, FigureId, GameState, HexKey, MonumentId, PlayerId } from './types';
+import { adjacentHexes, areAdjacent, computeRegions, isEmptyLand, isHexInRegion, isOnBoard } from './map';
+import type {
+  AnkhPowerId, Figure, FigureId, GameState, HexKey, Monument, MonumentId, MonumentType, PlayerId, Terrain,
+} from './types';
 
 export const figuresOf = (state: GameState, p: PlayerId): Figure[] =>
   Object.values(state.figures).filter((f) => f.owner === p);
@@ -134,4 +136,57 @@ export function controlMonumentCandidates(state: GameState, p: PlayerId): Monume
     .filter((m) => figs.some((f) => areAdjacent(state.map, f.pos!, m.pos)))
     .map((m) => m.id)
     .sort();
+}
+
+// ---------- Regiony i konflikt ----------
+
+/** Typ terenu pola z punktu widzenia efektów (etap 4: pole z wrotami zaświatów nie jest ani żyzne, ani pustynne). */
+export function terrainOf(state: GameState, h: HexKey): Terrain {
+  return state.map.terrain[h];
+}
+
+export function figuresInRegion(state: GameState, region: number, p?: PlayerId): Figure[] {
+  return Object.values(state.figures)
+    .filter((f) => f.pos !== null && (p === undefined || f.owner === p))
+    .filter((f) => isHexInRegion(state.map, f.pos!, region))
+    .sort((a, b) => a.id.localeCompare(b.id, 'en', { numeric: true }));
+}
+
+/** Gracze z co najmniej jedną figurką w regionie (rosnąco wg id). */
+export function playersInRegion(state: GameState, region: number): PlayerId[] {
+  return [...new Set(figuresInRegion(state, region).map((f) => f.owner))].sort((a, b) => a - b);
+}
+
+export function monumentsInRegion(state: GameState, region: number): Monument[] {
+  const { landRegion } = computeRegions(state.map);
+  return Object.values(state.monuments).filter((m) => landRegion[m.pos] === region);
+}
+
+const MONUMENT_TYPES: MonumentType[] = ['obelisk', 'temple', 'pyramid'];
+
+/** Przewaga monumentów: gracz kontrolujący w regionie więcej monumentów danego typu niż każdy rywal. */
+export function monumentMajorities(state: GameState, region: number): Record<MonumentType, PlayerId | null> {
+  const out = {} as Record<MonumentType, PlayerId | null>;
+  const ms = monumentsInRegion(state, region);
+  for (const type of MONUMENT_TYPES) {
+    const counts = new Map<PlayerId, number>();
+    for (const m of ms) if (m.type === type && m.owner !== null) counts.set(m.owner, (counts.get(m.owner) ?? 0) + 1);
+    const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    out[type] = sorted.length && (sorted.length === 1 || sorted[0][1] > sorted[1][1]) ? sorted[0][0] : null;
+  }
+  return out;
+}
+
+/**
+ * Liczba przewag, za które gracz dostaje oddanie: musi mieć figurkę w regionie.
+ * Gdy przewagę ma gracz bez figurek, nikt inny nie dostaje za nią oddania (FAQ).
+ */
+export function majorityCount(state: GameState, region: number, p: PlayerId): number {
+  if (!figuresInRegion(state, region, p).length) return 0;
+  return Object.values(monumentMajorities(state, region)).filter((owner) => owner === p).length;
+}
+
+/** Puste pola lądowe regionu, na których można zbudować monument. */
+export function buildSites(state: GameState, region: number): HexKey[] {
+  return computeRegions(state.map).regions[region].filter((h) => isEmptyLand(state, h));
 }

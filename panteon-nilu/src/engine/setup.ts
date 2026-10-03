@@ -153,6 +153,8 @@ export function createGame(opts: NewGameOptions): GameState {
   };
   state.eventIndex = -1;
   state.conflictsResolved = 0;
+  state.conflict = null;
+  state.battle = null;
   state.turn = { player: 0, actions: [], triggered: null };
   state.turnNumber = 1;
   state.pending = { kind: 'chooseAction', player: 0 };

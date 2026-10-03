@@ -1,6 +1,7 @@
 export { applyMove, runQueue } from './game';
 export { createGame, buildMap, type NewGameOptions } from './setup';
-export { legalMoves, isLegal, moveKey } from './legal';
+export { legalMoves, isLegal, moveKey, pendingPlayers } from './legal';
+export { battleStrength, buildOptions } from './conflict';
 export * from './queries';
 export * from './map';
 export * from './types';

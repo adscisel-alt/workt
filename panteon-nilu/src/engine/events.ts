@@ -1,4 +1,5 @@
 import { controlMonumentCandidates } from './queries';
+import { startConflict } from './conflict';
 import { devotionAscending } from './devotion';
 import type { EventType } from '../config/rules';
 import type { GameState, MonumentId } from './types';
@@ -30,9 +31,7 @@ export function resolveEvent(state: GameState, event: EventType): void {
       log(state, 'Karawana — TODO (etap 4): wydarzenie pominięte.');
       break;
     case 'conflict':
-      // TODO (etap 2): rozstrzyganie regionów. Na razie liczymy tylko konflikty.
-      state.conflictsResolved++;
-      log(state, `Konflikt nr ${state.conflictsResolved} — TODO (etap 2): rozstrzyganie pominięte.`);
+      startConflict(state);
       break;
   }
 }

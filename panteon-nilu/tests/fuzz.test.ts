@@ -1,3 +1,4 @@
+import { ALL_BATTLE_CARDS } from '../src/content/battleCards';
 import { legalMoves } from '../src/engine';
 import { isLand } from '../src/engine/map';
 import type { GameState } from '../src/engine/types';
@@ -17,6 +18,8 @@ function checkInvariants(s: GameState) {
   }
   for (const p of s.players) {
     expect(p.followers).toBeGreaterThanOrEqual(0);
+    expect([...p.hand, ...p.used].sort()).toEqual([...ALL_BATTLE_CARDS].sort());
+    expect(p.hand.length).toBeGreaterThan(0);
     const onMonuments = Object.values(s.monuments).filter((m) => m.owner === p.id).length;
     expect(p.ankhPool + onMonuments).toBe(s.rules.ankhTokensPerGod - s.rules.dashboardSlots);
   }
@@ -39,6 +42,9 @@ describe('losowe rozgrywki (tylko legalne ruchy z generatora)', () => {
       expect(JSON.parse(JSON.stringify(s))).toEqual(s);
     }
     expect(s.result).not.toBeNull();
+    // koniec po 5. konflikcie albo wcześniej — gdy ktoś dotarł na szczyt toru oddania
+    const topReached = s.players.some((p) => p.devotion === s.rules.devotion.top);
+    expect(s.conflictsResolved === 5 || topReached).toBe(true);
   });
 
   it('determinizm: to samo ziarno i te same ruchy dają identyczny stan', () => {

@@ -46,7 +46,7 @@ npm run build     # typecheck + build produkcyjny
 ## Etapy
 
 1. ✅ Silnik: mapa, regiony, sąsiedztwo, 4 akcje, tory, przejęcie monumentu.
-2. Konflikt: dominacja, bitwa, 7 kart, żeton remisu.
+2. ✅ Konflikt: dominacja, bitwa (5 kroków), 7 kart, żeton remisu.
 3. UI hot-seat dla 2 graczy.
 4. Karawana, moce ankh, strażnicy, zdolności bogów.
 5. Łączenie i eliminacja bogów, 3–5 graczy.
