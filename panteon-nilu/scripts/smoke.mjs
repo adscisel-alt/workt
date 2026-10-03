@@ -9,6 +9,8 @@ const server = await createServer({ server: { port: 4179, strictPort: true }, lo
 await server.listen();
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 const page = await browser.newPage({ viewport: { width: 1400, height: 950 } });
+// test dotyczy widoku 2D (SVG) — przy dostępnym WebGL domyślny jest widok 3D
+await page.addInitScript(() => localStorage.setItem('panteon-nilu:widok', '2d'));
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 const fail = (msg) => {

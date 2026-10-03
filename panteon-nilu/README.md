@@ -2,7 +2,7 @@
 
 Hobbystyczna przeglądarkowa gra strategiczna inspirowana mechaniką planszówki
 *Ankh: Gods of Egypt* (Eric M. Lang, CMON 2021). Własna nazwa, własna grafika (proste
-kształty SVG), własne sformułowania tekstów — bez ilustracji i tekstów wydawcy.
+kształty SVG i proceduralna scena 3D), własne sformułowania tekstów — bez ilustracji i tekstów wydawcy.
 
 ## Uruchomienie
 
@@ -11,7 +11,10 @@ npm install
 npm test          # testy silnika (Vitest)
 npm run dev       # gra w przeglądarce (hot-seat, 2 graczy)
 npm run build     # typecheck + build produkcyjny
-npm run smoke     # test dymny w Chromium (Playwright); CHROMIUM_PATH=... dla własnej przeglądarki
+npm run smoke     # test dymny widoku 2D w Chromium (Playwright); CHROMIUM_PATH=... dla własnej przeglądarki
+npm run smoke3d -- <katalog>          # test dymny widoku 3D (WebGL przez SwiftShader) + zrzuty ekranu
+npm run shot3d -- <plik.png> [midgame|summon] [high|low]   # pojedynczy zrzut sceny 3D
+npm run models    # przebudowa modeli figurek (public/models/*.glb) i manifestu
 ```
 
 ## Architektura
@@ -27,6 +30,44 @@ npm run smoke     # test dymny w Chromium (Playwright); CHROMIUM_PATH=... dla w�
 - **Moce, bogowie i strażnicy** to dane z hookami (`src/content`). Silnik pyta o nie
   tylko przez dispatcher `src/engine/hooks.ts`.
 - **Liczby i tory** są w `src/config/rules.ts`, a **scenariusze map** w `src/config/scenarios`.
+
+## Warstwa 3D
+
+Widok 3D (React Three Fiber + drei + @react-three/postprocessing) to tylko inna prezentacja:
+czyta stan gry i wysyła te same akcje co plansza SVG (wspólne `interaction` z legalnych ruchów silnika).
+Silnik nie zmienił się w tym etapie. Przełącznik **2D / 3D** jest na górnym pasku (zapamiętywany);
+bez WebGL2 gra startuje w 2D. Kod 3D (`src/ui3d`) jest w osobnym, leniwie ładowanym fragmencie.
+
+- **Plansza**: heksy jako niskie graniastosłupy z fazowaną krawędzią, jeden `InstancedMesh` na teren.
+  Osobne materiały PBR dla żyznych pól, pustyni i dna wody; tekstury rysowane proceduralnie na kanwie
+  (własny RNG, bez plików graficznych), UV w przestrzeni świata, więc kafle się nie powtarzają.
+  Woda: shader z falami w normalnych (odbicia HDRI). Rzeki, wielbłądy, żetony regionów i wrota też są w 3D.
+- **Monumenty** (obelisk, świątynia, piramida) są złożone z prostych brył; znacznik właściciela ma kolor gracza.
+- **Figurki**: modele `*.glb` z `public/models` według `manifest.json` (bez sondowania plików).
+  Kolejność: `god-<bóg>.glb` → `god.glb`, `warrior-<bóg>.glb` → `warrior.glb`,
+  `guardian-<strażnik>.glb` → `guardian.glb`. Materiał o nazwie zaczynającej się od `team` dostaje
+  kolor gracza. Model skaluje się do wysokości figurki. Brak pliku albo błąd wczytania → pionek-zastępnik.
+  W repozytorium są własne, proceduralne statuetki (`npm run models`): bóg z kompresją **meshopt**,
+  wojownik z **Draco**. Dekoder Draco (kopia z `three/examples/jsm/libs/draco/gltf`, Apache 2.0) leży w `public/draco`, bez CDN. Strażnicy celowo nie mają
+  modelu, więc pokazują pionek-zastępnik.
+- **Światło**: HDRI `apartment.exr` z pakietu `@pmndrs/assets` (CC0, Poly Haven), jedno światło
+  kierunkowe z miękkimi cieniami (PCF), tone mapping ACES.
+- **Postprocessing**: okluzja otoczenia (N8AO), bloom, tilt-shift, winieta (+ SMAA). Każdy efekt ma
+  przełącznik w panelu **⚙ Grafika**.
+- **Kamera**: orbita z limitem kąta i odległości, granice celu w obrębie planszy. Podczas bitwy kamera
+  płynnie najeżdża na region (z czerwonym obrysem jego granicy), a po bitwie wraca do poprzedniego ujęcia.
+- **Animacje** (czasowe, niezależne od liczby klatek): ruch po łuku z easingiem, pojawienie się przy
+  przywołaniu, zapadanie się zabitych figurek, cząsteczki piasku przy lądowaniu i pył nad pustynią,
+  pulsujące legalne pola.
+- **Interakcja**: raycasting po heksach (niewidoczna warstwa instancji), obrys pola pod kursorem
+  (złoty, gdy pole jest legalnym celem), HUD to zwykły HTML nad kanwą.
+- **Wydajność**: adaptacyjna rozdzielczość (`PerformanceMonitor`, DPR 0,6–2). Tryb **Niska jakość**
+  wyłącza postprocessing, cienie i cząsteczki oraz ogranicza DPR do 1. Licznik FPS (opcja w panelu)
+  pokazuje też wywołania rysowania i trójkąty: ok. 35–45 wywołań i 14–15 tys. trójkątów w niskiej jakości
+  (2 graczy), ok. 110 wywołań i 32 tys. trójkątów w wysokiej (3 graczy, z cieniami i efektami).
+  Celem jest 60 FPS na laptopie z GPU zintegrowanym, ale **nie zmierzyłem tego na prawdziwym GPU**.
+  Testy dymne działają na programowym WebGL (SwiftShader, CPU), który daje 1–2 FPS i nie mówi nic
+  o wydajności na sprzęcie.
 
 ## Źródła danych
 
@@ -76,6 +117,7 @@ miejsca (instrukcja: przy sporze rozstrzyga gracz wyższego boga).
 4. ✅ Karawana, 12 mocy ankh, 6 strażników, zdolności 5 bogów.
 5. ✅ Łączenie bogów (po 3. konflikcie), zapomniani bogowie (po 4.), rozstawienia dla 3–5 graczy.
 6. ✅ Boty (losowy, heurystyczny) i zapis/wczytanie (przeglądarka + plik .json).
+7. Warstwa 3D (React Three Fiber) — opis wyżej.
 
 ## Boty
 

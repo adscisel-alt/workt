@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { botMove, nextBotSeat, type Controller } from '../bot';
 import { GODS } from '../content/gods';
 import { SCENARIOS } from '../config/scenarios';
@@ -16,6 +16,48 @@ import { PlayerPanel } from './PlayerPanel';
 import { SecretDecision } from './SecretDecision';
 import { deleteSave, downloadSave, listSaves, storeSave, type StoredSave } from './storage';
 import { Tracks } from './Tracks';
+import { SettingsPanel } from '../ui3d/SettingsPanel';
+import { loadSettings, saveSettings, type Settings3D } from '../ui3d/settings';
+
+// Scena 3D ładowana leniwie — widok 2D nie pobiera three.js.
+const Scene3D = lazy(() => import('../ui3d/Scene3D'));
+
+type ViewMode = '2d' | '3d';
+const VIEW_KEY = 'panteon-nilu:widok';
+let webgl: boolean | null = null;
+/** Czy przeglądarka faktycznie tworzy kontekst WebGL2 (samo istnienie klasy nie wystarcza — np. zablokowane GPU). */
+function webglAvailable(): boolean {
+  if (webgl !== null) return webgl;
+  webgl = false;
+  try {
+    if (typeof window !== 'undefined' && typeof window.WebGL2RenderingContext !== 'undefined') {
+      const gl = document.createElement('canvas').getContext('webgl2');
+      webgl = !!gl;
+      gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    }
+  } catch {
+    /* brak WebGL — zostaje widok 2D */
+  }
+  return webgl;
+}
+
+function loadView(): ViewMode {
+  try {
+    const v = localStorage.getItem(VIEW_KEY);
+    if (v === '2d' || v === '3d') return v === '3d' && !webglAvailable() ? '2d' : v;
+  } catch {
+    /* pamięć niedostępna */
+  }
+  return webglAvailable() ? '3d' : '2d';
+}
+
+function saveView(v: ViewMode) {
+  try {
+    localStorage.setItem(VIEW_KEY, v);
+  } catch {
+    /* pamięć niedostępna */
+  }
+}
 
 /** Opóźnienie ruchu bota (ms), żeby dało się śledzić grę. */
 export const BOT_DELAY = 400;
@@ -99,7 +141,42 @@ function GameScreen({ game, setState, onNew }: { game: Game; setState(s: GameSta
     else setMessage(storeSave({ id: savedAt, name, savedAt, data }) ? 'Zapisano w przeglądarce.' : 'Nie udało się zapisać w przeglądarce — pobierz plik.');
   };
 
+  // Tylko w trybie deweloperskim: bieżący stan dla testów w przeglądarce.
+  if (import.meta.env.DEV) (window as unknown as { __panteonState: GameState }).__panteonState = state;
+
   const activeIds = [...(pending ? ('waiting' in pending ? pending.waiting : [pending.player]) : []), state.turn.player];
+
+  // Widok 2D/3D i ustawienia grafiki (zapamiętywane w przeglądarce).
+  const [mode, setModeState] = useState<ViewMode>(loadView);
+  const setMode = (v: ViewMode) => {
+    setModeState(v);
+    saveView(v);
+  };
+  const [settings3d, setSettings3d] = useState<Settings3D>(loadSettings);
+  const changeSettings = (s: Settings3D) => {
+    setSettings3d(s);
+    saveSettings(s);
+  };
+  const [showSettings, setShowSettings] = useState(false);
+  const fpsRef = useRef<HTMLSpanElement>(null);
+
+  /** Te same akcje dla planszy 2D i sceny 3D — obie tylko wyświetlają ruchy z silnika. */
+  const boardHandlers = {
+    onFigure: (id: string) => setSel({ ...sel, figure: id, pushTo: undefined }),
+    onHex: (h: string) => {
+      const a = interaction.hexActions.get(h);
+      if (a?.kind === 'move') dispatch(a.move);
+      else if (a?.kind === 'select') setSel(a.sel);
+    },
+    onEdge: (e: string) => {
+      const cur = sel.camels ?? [];
+      setSel({ camels: cur.includes(e) ? cur.filter((x) => x !== e) : [...cur, e] });
+    },
+    onMonument: (id: string) => {
+      const m = interaction.monumentMoves.get(id);
+      if (m) dispatch(m);
+    },
+  };
 
   return (
     <div className="app">
@@ -107,33 +184,47 @@ function GameScreen({ game, setState, onNew }: { game: Game; setState(s: GameSta
         <h1>Panteon Nilu</h1>
         <span className="muted">Tura {state.turnNumber}</span>
         <span className="topbar-actions">
+          {webglAvailable() && (
+            <span className="seg">
+              {(['2d', '3d'] as const).map((v) => (
+                <button key={v} className={mode === v ? 'on' : ''} onClick={() => setMode(v)} data-view={v}>
+                  {v.toUpperCase()}
+                </button>
+              ))}
+            </span>
+          )}
           <button className="ghost" onClick={() => save(false)} data-save>Zapisz</button>
           <button className="ghost" onClick={() => save(true)} data-download>Pobierz zapis</button>
           <button className="ghost" onClick={onNew}>Nowa gra</button>
         </span>
       </header>
-      <main className="layout">
+      <main className={`layout${mode === '3d' ? ' layout-3d' : ''}`}>
         <div className="board-wrap">
-          <Board
-            state={view}
-            interaction={interaction}
-            selectedFigure={sel.figure}
-            regionTint={regionTint}
-            onFigure={(id) => setSel({ ...sel, figure: id, pushTo: undefined })}
-            onHex={(h) => {
-              const a = interaction.hexActions.get(h);
-              if (a?.kind === 'move') dispatch(a.move);
-              else if (a?.kind === 'select') setSel(a.sel);
-            }}
-            onEdge={(e) => {
-              const cur = sel.camels ?? [];
-              setSel({ camels: cur.includes(e) ? cur.filter((x) => x !== e) : [...cur, e] });
-            }}
-            onMonument={(id) => {
-              const m = interaction.monumentMoves.get(id);
-              if (m) dispatch(m);
-            }}
-          />
+          {mode === '3d' ? (
+            <div className="scene-wrap">
+              <Suspense fallback={<p className="scene-loading">Ładowanie sceny 3D…</p>}>
+                <Scene3D
+                  state={view}
+                  interaction={interaction}
+                  selectedFigure={sel.figure}
+                  regionTint={regionTint}
+                  settings={settings3d}
+                  hudInset={400}
+                  fpsRef={settings3d.showFps ? fpsRef : undefined}
+                  {...boardHandlers}
+                />
+              </Suspense>
+              <div className="hud3d">
+                <button className="hud-btn" onClick={() => setShowSettings(!showSettings)} data-settings-toggle>
+                  ⚙ Grafika
+                </button>
+                {showSettings && <SettingsPanel settings={settings3d} onChange={changeSettings} />}
+                {settings3d.showFps && <span className="fps" ref={fpsRef} data-fps>…</span>}
+              </div>
+            </div>
+          ) : (
+            <Board state={view} interaction={interaction} selectedFigure={sel.figure} regionTint={regionTint} {...boardHandlers} />
+          )}
         </div>
         <aside className="side">
           {message && <p className="message" role="status">{message}</p>}

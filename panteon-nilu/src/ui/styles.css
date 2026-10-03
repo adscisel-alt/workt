@@ -170,3 +170,25 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: 
 .saves li button:first-child { flex: 1; text-align: left; }
 .newgame h2 { margin-top: 12px; }
 @media (max-width: 600px) { .topbar { flex-wrap: wrap; } }
+
+/* warstwa 3D */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 10px; }
+.layout-3d { grid-template-columns: 1fr; padding: 0; position: relative; }
+.layout-3d .board-wrap { height: calc(100vh - 58px); }
+.layout-3d .side {
+  position: absolute; top: 12px; right: 12px; width: 380px; max-height: calc(100vh - 82px); overflow: auto;
+  padding-right: 2px; z-index: 2;
+}
+.layout-3d .side > section { background: color-mix(in srgb, var(--panel) 90%, transparent); backdrop-filter: blur(4px); }
+.scene-wrap { position: relative; width: 100%; height: 100%; }
+.scene3d { width: 100%; height: 100%; display: block; touch-action: none; }
+.scene-loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: var(--muted); }
+.hud3d { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; z-index: 2; }
+.hud-btn { background: var(--panel); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+.settings3d { background: color-mix(in srgb, var(--panel) 94%, transparent); border: 1px solid var(--line); border-radius: 10px; padding: 10px; width: 250px; }
+.fps { font: 12px/1.3 ui-monospace, monospace; background: rgba(0,0,0,0.6); color: #e8ffe0; padding: 4px 8px; border-radius: 6px; }
+@media (max-width: 900px) {
+  .layout-3d .board-wrap { height: 62vh; }
+  .layout-3d .side { position: static; width: auto; max-height: none; padding: 12px; }
+}
