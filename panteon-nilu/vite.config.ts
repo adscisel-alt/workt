@@ -6,6 +6,6 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
   },
 });

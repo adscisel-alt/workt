@@ -9,8 +9,9 @@ kształty SVG), własne sformułowania tekstów — bez ilustracji i tekstów wy
 ```bash
 npm install
 npm test          # testy silnika (Vitest)
-npm run dev       # podgląd (UI od etapu 3)
+npm run dev       # gra w przeglądarce (hot-seat, 2 graczy)
 npm run build     # typecheck + build produkcyjny
+npm run smoke     # test dymny w Chromium (Playwright); CHROMIUM_PATH=... dla własnej przeglądarki
 ```
 
 ## Architektura
@@ -21,6 +22,8 @@ npm run build     # typecheck + build produkcyjny
   `applyMove` odrzuca każdy ruch spoza tej listy.
 - **Decyzje w trakcie rozstrzygania** obsługuje pole `pending` (na co silnik czeka)
   i kolejka kroków `queue`. Obie są serializowalne.
+- **Ukryte informacje**: `viewFor(stan, gracz)` zakrywa cudze karty i oferty; UI pokazuje
+  tajne decyzje dopiero po ekranie przekazania urządzenia.
 - **Moce, bogowie i strażnicy** to dane z hookami (`src/content`). Silnik pyta o nie
   tylko przez dispatcher `src/engine/hooks.ts`.
 - **Liczby i tory** są w `src/config/rules.ts`, a **scenariusze map** w `src/config/scenarios`.
@@ -47,7 +50,7 @@ npm run build     # typecheck + build produkcyjny
 
 1. ✅ Silnik: mapa, regiony, sąsiedztwo, 4 akcje, tory, przejęcie monumentu.
 2. ✅ Konflikt: dominacja, bitwa (5 kroków), 7 kart, żeton remisu.
-3. UI hot-seat dla 2 graczy.
+3. ✅ UI hot-seat dla 2 graczy: plansza SVG, podświetlanie legalnych ruchów, panele graczy, tory, dziennik, ukryty wybór kart i ofert plagi.
 4. Karawana, moce ankh, strażnicy, zdolności bogów.
 5. Łączenie i eliminacja bogów, 3–5 graczy.
 6. Bot, zapis i wczytanie.

@@ -7,3 +7,4 @@ export * from './map';
 export * from './types';
 export { devotionAscending, isInRed } from './devotion';
 export { IllegalMoveError } from './util';
+export { viewFor } from './view';
