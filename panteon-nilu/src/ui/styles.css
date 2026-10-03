@@ -146,3 +146,16 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: 
 .newgame label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 .region-token { pointer-events: none; }
 .card b { padding-right: 30px; }
+
+/* etap 4 */
+.edge-choice { stroke: var(--target); stroke-width: 6; stroke-linecap: round; opacity: 0.55; cursor: pointer; }
+.edge-choice:hover { opacity: 1; }
+.edge-selected { stroke: #8a5a2b; stroke-width: 7; stroke-linecap: round; cursor: pointer; }
+.portal ellipse { fill: none; stroke: #5b2d8a; stroke-width: 2.5; pointer-events: none; }
+.portal ellipse:first-child { fill: rgba(91, 45, 138, 0.25); }
+.sun-ring { fill: none; stroke: #f2b705; stroke-width: 3; stroke-dasharray: 3 2; }
+.claw { stroke-width: 4; stroke-linecap: round; pointer-events: none; }
+.hex-tint-a { filter: sepia(0.6) hue-rotate(-20deg) saturate(1.6); }
+.hex-tint-b { filter: sepia(0.6) hue-rotate(180deg) saturate(1.6); }
+.toggle { display: flex; gap: 6px; align-items: center; font-size: 13px; margin: 6px 0; }
+.status { font-size: 12px; margin-top: 4px; }

@@ -1,3 +1,4 @@
+import { sumHook } from './hooks';
 import type { GameState, PlayerId } from './types';
 import { godName, log } from './util';
 
@@ -18,6 +19,8 @@ export const isInRed = (state: GameState, p: PlayerId): boolean =>
  */
 export function changeDevotion(state: GameState, p: PlayerId, delta: number, reason: string): void {
   if (delta === 0 || state.result) return;
+  // Każde wywołanie z dodatnią zmianą to jedna „instancja” zysku (np. Hojność dodaje +1 raz).
+  if (delta > 0) delta += sumHook(state, p, (h, ctx) => h.devotionGainBonus?.(ctx));
   const player = state.players[p];
   const before = player.devotion;
   const after = Math.max(0, Math.min(state.rules.devotion.top, before + delta));

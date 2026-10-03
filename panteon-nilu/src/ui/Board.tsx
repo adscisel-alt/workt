@@ -1,7 +1,7 @@
 import { GODS } from '../content/gods';
 import { GUARDIANS } from '../content/guardians';
 import { computeRegions, regionsInConflictOrder } from '../engine/map';
-import type { Figure, GameState, HexKey, Monument } from '../engine/types';
+import type { EdgeKey, Figure, GameState, HexKey, Monument } from '../engine/types';
 import type { Interaction } from './interaction';
 import { boardBounds, edgeSegment, HEX_R, hexCenter, hexCorners, pointsAttr } from './layout';
 import { MONUMENT_LABEL } from './labels';
@@ -10,14 +10,17 @@ interface Props {
   state: GameState;
   interaction: Interaction;
   selectedFigure?: string;
+  /** Podświetlenie regionów (np. wybór regionu po karawanie): pole -> etykieta. */
+  regionTint?: Map<HexKey, string>;
   onHex(h: HexKey): void;
   onFigure(id: string): void;
   onMonument(id: string): void;
+  onEdge?(e: EdgeKey): void;
 }
 
 const TERRAIN_FILL = { fertile: 'var(--fertile)', desert: 'var(--desert)', water: 'var(--water)' };
 
-export function Board({ state, interaction, selectedFigure, onHex, onFigure, onMonument }: Props) {
+export function Board({ state, interaction, selectedFigure, regionTint, onHex, onFigure, onMonument, onEdge }: Props) {
   const hexes = Object.keys(state.map.terrain);
   const b = boardBounds(hexes);
   const figures = Object.values(state.figures).filter((f) => f.pos !== null);
@@ -35,8 +38,9 @@ export function Board({ state, interaction, selectedFigure, onHex, onFigure, onM
     >
       <g>
         {hexes.map((h) => {
-          const target = interaction.hexMoves.has(h);
+          const target = interaction.hexActions.has(h);
           const inBattle = battleRegion !== undefined && landRegion[h] === battleRegion;
+          const tint = regionTint?.get(h);
           return (
             <polygon
               key={h}
@@ -44,7 +48,7 @@ export function Board({ state, interaction, selectedFigure, onHex, onFigure, onM
               data-target={target || undefined}
               points={pointsAttr(hexCorners(h, HEX_R - 0.5))}
               fill={TERRAIN_FILL[state.map.terrain[h]]}
-              className={`hex${target ? ' hex-target' : ''}${inBattle ? ' hex-battle' : ''}`}
+              className={`hex${target ? ' hex-target' : ''}${inBattle ? ' hex-battle' : ''}${tint ? ` hex-tint-${tint}` : ''}`}
               onClick={() => target && onHex(h)}
             />
           );
@@ -58,6 +62,31 @@ export function Board({ state, interaction, selectedFigure, onHex, onFigure, onM
         {state.map.camels.map((e) => {
           const [p, q] = edgeSegment(e);
           return <line key={e} x1={p.x} y1={p.y} x2={q.x} y2={q.y} className="camel" />;
+        })}
+        {[...interaction.selectedEdges, ...interaction.edgeChoices].map((e) => {
+          const [p, q] = edgeSegment(e);
+          const chosen = interaction.selectedEdges.has(e);
+          return (
+            <line
+              key={`c-${e}`}
+              x1={p.x} y1={p.y} x2={q.x} y2={q.y}
+              className={chosen ? 'edge-selected' : 'edge-choice'}
+              data-edge={e}
+              onClick={() => onEdge?.(e)}
+            />
+          );
+        })}
+      </g>
+      <g className="underworld">
+        {state.abilities.underworld.map((h) => {
+          const c = hexCenter(h);
+          return (
+            <g key={h} transform={`translate(${c.x},${c.y})`} className="portal" data-underworld={h}>
+              <title>Wrota zaświatów</title>
+              <ellipse rx={22} ry={13} />
+              <ellipse rx={14} ry={7} />
+            </g>
+          );
         })}
       </g>
       <g className="tokens">
@@ -90,13 +119,31 @@ export function Board({ state, interaction, selectedFigure, onHex, onFigure, onM
             color={color(f.owner)}
             selected={selectedFigure === f.id}
             selectable={interaction.selectableFigures.has(f.id)}
+            radiant={state.abilities.radiant.includes(f.id)}
             onClick={() => interaction.selectableFigures.has(f.id) && onFigure(f.id)}
           />
         ))}
       </g>
+      <g className="claws">
+        {figures.filter((f) => f.aim).map((f) =>
+          f.aim!.map((h) => {
+            const a = hexCenter(f.pos!);
+            const t = hexCenter(h);
+            return (
+              <line
+                key={`${f.id}-${h}`}
+                x1={a.x + (t.x - a.x) * 0.35} y1={a.y + (t.y - a.y) * 0.35}
+                x2={a.x + (t.x - a.x) * 0.7} y2={a.y + (t.y - a.y) * 0.7}
+                className="claw"
+                style={{ stroke: color(f.owner) }}
+              />
+            );
+          }),
+        )}
+      </g>
       {/* pola docelowe nad figurkami, by dało się je kliknąć */}
       <g>
-        {[...interaction.hexMoves.keys()].map((h) => {
+        {[...interaction.hexActions.keys()].map((h) => {
           const c = hexCenter(h);
           return (
             <circle key={h} cx={c.x} cy={c.y} r={7} className="target-dot" onClick={() => onHex(h)} data-target-dot={h} />
@@ -155,14 +202,15 @@ function MonumentShape({ m, color, selectable, onClick }: { m: Monument; color: 
 }
 
 function FigureShape({
-  f, color, selected, selectable, onClick,
-}: { f: Figure; color: string; selected: boolean; selectable: boolean; onClick(): void }) {
+  f, color, selected, selectable, radiant, onClick,
+}: { f: Figure; color: string; selected: boolean; selectable: boolean; radiant: boolean; onClick(): void }) {
   const c = hexCenter(f.pos!);
   const cls = `figure${selectable ? ' figure-selectable' : ''}${selected ? ' figure-selected' : ''}`;
   const label = f.kind === 'guardian' ? GUARDIANS[f.guardian!].name : f.kind === 'god' ? 'Bóg' : 'Wojownik';
   return (
     <g transform={`translate(${c.x},${c.y})`} className={cls} onClick={onClick} data-figure={f.id}>
-      <title>{label}</title>
+      <title>{`${label}${radiant ? ' (promienny)' : ''}`}</title>
+      {radiant && <circle r={f.kind === 'god' ? 21 : 15} className="sun-ring" />}
       {f.kind === 'god' && (
         <>
           <circle r={16} fill={color} />

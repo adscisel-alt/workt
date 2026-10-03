@@ -1,6 +1,6 @@
 import { applyMove, legalMoves } from '../src/engine';
 import type { GameState } from '../src/engine/types';
-import { act, newGame, play } from './helpers';
+import { act, clearBoard, newGame, play } from './helpers';
 
 /** Wyzwala kolejne wydarzenie akcją Wyznawcy aktywnego gracza i rozstrzyga ewentualne decyzje. */
 function triggerNext(s: GameState): GameState {
@@ -29,7 +29,7 @@ describe('tor wydarzeń', () => {
   it('zwycięzca po ostatnim wydarzeniu: najwięcej oddania', () => {
     let s = newGame();
     while (s.eventIndex < s.rules.eventTrack.length - 2) s = triggerNext(s);
-    s = structuredClone(s);
+    s = clearBoard(structuredClone(s));
     s.players[1].devotion = 7;
     s = triggerNext(s);
     expect(s.result?.winners).toEqual([1]);
@@ -39,7 +39,7 @@ describe('tor wydarzeń', () => {
   it('remis pola rozstrzyga stos: wygrywa żeton na szczycie', () => {
     let s = newGame();
     while (s.eventIndex < s.rules.eventTrack.length - 2) s = triggerNext(s);
-    s = structuredClone(s);
+    s = clearBoard(structuredClone(s)); // ostatni konflikt bez figurek — nie zmienia oddania
     s.players[0].devotion = 4;
     s.players[1].devotion = 4;
     s.players[0].devotionSeq = 10;

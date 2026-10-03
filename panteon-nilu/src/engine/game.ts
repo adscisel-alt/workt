@@ -1,11 +1,15 @@
 import {
-  afterAction, chooseAction, endMove, moveFigure, resetMarker, resolveAction, summonFigure, unlockPower,
+  afterAction, aimScorpion, aimScorpionTask, anubisTrap, anubisTrapTask, chooseAction, continueSummon, endMove,
+  endSummon, moveFigure, mummyReturn, mummyReturnTask, resetMarker, resolveAction, resumeMove, summonFigure,
+  unlockPower,
 } from './actions';
 import {
-  battleAfter, battleBuild, battleEnd, battleMajority, battlePlague, battleResolution, battleReveal, battleSettle,
-  buildFor, buildMonument, conflictEnd, conflictStart, plagueBid, plagueBidStart, plagueResolve, resolveRegion,
-  selectCard, skipBuild, useTiebreaker,
+  afterBattlePhase, afterBattleStep, announceTwoCards, battleAfter, battleBuild, battleCards, battleEnd, battleKill,
+  battleMajority, battleObelisk, battlePlague, battleResolution, battleReveal, battleSettle, buildFor, buildMonument,
+  conflictEnd, conflictStart, obeliskDone, obeliskMove, placeUnderworld, plagueBid, plagueBidStart, plagueResolve,
+  protectAsk, protectFigure, resolveRegion, selectCard, skipBuild, useTiebreaker, worshipful,
 } from './conflict';
+import { caravan, caravanKeep, caravanSwap } from './caravan';
 import { advanceEvent, afterEvent, resolveEvent, takeMonument } from './events';
 import { isLegal } from './legal';
 import type { GameState, Move, Task } from './types';
@@ -15,43 +19,62 @@ import { IllegalMoveError, log } from './util';
 export function applyMove(state: GameState, move: Move): GameState {
   if (!isLegal(state, move)) throw new IllegalMoveError(`Nielegalny ruch: ${JSON.stringify(move)}`);
   const next = structuredClone(state);
-  switch (move.type) {
-    case 'chooseAction':
-      chooseAction(next, move.action);
-      break;
-    case 'moveFigure':
-      moveFigure(next, move.figure, move.to);
-      break;
-    case 'endMove':
-      endMove(next);
-      break;
-    case 'summon':
-      summonFigure(next, move.figure, move.to);
-      break;
-    case 'unlockPower':
-      unlockPower(next, move.player, move.power);
-      break;
-    case 'controlMonument':
-      takeMonument(next, move.monument);
-      break;
-    case 'selectCard':
-      selectCard(next, move.player, move.card);
-      break;
-    case 'build':
-      buildMonument(next, move.player, move.monument, move.at);
-      break;
-    case 'skipBuild':
-      skipBuild(next, move.player);
-      break;
-    case 'plagueBid':
-      plagueBid(next, move.player, move.amount);
-      break;
-    case 'useTiebreaker':
-      useTiebreaker(next, move.use);
-      break;
-  }
+  dispatch(next, move);
   runQueue(next);
   return next;
+}
+
+function dispatch(state: GameState, m: Move): void {
+  switch (m.type) {
+    case 'chooseAction':
+      return chooseAction(state, m.action);
+    case 'moveFigure':
+      return moveFigure(state, m.figure, m.to, m.push);
+    case 'endMove':
+      return endMove(state);
+    case 'summon':
+      return summonFigure(state, m.player, m.figure, m.to, m.source, m.radiant);
+    case 'endSummon':
+      return endSummon(state);
+    case 'unlockPower':
+      return unlockPower(state, m.player, m.power);
+    case 'controlMonument':
+      return takeMonument(state, m.monument);
+    case 'selectCard':
+      return selectCard(state, m.player, m.card, m.second);
+    case 'build':
+      return buildMonument(state, m.player, m.monument, m.at);
+    case 'skipBuild':
+      return skipBuild(state, m.player);
+    case 'plagueBid':
+      return plagueBid(state, m.player, m.amount);
+    case 'useTiebreaker':
+      return useTiebreaker(state, m.use);
+    case 'aimScorpion':
+      return aimScorpion(state, m.figure, m.aim);
+    case 'caravan':
+      return caravan(state, m.player, m.camels);
+    case 'caravanKeep':
+      return caravanKeep(state, m.player, m.region);
+    case 'caravanSwap':
+      return caravanSwap(state, m.player, m.swap);
+    case 'obeliskMove':
+      return obeliskMove(state, m.player, m.figure, m.to);
+    case 'obeliskDone':
+      return obeliskDone(state, m.player);
+    case 'amunAnnounce':
+      return announceTwoCards(state, m.player, m.use);
+    case 'anubisTrap':
+      return anubisTrap(state, m.player, m.figure);
+    case 'isisProtect':
+      return protectFigure(state, m.player, m.figure);
+    case 'underworld':
+      return placeUnderworld(state, m.player, m.from, m.to);
+    case 'worshipful':
+      return worshipful(state, m.player, m.use);
+    case 'mummyReturn':
+      return mummyReturn(state, m.figure, m.to, m.radiant);
+  }
 }
 
 function runTask(state: GameState, task: Task): void {
@@ -76,6 +99,10 @@ function runTask(state: GameState, task: Task): void {
       return resolveRegion(state, task.token);
     case 'conflictEnd':
       return conflictEnd(state);
+    case 'battleObelisk':
+      return battleObelisk(state);
+    case 'battleCards':
+      return battleCards(state);
     case 'battleReveal':
       return battleReveal(state);
     case 'battleBuild':
@@ -94,10 +121,28 @@ function runTask(state: GameState, task: Task): void {
       return battleResolution(state);
     case 'battleSettle':
       return battleSettle(state);
+    case 'protectAsk':
+      return protectAsk(state, task.player, task.candidates);
+    case 'battleKill':
+      return battleKill(state);
     case 'battleAfter':
       return battleAfter(state);
+    case 'afterBattlePhase':
+      return afterBattlePhase(state, task.phase);
+    case 'afterBattleStep':
+      return afterBattleStep(state, task.phase, task.player);
     case 'battleEnd':
       return battleEnd(state);
+    case 'continueSummon':
+      return continueSummon(state, task.player, task.used);
+    case 'resumeMove':
+      return resumeMove(state, task.player, task.moved);
+    case 'aimScorpion':
+      return aimScorpionTask(state, task.figure);
+    case 'mummyReturn':
+      return mummyReturnTask(state, task.figure);
+    case 'anubisTrap':
+      return anubisTrapTask(state, task.player, task.candidates);
   }
 }
 

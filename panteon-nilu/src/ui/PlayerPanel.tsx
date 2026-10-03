@@ -9,7 +9,7 @@ export function PlayerPanel({ state, player, active }: { state: GameState; playe
   const p = state.players[player];
   const god = GODS[p.god];
   const figs = Object.values(state.figures).filter((f) => f.owner === player);
-  const pool = figs.filter((f) => f.pos === null);
+  const pool = figs.filter((f) => f.pos === null && f.trappedBy === undefined);
   const monuments = Object.values(state.monuments).filter((m) => m.owner === player).length;
   return (
     <section className={`player${active ? ' player-active' : ''}`} style={{ borderColor: god.color }} data-player={player}>
@@ -27,6 +27,7 @@ export function PlayerPanel({ state, player, active }: { state: GameState; playe
         <span title="Kontrolowane monumenty">Monumenty <b>{monuments}</b></span>
       </div>
       <p className="ability">{god.ability}</p>
+      {god.status && <div className="status">{god.status(state, player)}</div>}
       <div className="row">
         <span className="muted">Pula:</span>{' '}
         {pool.length === 0 ? '—' : summarizePool(pool.map((f) => (f.kind === 'guardian' ? GUARDIANS[f.guardian!].name : f.kind === 'god' ? 'bóg' : 'wojownik')))}

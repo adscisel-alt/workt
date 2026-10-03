@@ -46,11 +46,25 @@ npm run smoke     # test dymny w Chromium (Playwright); CHROMIUM_PATH=... dla w�
 - Tor oddania: liczba pól odczytana z grafiki.
 - Mapa „Trzy Krainy” to własny projekt; scenariusze wydawcy są w osobnej książce, której tu nie ma.
 
+## Interpretacje zasad (etap 4)
+
+Miejsca, gdzie instrukcja i FAQ nie mówią wprost, kto decyduje albo jak dokładnie:
+
+- **Satet**: miejsce, na które spychany jest wróg, wybiera właściciel Satet.
+- **Skorpion**: celowanie po każdym postawieniu lub ruchu (także zepchnięciu) wybiera jego właściciel;
+  gdy możliwy jest tylko jeden kierunek, ustawia się sam. Celować można tylko w pola planszy.
+- **Mumia**: pole powrotu obok boga wybiera właściciel; Ra może przy tym nadać słońce (to przywołanie).
+- **Izyda**: ocalenie decydowane osobno dla każdej chronionej figurki.
+- **Wrota zaświatów**: stawiane na pustym polu lądowym (bez figurki i monumentu), innym niż istniejące wrota.
+- **Zapowiedź Amuna**: jawna, przed tajnym wyborem kart wszystkich graczy.
+- **Karawana**: linia to ścieżka po krawędziach heksów, której oba końce dotykają rzeki, wody, wielbłąda
+  lub brzegu mapy; musi podzielić region na dokładnie dwa, każdy ≥ 6 pól lądowych.
+
 ## Etapy
 
 1. ✅ Silnik: mapa, regiony, sąsiedztwo, 4 akcje, tory, przejęcie monumentu.
 2. ✅ Konflikt: dominacja, bitwa (5 kroków), 7 kart, żeton remisu.
 3. ✅ UI hot-seat dla 2 graczy: plansza SVG, podświetlanie legalnych ruchów, panele graczy, tory, dziennik, ukryty wybór kart i ofert plagi.
-4. Karawana, moce ankh, strażnicy, zdolności bogów.
+4. ✅ Karawana, 12 mocy ankh, 6 strażników, zdolności 5 bogów.
 5. Łączenie i eliminacja bogów, 3–5 graczy.
 6. Bot, zapis i wczytanie.

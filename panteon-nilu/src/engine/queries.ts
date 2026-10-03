@@ -1,9 +1,9 @@
 // Czyste zapytania o stan — wspólne dla silnika, generatora legalnych ruchów i UI.
 import { powersOfLevel } from '../content/ankhPowers';
 import type { ActionType } from '../config/rules';
-import { allowedByAll, sumHook } from './hooks';
+import { allowedByAll, anyHook, anyPlayerHook, activeEffects, collectHook, sumHook, type SummonSource } from './hooks';
 import { neighborKeys } from './hex';
-import { adjacentHexes, areAdjacent, computeRegions, isEmptyLand, isHexInRegion, isOnBoard } from './map';
+import { adjacentHexes, areAdjacent, computeRegions, figureAt, isEmptyLand, isHexInRegion, isLand, isOnBoard } from './map';
 import type {
   AnkhPowerId, Figure, FigureId, GameState, HexKey, Monument, MonumentId, MonumentType, PlayerId, Terrain,
 } from './types';
@@ -15,7 +15,7 @@ export const boardFiguresOf = (state: GameState, p: PlayerId): Figure[] =>
   figuresOf(state, p).filter((f) => f.pos !== null);
 
 export const poolFiguresOf = (state: GameState, p: PlayerId): Figure[] =>
-  figuresOf(state, p).filter((f) => f.pos === null);
+  figuresOf(state, p).filter((f) => f.pos === null && f.trappedBy === undefined);
 
 // ---------- Tura i akcje ----------
 
@@ -35,18 +35,15 @@ export function availableActions(state: GameState): ActionType[] {
 
 // ---------- Ruch ----------
 
-export function canEndMoveOn(state: GameState, figure: Figure, hex: HexKey): boolean {
-  if (!isEmptyLand(state, hex)) return false;
+export function canEndMoveOn(state: GameState, figure: Figure, hex: HexKey, ignore?: FigureId): boolean {
+  if (!isEmptyLand(state, hex, ignore)) return false;
   return allowedByAll(state, (h, ctx) => h.canEndMoveOn?.({ ...ctx, figure, hex }));
 }
 
-/** Pola docelowe figurki: do `moveRange` kroków przez dowolne pola planszy, koniec na pustym lądzie. */
-export function moveDestinations(state: GameState, figureId: FigureId): HexKey[] {
-  const fig = state.figures[figureId];
-  if (!fig?.pos) return [];
-  const range = state.rules.moveRange;
-  const dist = new Map<HexKey, number>([[fig.pos, 0]]);
-  const queue: HexKey[] = [fig.pos];
+/** Pola w zasięgu `range` kroków przez dowolne pola planszy (bez pola startowego). */
+export function reachable(state: GameState, from: HexKey, range: number): HexKey[] {
+  const dist = new Map<HexKey, number>([[from, 0]]);
+  const queue: HexKey[] = [from];
   while (queue.length) {
     const h = queue.shift()!;
     const d = dist.get(h)!;
@@ -57,34 +54,148 @@ export function moveDestinations(state: GameState, figureId: FigureId): HexKey[]
       queue.push(n);
     }
   }
-  return [...dist.keys()].filter((h) => h !== fig.pos && canEndMoveOn(state, fig, h)).sort();
+  dist.delete(from);
+  return [...dist.keys()].sort();
+}
+
+export interface MoveOption {
+  to: HexKey;
+  /** Gdzie zostaje zepchnięty wróg z pola `to` (Satet); null — zwykły ruch. */
+  push: HexKey | null;
+}
+
+/** Możliwe ruchy figurki: koniec na pustym lądzie albo (Satet) na polu wroga ze zepchnięciem go o 1 pole. */
+export function moveOptions(state: GameState, figureId: FigureId): MoveOption[] {
+  const fig = state.figures[figureId];
+  if (!fig?.pos) return [];
+  const out: MoveOption[] = [];
+  const canPush = anyHook(state, fig.owner, (h, ctx) => h.movePush?.({ ...ctx, figure: fig }));
+  for (const h of reachable(state, fig.pos, state.rules.moveRange)) {
+    if (canEndMoveOn(state, fig, h)) {
+      out.push({ to: h, push: null });
+      continue;
+    }
+    if (!canPush || !isLand(state.map, h)) continue;
+    const enemy = figureAt(state, h);
+    if (!enemy || enemy.owner === fig.owner) continue;
+    // Pole wroga musi być dozwolone dla spychającego (np. wrota zaświatów), gdyby było puste.
+    if (!allowedByAll(state, (x, ctx) => x.canEndMoveOn?.({ ...ctx, figure: fig, hex: h }))) continue;
+    for (const n of neighborKeys(h)) {
+      if (isOnBoard(state.map, n) && canEndMoveOn(state, enemy, n, fig.id)) out.push({ to: h, push: n });
+    }
+  }
+  return out;
+}
+
+export function moveDestinations(state: GameState, figureId: FigureId): HexKey[] {
+  return [...new Set(moveOptions(state, figureId).map((o) => o.to))].sort();
 }
 
 // ---------- Przywołanie ----------
 
-/** Puste pola lądowe sąsiadujące z figurką gracza lub kontrolowanym przez niego monumentem. */
-export function summonTargets(state: GameState, p: PlayerId): HexKey[] {
-  const anchors = [
-    ...boardFiguresOf(state, p).map((f) => f.pos!),
-    ...Object.values(state.monuments).filter((m) => m.owner === p).map((m) => m.pos),
-  ];
+/** Czy figurkę (lub monument, gdy `figure = null`) można postawić na polu. */
+export function canPlace(state: GameState, figure: Figure | null, hex: HexKey): boolean {
+  return isEmptyLand(state, hex) && allowedByAll(state, (h, ctx) => h.canPlaceOn?.({ ...ctx, figure, hex }));
+}
+
+function adjacentPlaceable(state: GameState, figure: Figure | null, anchors: HexKey[]): HexKey[] {
   const out = new Set<HexKey>();
-  for (const a of anchors) for (const h of adjacentHexes(state.map, a)) if (isEmptyLand(state, h)) out.add(h);
+  for (const a of anchors) for (const h of adjacentHexes(state.map, a)) if (canPlace(state, figure, h)) out.add(h);
+  return [...out];
+}
+
+/** Źródła przywołania w akcji: zwykłe (obowiązkowe, jeśli możliwe) + dodatkowe z efektów. */
+export function summonSources(state: GameState, p: PlayerId): (SummonSource | 'regular')[] {
+  return ['regular', ...collectHook(state, p, (h, ctx) => h.extraSummonSources?.(ctx)).flat()];
+}
+
+const sourceId = (src: SummonSource | 'regular') => (src === 'regular' ? 'regular' : src.id);
+
+/** Pola, na które gracz może przywołać figurkę z danego źródła. */
+export function summonTargetsFor(
+  state: GameState,
+  p: PlayerId,
+  figure: Figure | null,
+  source: SummonSource | 'regular' = 'regular',
+): HexKey[] {
+  const out = new Set<HexKey>();
+  if (source === 'regular') {
+    const anchors = [
+      ...boardFiguresOf(state, p).map((f) => f.pos!),
+      ...Object.values(state.monuments).filter((m) => m.owner === p).map((m) => m.pos),
+    ];
+    for (const h of adjacentPlaceable(state, figure, anchors)) out.add(h);
+  } else {
+    for (const h of adjacentPlaceable(state, figure, source.anchors ?? [])) out.add(h);
+    for (const h of source.targets ?? []) if (canPlace(state, figure, h)) out.add(h);
+  }
+  if (figure) {
+    for (const h of collectHook(state, p, (x, ctx) => x.extraPlacementTargets?.({ ...ctx, figure, source })).flat()) {
+      if (!figureAt(state, h)) out.add(h);
+    }
+  }
   return [...out].sort();
 }
 
-/** Figurki z puli do wyboru — po jednym reprezentancie na rodzaj (wojownicy są wymienni). */
+/** Zwykłe pola przywołania (bez efektów zależnych od rodzaju figurki). */
+export function summonTargets(state: GameState, p: PlayerId): HexKey[] {
+  return summonTargetsFor(state, p, null);
+}
+
+const byId = (a: Figure, b: Figure) => a.id.localeCompare(b.id, 'en', { numeric: true });
+
+/**
+ * Figurki do przywołania — po jednym reprezentancie na rodzaj (wojownicy są wymienni).
+ * Wojownik uwięziony przez Anubisa może zastąpić wojownika z puli za 1 wyznawcę dla Anubisa.
+ */
 export function summonableFigures(state: GameState, p: PlayerId): Figure[] {
   const seen = new Set<string>();
   const out: Figure[] = [];
-  for (const f of poolFiguresOf(state, p).sort((a, b) => a.id.localeCompare(b.id, 'en', { numeric: true }))) {
-    const kind = f.kind === 'guardian' ? `g:${f.guardian}` : f.kind;
+  const canFree = state.players[p].followers >= 1;
+  for (const f of figuresOf(state, p).filter((x) => x.pos === null).sort(byId)) {
+    if (f.trappedBy !== undefined && !canFree) continue;
+    const kind = f.trappedBy !== undefined ? 'trapped' : f.kind === 'guardian' ? `g:${f.guardian}` : f.kind;
     if (seen.has(kind)) continue;
     seen.add(kind);
     out.push(f);
   }
   return out;
 }
+
+export interface SummonOption {
+  figure: FigureId;
+  to: HexKey;
+  source: string;
+}
+
+/** Wszystkie możliwe przywołania przy już użytych źródłach `used`. */
+export function summonOptions(state: GameState, p: PlayerId, used: string[]): SummonOption[] {
+  const figs = summonableFigures(state, p);
+  const out: SummonOption[] = [];
+  for (const src of summonSources(state, p)) {
+    const id = sourceId(src);
+    if (used.includes(id)) continue;
+    for (const f of figs) for (const to of summonTargetsFor(state, p, f, src)) out.push({ figure: f.id, to, source: id });
+  }
+  return out;
+}
+
+/** Możliwe kierunki szczypiec skorpiona: 2 pola o 1 od niego i o 1 od siebie (FAQ). */
+export function aimOptions(state: GameState, figure: FigureId): [HexKey, HexKey][] {
+  const pos = state.figures[figure].pos;
+  if (!pos) return [];
+  const ns = neighborKeys(pos);
+  const out: [HexKey, HexKey][] = [];
+  for (let i = 0; i < 6; i++) {
+    const a = ns[i];
+    const b = ns[(i + 1) % 6];
+    if (isOnBoard(state.map, a) && isOnBoard(state.map, b)) out.push(a < b ? [a, b] : [b, a]);
+  }
+  return out;
+}
+
+export const canMakeRadiant = (state: GameState, p: PlayerId): boolean =>
+  anyHook(state, p, (h, ctx) => h.canMakeRadiant?.(ctx));
 
 // ---------- Wyznawcy ----------
 
@@ -140,9 +251,22 @@ export function controlMonumentCandidates(state: GameState, p: PlayerId): Monume
 
 // ---------- Regiony i konflikt ----------
 
-/** Typ terenu pola z punktu widzenia efektów (etap 4: pole z wrotami zaświatów nie jest ani żyzne, ani pustynne). */
-export function terrainOf(state: GameState, h: HexKey): Terrain {
+/** Typ terenu pola z punktu widzenia efektów (np. pole z wrotami zaświatów nie jest ani żyzne, ani pustynne). */
+export function terrainOf(state: GameState, h: HexKey): Terrain | 'none' {
+  for (const p of state.players) {
+    for (const o of collectHook(state, p.id, (x, ctx) => x.terrainOverride?.({ ...ctx, hex: h }))) return o;
+  }
   return state.map.terrain[h];
+}
+
+/** Siła figurki w bitwie: baza 1, modyfikowana efektami właściciela; zerowana przez efekty neutralizujące. */
+export function figureStrength(state: GameState, figure: Figure): number {
+  if (anyPlayerHook(state, (h, ctx) => h.neutralizes?.({ ...ctx, figure }))) return 0;
+  let s = 1;
+  for (const src of activeEffects(state, figure.owner)) {
+    s = src.hooks.figureStrength?.({ state, owner: figure.owner, figure, base: s }) ?? s;
+  }
+  return s;
 }
 
 export function figuresInRegion(state: GameState, region: number, p?: PlayerId): Figure[] {
@@ -188,5 +312,5 @@ export function majorityCount(state: GameState, region: number, p: PlayerId): nu
 
 /** Puste pola lądowe regionu, na których można zbudować monument. */
 export function buildSites(state: GameState, region: number): HexKey[] {
-  return computeRegions(state.map).regions[region].filter((h) => isEmptyLand(state, h));
+  return computeRegions(state.map).regions[region].filter((h) => canPlace(state, null, h));
 }

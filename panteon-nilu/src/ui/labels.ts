@@ -1,5 +1,6 @@
 import type { ActionType, EventType } from '../config/rules';
-import type { MonumentType } from '../engine/types';
+import { GUARDIANS } from '../content/guardians';
+import type { GameState, MonumentType } from '../engine/types';
 
 export const ACTION_LABEL: Record<ActionType, string> = {
   move: 'Ruch',
@@ -26,3 +27,12 @@ export const MONUMENT_LABEL: Record<MonumentType, string> = {
   temple: 'Świątynia',
   pyramid: 'Piramida',
 };
+
+/** Czytelna nazwa figurki, np. „Wojownik (uwięziony)”, „Satet”. */
+export function figureLabel(state: GameState, id: string): string {
+  const f = state.figures[id];
+  if (!f) return id;
+  if (f.kind === 'guardian') return GUARDIANS[f.guardian!].name;
+  if (f.kind === 'god') return 'Bóg';
+  return f.trappedBy !== undefined ? 'Wojownik (uwięziony — 1 wyznawca)' : 'Wojownik';
+}

@@ -17,7 +17,7 @@ describe('UI: mapowanie legalnych ruchów na planszę', () => {
     const legal = legalMoves(s);
     const i = interactionFor(legal, { figure: 'p0-god' });
     const expected = legal.filter((m) => m.type === 'moveFigure' && m.figure === 'p0-god').map((m) => (m as { to: string }).to);
-    expect([...i.hexMoves.keys()].sort()).toEqual(expected.sort());
+    expect([...i.hexActions.keys()].sort()).toEqual(expected.sort());
     expect(i.selectableFigures).toEqual(new Set(['p0-god']));
   });
 });

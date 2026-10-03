@@ -1,11 +1,12 @@
 import { ANKH_POWERS } from '../content/ankhPowers';
 import { GUARDIANS } from '../content/guardians';
 import type { ActionType } from '../config/rules';
+import { anyHook, forEachHook } from './hooks';
+import { adjacentHexes, figureAt } from './map';
 import {
-  availableActions, boardFiguresOf, followersGain, moveDestinations, nextUnlock, summonTargets,
-  summonableFigures,
+  aimOptions, availableActions, boardFiguresOf, canPlace, followersGain, moveOptions, nextUnlock, summonOptions,
 } from './queries';
-import type { FigureId, GameState, PlayerId } from './types';
+import type { Figure, FigureId, GameState, HexKey, PlayerId, Task } from './types';
 import { godName, log, schedule } from './util';
 
 const ACTION_NAMES: Record<ActionType, string> = {
@@ -30,15 +31,13 @@ export function resolveAction(state: GameState, action: ActionType): void {
   const p = state.turn.player;
   switch (action) {
     case 'move': {
-      const movable = boardFiguresOf(state, p).some((f) => moveDestinations(state, f.id).length > 0);
-      if (movable) state.pending = { kind: 'move', player: p, moved: [] };
+      if (canStillMove(state, p, [])) state.pending = { kind: 'move', player: p, moved: [] };
       else log(state, 'Żadna figurka nie może się ruszyć.', p);
       return;
     }
     case 'summon': {
-      if (summonableFigures(state, p).length && summonTargets(state, p).length) {
-        state.pending = { kind: 'summon', player: p };
-      } else log(state, 'Brak figurki w puli lub wolnego pola — przywołanie bez efektu.', p);
+      if (summonOptions(state, p, []).length) state.pending = { kind: 'summon', player: p, used: [] };
+      else log(state, 'Brak figurki w puli lub wolnego pola — przywołanie bez efektu.', p);
       return;
     }
     case 'followers': {
@@ -70,26 +69,132 @@ export function resetMarker(state: GameState, action: ActionType): void {
   state.actionTracks[action] = state.rules.actionTracks[action].start[state.playerCount];
 }
 
-export function moveFigure(state: GameState, figure: FigureId, to: string): void {
+// ---------- Ruch ----------
+
+const canStillMove = (state: GameState, p: PlayerId, moved: FigureId[]) =>
+  boardFiguresOf(state, p).some((f) => !moved.includes(f.id) && moveOptions(state, f.id).length > 0);
+
+/** Zadania celowania dla skorpionów, które właśnie stanęły lub się przesunęły. */
+function aimTasks(state: GameState, figures: Figure[]): Task[] {
+  return figures
+    .filter((f) => anyHook(state, f.owner, (h, ctx) => h.needsAim?.({ ...ctx, figure: f })))
+    .map((f) => ({ t: 'aimScorpion' as const, figure: f.id }));
+}
+
+export function moveFigure(state: GameState, figure: FigureId, to: HexKey, push: HexKey | null): void {
   const pending = state.pending;
   if (pending?.kind !== 'move') return;
   const fig = state.figures[figure];
   const from = fig.pos;
+  const moved: Figure[] = [fig];
+  if (push) {
+    const enemy = figureAt(state, to)!;
+    enemy.pos = push;
+    moved.push(enemy);
+    log(state, `${godName(state, fig.owner)}: ${figure} spycha ${enemy.id} na ${push}.`, fig.owner);
+  }
   fig.pos = to;
-  pending.moved.push(figure);
   log(state, `${godName(state, fig.owner)}: ${figure} ${from} → ${to}.`, fig.owner);
-  const remaining = boardFiguresOf(state, pending.player).some((f) => !pending.moved.includes(f.id));
-  if (!remaining) state.pending = null;
+  const done = [...pending.moved, figure];
+  state.pending = null;
+  schedule(state, ...aimTasks(state, moved), { t: 'resumeMove', player: pending.player, moved: done });
+}
+
+export function resumeMove(state: GameState, p: PlayerId, moved: FigureId[]): void {
+  if (canStillMove(state, p, moved)) state.pending = { kind: 'move', player: p, moved };
 }
 
 export function endMove(state: GameState): void {
   state.pending = null;
 }
 
-export function summonFigure(state: GameState, figure: FigureId, to: string): void {
+export function aimScorpionTask(state: GameState, figure: FigureId): void {
   const fig = state.figures[figure];
+  if (!fig.pos) return;
+  const options = aimOptions(state, figure);
+  if (options.length === 0) fig.aim = null;
+  else if (options.length === 1) fig.aim = options[0];
+  else state.pending = { kind: 'aimScorpion', player: fig.owner, figure };
+}
+
+export function aimScorpion(state: GameState, figure: FigureId, aim: [HexKey, HexKey] | null): void {
+  state.figures[figure].aim = aim;
+  log(state, `${godName(state, state.figures[figure].owner)}: skorpion celuje w ${aim?.join(' i ') ?? '—'}.`);
+  state.pending = null;
+}
+
+// ---------- Przywołanie ----------
+
+/** Stawia figurkę z puli jako przywołaną (wywołuje efekty przywołania, np. promienność). */
+function placeSummoned(state: GameState, fig: Figure, to: HexKey, radiant: boolean): Task[] {
   fig.pos = to;
-  log(state, `${godName(state, fig.owner)} przywołuje ${figure} na ${to}.`, fig.owner);
+  forEachHook(state, (h, ctx) => h.onSummoned?.({ ...ctx, figure: fig, radiant }));
+  return aimTasks(state, [fig]);
+}
+
+export function summonFigure(state: GameState, p: PlayerId, figure: FigureId, to: HexKey, source: string, radiant: boolean): void {
+  const pending = state.pending;
+  if (pending?.kind !== 'summon') return;
+  const fig = state.figures[figure];
+  if (fig.trappedBy !== undefined) {
+    const anubis = fig.trappedBy;
+    state.players[p].followers--;
+    state.players[anubis].followers++;
+    delete fig.trappedBy;
+    log(state, `${godName(state, p)} uwalnia wojownika od ${godName(state, anubis)} za 1 wyznawcę.`, p);
+  }
+  log(state, `${godName(state, p)} przywołuje ${figure} na ${to}.`, p);
+  const used = [...pending.used, source];
+  state.pending = null;
+  schedule(state, ...placeSummoned(state, fig, to, radiant), { t: 'continueSummon', player: p, used });
+}
+
+export function continueSummon(state: GameState, p: PlayerId, used: string[]): void {
+  if (summonOptions(state, p, used).length) state.pending = { kind: 'summon', player: p, used };
+}
+
+export function endSummon(state: GameState): void {
+  state.pending = null;
+}
+
+/** Mumia po śmierci wraca obok swojego boga (to przywołanie). */
+export function mummyReturnTargets(state: GameState, figure: FigureId): HexKey[] {
+  const fig = state.figures[figure];
+  const god = Object.values(state.figures).find((f) => f.owner === fig.owner && f.kind === 'god' && f.pos);
+  if (!god) return [];
+  return adjacentHexes(state.map, god.pos!).filter((h) => canPlace(state, fig, h)).sort();
+}
+
+export function mummyReturnTask(state: GameState, figure: FigureId): void {
+  const fig = state.figures[figure];
+  if (fig.pos !== null) return;
+  const targets = mummyReturnTargets(state, figure);
+  if (!targets.length) {
+    log(state, `${godName(state, fig.owner)}: mumia nie ma miejsca obok boga — wraca do puli.`, fig.owner);
+  } else {
+    state.pending = { kind: 'mummyReturn', player: fig.owner, figure };
+  }
+}
+
+export function mummyReturn(state: GameState, figure: FigureId, to: HexKey, radiant: boolean): void {
+  const fig = state.figures[figure];
+  log(state, `${godName(state, fig.owner)}: mumia powstaje na ${to}.`, fig.owner);
+  state.pending = null;
+  schedule(state, ...placeSummoned(state, fig, to, radiant));
+}
+
+// ---------- Anubis ----------
+
+export function anubisTrapTask(state: GameState, player: PlayerId, candidates: FigureId[]): void {
+  const still = candidates.filter((id) => state.figures[id].pos === null && state.figures[id].trappedBy === undefined);
+  if (still.length) state.pending = { kind: 'anubisTrap', player, candidates: still };
+}
+
+export function anubisTrap(state: GameState, player: PlayerId, figure: FigureId | null): void {
+  if (figure) {
+    state.figures[figure].trappedBy = player;
+    log(state, `${godName(state, player)} więzi wojownika ${figure}.`, player);
+  }
   state.pending = null;
 }
 

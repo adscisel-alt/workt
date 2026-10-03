@@ -1,4 +1,5 @@
 import { controlMonumentCandidates } from './queries';
+import { startCaravan } from './caravan';
 import { startConflict } from './conflict';
 import { devotionAscending } from './devotion';
 import type { EventType } from '../config/rules';
@@ -28,7 +29,7 @@ export function resolveEvent(state: GameState, event: EventType): void {
       break;
     }
     case 'caravan':
-      log(state, 'Karawana — TODO (etap 4): wydarzenie pominięte.');
+      startCaravan(state);
       break;
     case 'conflict':
       startConflict(state);

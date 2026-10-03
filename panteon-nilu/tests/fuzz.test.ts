@@ -2,13 +2,14 @@ import { ALL_BATTLE_CARDS } from '../src/content/battleCards';
 import { legalMoves } from '../src/engine';
 import { isLand } from '../src/engine/map';
 import type { GameState } from '../src/engine/types';
-import { GODS5, newGame, randomPlayout } from './helpers';
+import { addGuardian, GODS5, newGame, randomPlayout } from './helpers';
 
 function checkInvariants(s: GameState) {
   const occupied = new Map<string, string>();
   for (const f of Object.values(s.figures)) {
     if (f.pos === null) continue;
-    expect(isLand(s.map, f.pos), `figurka ${f.id} poza lądem`).toBe(true);
+    // na wodzie może stać tylko Apep (przywołany tam swoją zdolnością)
+    expect(isLand(s.map, f.pos) || f.guardian === 'apep', `figurka ${f.id} na wodzie`).toBe(true);
     expect(occupied.has(f.pos), `pole ${f.pos} zajęte podwójnie`).toBe(false);
     occupied.set(f.pos, f.id);
   }
@@ -45,6 +46,31 @@ describe('losowe rozgrywki (tylko legalne ruchy z generatora)', () => {
     // koniec po 5. konflikcie albo wcześniej — gdy ktoś dotarł na szczyt toru oddania
     const topReached = s.players.some((p) => p.devotion === s.rules.devotion.top);
     expect(s.conflictsResolved === 5 || topReached).toBe(true);
+  });
+
+  it.each([2, 3, 4, 5] as const)('inni strażnicy (Satet, Apep, Skorpion), %i graczy: bez błędów do końca gry', (n) => {
+    let s = newGame({
+      ...(n === 2 ? { scenario: 'trzy-krainy' } : {}),
+      gods: GODS5.slice(0, n),
+      seed: 100 + n,
+      guardianCards: { 1: 'satet', 2: 'apep', 3: 'giantScorpion' },
+    });
+    for (let chunk = 0; chunk < 100 && !s.result; chunk++) {
+      s = randomPlayout(s, 7000 + chunk * n, 50).state;
+      checkInvariants(s);
+    }
+    expect(s.result).not.toBeNull();
+  });
+
+  it.each([1, 2, 3, 4])('Trzy Krainy, strażnicy w pulach od startu, ziarno %i: karawany, spychanie, skorpiony, mumie', (seed) => {
+    const pairs = [['amun', 'ra'], ['anubis', 'isis'], ['osiris', 'ra'], ['isis', 'amun']] as const;
+    let s = newGame({ scenario: 'trzy-krainy', gods: [...pairs[seed % 4]], seed }, true);
+    for (const p of [0, 1]) for (const g of ['satet', 'giantScorpion', 'mummy', 'apep'] as const) addGuardian(s, p, g, null);
+    for (let chunk = 0; chunk < 100 && !s.result; chunk++) {
+      s = randomPlayout(s, seed * 31 + chunk, 50).state;
+      checkInvariants(s);
+    }
+    expect(s.result).not.toBeNull();
   });
 
   it('determinizm: to samo ziarno i te same ruchy dają identyczny stan', () => {

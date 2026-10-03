@@ -46,6 +46,8 @@ try {
     game.runQueue(s);
     window.__panteonLoad(s);
   });
+  // Amun najpierw decyduje jawnie, czy zagra dwie karty
+  await page.getByText('Jedna karta').click();
   await page.waitForSelector('[data-reveal]');
   await page.screenshot({ path: `${out}/04-handoff.png` });
   if (await page.locator('[data-card]').count()) fail('karty widoczne przed odsłonięciem');

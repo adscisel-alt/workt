@@ -84,17 +84,17 @@ export function adjacentHexes(map: MapState, h: HexKey): HexKey[] {
   return neighborKeys(h).filter((n) => areAdjacent(map, h, n));
 }
 
-export function figureAt(state: GameState, h: HexKey) {
-  return Object.values(state.figures).find((f) => f.pos === h);
+export function figureAt(state: GameState, h: HexKey, ignore?: string) {
+  return Object.values(state.figures).find((f) => f.pos === h && f.id !== ignore);
 }
 
 export function monumentAt(state: GameState, h: HexKey): Monument | undefined {
   return Object.values(state.monuments).find((m) => m.pos === h);
 }
 
-/** Puste pole lądowe: bez figurki i bez monumentu. */
-export function isEmptyLand(state: GameState, h: HexKey): boolean {
-  return isLand(state.map, h) && !figureAt(state, h) && !monumentAt(state, h);
+/** Puste pole lądowe: bez figurki i bez monumentu (`ignore` — figurka traktowana jak nieobecna). */
+export function isEmptyLand(state: GameState, h: HexKey, ignore?: string): boolean {
+  return isLand(state.map, h) && !figureAt(state, h, ignore) && !monumentAt(state, h);
 }
 
 /** Id regionu przypisanego do żetonu kolejności konfliktu. */

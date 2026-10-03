@@ -31,8 +31,12 @@ export const TEST_SCENARIO: ScenarioDef = {
   ),
 };
 
-export function newGame(overrides: Partial<Parameters<typeof createGame>[0]> = {}): GameState {
-  return createGame({
+/**
+ * Nowa gra testowa. Testy zasad bazowych mają domyślnie zużyty żeton Amuna (żeby jego zdolność
+ * nie przerywała bitew pytaniem o dwie karty); testy zdolności włączają go jawnie.
+ */
+export function newGame(overrides: Partial<Parameters<typeof createGame>[0]> = {}, amunReady = false): GameState {
+  const s = createGame({
     scenario: TEST_SCENARIO,
     gods: ['amun', 'ra'],
     seed: 42,
@@ -40,6 +44,8 @@ export function newGame(overrides: Partial<Parameters<typeof createGame>[0]> = {
     guardianCards: { 1: 'catMummy', 2: 'mummy', 3: 'androsphinx' },
     ...overrides,
   });
+  s.abilities.amunTokenUp = amunReady;
+  return s;
 }
 
 /** Czyści planszę z figurek (wszystkie do puli) i monumentów — do precyzyjnych ustawień w testach. */
@@ -114,3 +120,15 @@ export const bid = (player: number, amount: number): Move => ({ type: 'plagueBid
 /** Pole w regionie 1 (lewa część planszy testowej) / regionie 2 (prawa). */
 export const R1 = { fertile: [k(0, 0), k(1, 0), k(0, 1), k(1, 1), k(0, 3)], desert: [k(0, 4), k(1, 4), k(2, 4), k(0, 5)] };
 export const R2 = { desert: [k(5, 0), k(6, 0), k(5, 1), k(6, 1)], fertile: [k(5, 4), k(6, 4), k(5, 5), k(6, 5)] };
+
+// ---------- Etap 4 ----------
+
+import type { GuardianId } from '../src/engine/types';
+
+export function addGuardian(state: GameState, owner: number, type: GuardianId, pos: string | null): string {
+  let i = 1;
+  while (state.figures[`${type}-${i}`]) i++;
+  const id = `${type}-${i}`;
+  state.figures[id] = { id, owner, kind: 'guardian', guardian: type, pos };
+  return id;
+}

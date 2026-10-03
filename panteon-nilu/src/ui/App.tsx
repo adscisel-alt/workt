@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { GODS } from '../content/gods';
 import { SCENARIOS } from '../config/scenarios';
-import { applyMove, createGame, legalMoves, viewFor } from '../engine';
+import { applyMove, computeRegions, createGame, legalMoves, viewFor } from '../engine';
 import type { GameState, GodId, Move, PlayerId } from '../engine/types';
 import { ActionPanel } from './ActionPanel';
 import { BattlePanel } from './BattlePanel';
@@ -30,6 +30,13 @@ function GameScreen({ state, setState, onNew }: { state: GameState; setState(s: 
   // W trakcie tajnej decyzji pokazujemy tylko widok decydującego (albo nikogo — przed odsłonięciem).
   const view = secretPlayer !== null ? viewFor(state, revealed ? secretPlayer : null) : state;
   const interaction = interactionFor(secretPlayer !== null ? [] : legal, sel);
+  const regionTint = useMemo(() => {
+    if (pending?.kind !== 'caravanKeep') return undefined;
+    const { landRegion, regions } = computeRegions(state.map);
+    const tint = new Map<string, string>();
+    pending.regions.forEach((rep, i) => regions[landRegion[rep]].forEach((h) => tint.set(h, i === 0 ? 'a' : 'b')));
+    return tint;
+  }, [state, pending]);
 
   const dispatch = (m: Move) => {
     try {
@@ -58,10 +65,16 @@ function GameScreen({ state, setState, onNew }: { state: GameState; setState(s: 
             state={view}
             interaction={interaction}
             selectedFigure={sel.figure}
-            onFigure={(id) => setSel({ figure: id })}
+            regionTint={regionTint}
+            onFigure={(id) => setSel({ ...sel, figure: id, pushTo: undefined })}
             onHex={(h) => {
-              const m = interaction.hexMoves.get(h);
-              if (m) dispatch(m);
+              const a = interaction.hexActions.get(h);
+              if (a?.kind === 'move') dispatch(a.move);
+              else if (a?.kind === 'select') setSel(a.sel);
+            }}
+            onEdge={(e) => {
+              const cur = sel.camels ?? [];
+              setSel({ camels: cur.includes(e) ? cur.filter((x) => x !== e) : [...cur, e] });
             }}
             onMonument={(id) => {
               const m = interaction.monumentMoves.get(id);
@@ -71,7 +84,7 @@ function GameScreen({ state, setState, onNew }: { state: GameState; setState(s: 
         </div>
         <aside className="side">
           {error && <p className="error" role="alert">{error}</p>}
-          <ActionPanel state={view} legal={legal} sel={sel} setSel={setSel} dispatch={dispatch} />
+          <ActionPanel state={view} legal={legal} sel={sel} interaction={interaction} setSel={setSel} dispatch={dispatch} />
           <BattlePanel state={view} />
           <div className="players">
             {view.players.map((p) => (

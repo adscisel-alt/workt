@@ -48,14 +48,23 @@ export function SecretDecision({ view, player, legal, revealed, onReveal, dispat
 function CardPicker({ god, moves, used, dispatch }: {
   god: string; moves: Extract<Move, { type: 'selectCard' }>[]; used: BattleCardId[]; dispatch(m: Move): void;
 }) {
+  // Dwie karty (zapowiedź Amuna): ruchy mają pole `second` — zaznaczamy dwie i zatwierdzamy.
+  const pair = moves.some((m) => m.second !== undefined);
+  const [picked, setPicked] = useState<BattleCardId[]>([]);
+  const cards = [...new Set(moves.flatMap((m) => (m.second ? [m.card, m.second] : [m.card])))];
+  const pairMove = moves.find((m) => picked.length === 2 && picked.includes(m.card) && picked.includes(m.second!));
+  const click = (c: BattleCardId) => {
+    if (!pair) return dispatch(moves.find((m) => m.card === c)!);
+    setPicked(picked.includes(c) ? picked.filter((x) => x !== c) : picked.length < 2 ? [...picked, c] : picked);
+  };
   return (
     <>
-      <h2>{god}: wybierz kartę bitwy</h2>
+      <h2>{god}: {pair ? 'wybierz dwie karty bitwy' : 'wybierz kartę bitwy'}</h2>
       <div className="cards">
-        {moves.map((m) => {
-          const c = BATTLE_CARDS[m.card];
+        {cards.map((id) => {
+          const c = BATTLE_CARDS[id];
           return (
-            <button key={m.card} className="card" onClick={() => dispatch(m)} data-card={m.card}>
+            <button key={id} className={`card${picked.includes(id) ? ' on' : ''}`} onClick={() => click(id)} data-card={id}>
               <span className="card-strength">+{c.strength}</span>
               <b>{c.name}</b>
               <small>{c.text}</small>
@@ -63,6 +72,11 @@ function CardPicker({ god, moves, used, dispatch }: {
           );
         })}
       </div>
+      {pair && (
+        <button disabled={!pairMove} onClick={() => pairMove && dispatch(pairMove)} data-confirm-cards>
+          Zagraj obie karty
+        </button>
+      )}
       {used.length > 0 && (
         <p className="muted small">Zagrane wcześniej: {used.map((c) => BATTLE_CARDS[c].name).join(', ')}</p>
       )}

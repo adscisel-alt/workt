@@ -28,6 +28,10 @@ export interface Figure {
   guardian?: GuardianId;
   /** null = w puli gracza */
   pos: HexKey | null;
+  /** Wojownik uwięziony przez Anubisa (id gracza Anubisa). */
+  trappedBy?: PlayerId;
+  /** Olbrzymi skorpion: dwa pola, w które celują szczypce. */
+  aim?: [HexKey, HexKey] | null;
 }
 
 export interface Monument {
@@ -68,13 +72,24 @@ export interface TurnState {
 export type Pending =
   | { kind: 'chooseAction'; player: PlayerId }
   | { kind: 'move'; player: PlayerId; moved: FigureId[] }
-  | { kind: 'summon'; player: PlayerId }
+  | { kind: 'summon'; player: PlayerId; used: string[] }
   | { kind: 'unlock'; player: PlayerId; level: 1 | 2 | 3 }
   | { kind: 'controlMonument'; player: PlayerId; candidates: MonumentId[] }
   | { kind: 'selectCards'; waiting: PlayerId[] }
   | { kind: 'build'; player: PlayerId }
   | { kind: 'plagueBid'; waiting: PlayerId[] }
-  | { kind: 'tiebreaker'; player: PlayerId };
+  | { kind: 'tiebreaker'; player: PlayerId }
+  | { kind: 'aimScorpion'; player: PlayerId; figure: FigureId }
+  | { kind: 'caravan'; player: PlayerId }
+  | { kind: 'caravanKeep'; player: PlayerId; token: number; regions: [HexKey, HexKey] }
+  | { kind: 'caravanSwap'; player: PlayerId; tokens: [number, number] }
+  | { kind: 'obeliskMove'; player: PlayerId }
+  | { kind: 'amunAnnounce'; player: PlayerId }
+  | { kind: 'anubisTrap'; player: PlayerId; candidates: FigureId[] }
+  | { kind: 'isisProtect'; player: PlayerId; candidates: FigureId[] }
+  | { kind: 'underworld'; player: PlayerId; region: number }
+  | { kind: 'worshipful'; player: PlayerId }
+  | { kind: 'mummyReturn'; player: PlayerId; figure: FigureId };
 
 export interface ConflictState {
   /** Żeton rozstrzygający remis: bierze go gracz, który wyzwolił konflikt. */
@@ -101,6 +116,18 @@ export interface BattleState {
   /** Gracze remisujący o zwycięstwo (gdy remis). */
   tied: PlayerId[];
   tiebreakUsed: boolean;
+  /** Kolejka graczy używających Zewu obelisków (na zmianę po 1 figurce). */
+  obeliskQueue: PlayerId[];
+  /** Liczba figurek w regionie w chwili rozstrzygnięcia (dla Wielkoduszności). */
+  figuresAtResolution: Partial<Record<PlayerId, number>>;
+  winner: PlayerId | null;
+  /** Figurki do zabicia w rozstrzygnięciu (po decyzji Izydy). */
+  toKill: FigureId[];
+  /** Właściciele kocich mumii poległych w rozstrzygnięciu (strata oddania po nagrodach). */
+  catMummyDeaths: PlayerId[];
+  /** Gracze, którzy zapowiedzieli dwie karty (Amun), i ci już zapytani. */
+  twoCards: PlayerId[];
+  askedTwoCards: PlayerId[];
 }
 
 /** Zaplanowany krok silnika (kolejka — w pełni serializowalna). */
@@ -125,20 +152,44 @@ export type Task =
   | { t: 'battleResolution' }
   | { t: 'battleSettle' }
   | { t: 'battleAfter' }
-  | { t: 'battleEnd' };
+  | { t: 'battleEnd' }
+  | { t: 'battleObelisk' }
+  | { t: 'battleCards' }
+  | { t: 'battleKill' }
+  | { t: 'afterBattleStep'; phase: number; player: PlayerId }
+  | { t: 'continueSummon'; player: PlayerId; used: string[] }
+  | { t: 'resumeMove'; player: PlayerId; moved: FigureId[] }
+  | { t: 'aimScorpion'; figure: FigureId }
+  | { t: 'mummyReturn'; figure: FigureId }
+  | { t: 'anubisTrap'; player: PlayerId; candidates: FigureId[] }
+  | { t: 'afterBattlePhase'; phase: number }
+  | { t: 'protectAsk'; player: PlayerId; candidates: FigureId[] };
 
 export type Move =
   | { type: 'chooseAction'; player: PlayerId; action: ActionType }
-  | { type: 'moveFigure'; player: PlayerId; figure: FigureId; to: HexKey }
+  | { type: 'moveFigure'; player: PlayerId; figure: FigureId; to: HexKey; push: HexKey | null }
   | { type: 'endMove'; player: PlayerId }
-  | { type: 'summon'; player: PlayerId; figure: FigureId; to: HexKey }
+  | { type: 'summon'; player: PlayerId; figure: FigureId; to: HexKey; source: string; radiant: boolean }
+  | { type: 'endSummon'; player: PlayerId }
   | { type: 'unlockPower'; player: PlayerId; power: AnkhPowerId }
   | { type: 'controlMonument'; player: PlayerId; monument: MonumentId }
-  | { type: 'selectCard'; player: PlayerId; card: BattleCardId }
+  | { type: 'selectCard'; player: PlayerId; card: BattleCardId; second?: BattleCardId }
   | { type: 'build'; player: PlayerId; monument: MonumentType; at: HexKey }
   | { type: 'skipBuild'; player: PlayerId }
   | { type: 'plagueBid'; player: PlayerId; amount: number }
-  | { type: 'useTiebreaker'; player: PlayerId; use: boolean };
+  | { type: 'useTiebreaker'; player: PlayerId; use: boolean }
+  | { type: 'aimScorpion'; player: PlayerId; figure: FigureId; aim: [HexKey, HexKey] | null }
+  | { type: 'caravan'; player: PlayerId; camels: EdgeKey[] }
+  | { type: 'caravanKeep'; player: PlayerId; region: HexKey }
+  | { type: 'caravanSwap'; player: PlayerId; swap: [number, number] | null }
+  | { type: 'obeliskMove'; player: PlayerId; figure: FigureId; to: HexKey }
+  | { type: 'obeliskDone'; player: PlayerId }
+  | { type: 'amunAnnounce'; player: PlayerId; use: boolean }
+  | { type: 'anubisTrap'; player: PlayerId; figure: FigureId | null }
+  | { type: 'isisProtect'; player: PlayerId; figure: FigureId | null }
+  | { type: 'underworld'; player: PlayerId; from: HexKey | null; to: HexKey | null }
+  | { type: 'worshipful'; player: PlayerId; use: boolean }
+  | { type: 'mummyReturn'; player: PlayerId; figure: FigureId; to: HexKey; radiant: boolean };
 
 export interface LogEntry {
   n: number;
@@ -170,6 +221,15 @@ export interface GameState {
   conflictsResolved: number;
   conflict: ConflictState | null;
   battle: BattleState | null;
+  /** Stan zdolności bogów (każdy bóg występuje w grze najwyżej raz). */
+  abilities: {
+    /** Ra: figurki ze słońcem (promienne). */
+    radiant: FigureId[];
+    /** Ozyrys: pola z wrotami zaświatów na planszy. */
+    underworld: HexKey[];
+    /** Amun: żeton zdolności odkryty (dostępny w tym konflikcie). */
+    amunTokenUp: boolean;
+  };
   devotionSeqCounter: number;
   turn: TurnState;
   turnNumber: number;

@@ -1,4 +1,5 @@
 import { changeDevotion } from '../engine/devotion';
+import { AFTER_PHASE } from '../engine/phases';
 import { figuresInRegion, terrainOf } from '../engine/queries';
 import type { BattleCardId, BattleState, GameState, PlayerId } from '../engine/types';
 import { godName, log } from '../engine/util';
@@ -9,8 +10,6 @@ export interface CardContext {
   battle: BattleState;
 }
 
-/** Fazy po rozstrzygnięciu bitwy (FAQ: Wielkoduszność → Cud → Uwielbienie); Ma'at na końcu. */
-export const AFTER_PHASE = { magnanimous: 1, miracle: 2, worshipful: 3, maat: 4 } as const;
 
 export interface BattleCardDef {
   id: BattleCardId;

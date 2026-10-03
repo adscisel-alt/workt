@@ -155,6 +155,7 @@ export function createGame(opts: NewGameOptions): GameState {
   state.conflictsResolved = 0;
   state.conflict = null;
   state.battle = null;
+  state.abilities = { radiant: [], underworld: [], amunTokenUp: true };
   state.turn = { player: 0, actions: [], triggered: null };
   state.turnNumber = 1;
   state.pending = { kind: 'chooseAction', player: 0 };

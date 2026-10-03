@@ -40,7 +40,7 @@ describe('akcja Ruch', () => {
     let s = clearBoard(newGame());
     place(s, 'p0-god', k(0, 0));
     place(s, 'p0-w1', k(0, 3));
-    s = play(s, act(0, 'move'), { type: 'moveFigure', player: 0, figure: 'p0-god', to: k(1, 0) });
+    s = play(s, act(0, 'move'), { type: 'moveFigure', player: 0, figure: 'p0-god', to: k(1, 0), push: null });
     const figs = legalMoves(s).filter((m) => m.type === 'moveFigure').map((m) => (m as { figure: string }).figure);
     expect(new Set(figs)).toEqual(new Set(['p0-w1']));
     s = applyMove(s, { type: 'endMove', player: 0 });
@@ -49,7 +49,7 @@ describe('akcja Ruch', () => {
   });
 
   it('ruch kończy się sam, gdy ruszyły wszystkie figurki na planszy', () => {
-    const s = play(newGame(), act(0, 'move'), { type: 'moveFigure', player: 0, figure: 'p0-god', to: k(0, 4) });
+    const s = play(newGame(), act(0, 'move'), { type: 'moveFigure', player: 0, figure: 'p0-god', to: k(0, 4), push: null });
     expect(s.pending).toEqual({ kind: 'chooseAction', player: 0 });
   });
 
