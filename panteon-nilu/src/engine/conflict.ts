@@ -82,6 +82,7 @@ function startBattle(state: GameState, region: number, token: number, participan
     tied: [],
     tiebreakUsed: false,
     obeliskQueue: devotionAscending(state).filter((p) => participants.includes(p)),
+    obeliskMoved: [],
     figuresAtResolution: {},
     winner: null,
     toKill: [],
@@ -114,6 +115,7 @@ export function relocationOptions(state: GameState, p: PlayerId): { figure: Figu
   const targets = [...new Set(anchors.flatMap((a) => adjacentHexes(state.map, a)))].sort();
   const out: { figure: FigureId; to: HexKey }[] = [];
   for (const f of boardFiguresOf(state, p)) {
+    if (b.obeliskMoved.includes(f.id)) continue; // każda figurka najwyżej raz
     for (const to of targets) if (to !== f.pos && canEndMoveOn(state, f, to)) out.push({ figure: f.id, to });
   }
   return out;
@@ -131,6 +133,7 @@ export function obeliskMove(state: GameState, p: PlayerId, figure: FigureId, to:
   const fig = state.figures[figure];
   log(state, `${godName(state, p)}: Zew obelisków — ${figure} na ${to}.`, p);
   fig.pos = to;
+  b.obeliskMoved.push(figure);
   b.obeliskQueue = [...b.obeliskQueue.filter((x) => x !== p), p];
   state.pending = null;
   const aim = anyHook(state, p, (h, c) => h.needsAim?.({ ...c, figure: fig }))

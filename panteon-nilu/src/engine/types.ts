@@ -126,6 +126,8 @@ export interface BattleState {
   tiebreakUsed: boolean;
   /** Kolejka graczy używających Zewu obelisków (na zmianę po 1 figurce). */
   obeliskQueue: PlayerId[];
+  /** Figurki już przestawione Zewem obelisków (każda najwyżej raz). */
+  obeliskMoved: FigureId[];
   /** Liczba figurek w regionie w chwili rozstrzygnięcia (dla Wielkoduszności). */
   figuresAtResolution: Partial<Record<PlayerId, number>>;
   winner: PlayerId | null;

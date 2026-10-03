@@ -79,6 +79,14 @@ describe('moce poziomu 2', () => {
     expect(s.players[0].devotion).toBe(2); // przewaga obelisków +1, wygrana (2 figurki vs 1) +1
   });
 
+  it('Zew obelisków: każdą figurkę przestawia się najwyżej raz', () => {
+    const s0 = setup([F[0], R2.desert[0]], [F[1]], [['obeliskAttuned'], []]);
+    addMonument(s0, 'obelisk', D[1], 0);
+    let s = conflictNow(s0);
+    s = applyMove(s, legalMoves(s).find((x) => x.type === 'obeliskMove' && x.figure === 'p0-w1')!);
+    expect(legalMoves(s).some((x) => x.type === 'obeliskMove' && x.figure === 'p0-w1')).toBe(false);
+  });
+
   it('Zew obelisków: kilku graczy — rosnąco wg oddania, na zmianę po 1 figurce', () => {
     const s0 = setup([F[0], R2.desert[0], R2.desert[1]], [F[1], R2.desert[2], R2.desert[3]], [['obeliskAttuned'], ['obeliskAttuned']]);
     addMonument(s0, 'obelisk', D[0], 0);

@@ -19,7 +19,15 @@ import { IllegalMoveError, log } from './util';
 /** Główne API silnika: (stan, ruch) -> nowy stan. Wejściowy stan nie jest modyfikowany. */
 export function applyMove(state: GameState, move: Move): GameState {
   if (!isLegal(state, move)) throw new IllegalMoveError(`Nielegalny ruch: ${JSON.stringify(move)}`);
-  const next = structuredClone(state);
+  return applyLegalMove(state, move);
+}
+
+/**
+ * Jak applyMove, ale bez sprawdzania legalności — tylko dla ruchów wziętych wprost z `legalMoves(state)`
+ * (symulacje bota). Wejściowy stan nie jest modyfikowany.
+ */
+export function applyLegalMove(state: GameState, move: Move): GameState {
+  const next = cloneState(state);
   dispatch(next, move);
   runQueue(next);
   return next;
@@ -147,6 +155,15 @@ function runTask(state: GameState, task: Task): void {
     case 'anubisTrap':
       return anubisTrapTask(state, task.player, task.candidates);
   }
+}
+
+/**
+ * Kopia stanu do modyfikacji. Mapa i reguły są niezmienne (karawana podmienia mapę na nowy obiekt),
+ * więc są współdzielone — dzięki temu cache regionów działa między kolejnymi stanami.
+ */
+export function cloneState(state: GameState): GameState {
+  const { map, rules, ...rest } = state;
+  return { ...structuredClone(rest), map, rules } as GameState;
 }
 
 /** Wykonuje zaplanowane kroki, aż silnik będzie czekał na decyzję albo gra się skończy. */

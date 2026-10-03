@@ -60,6 +60,29 @@ try {
   await page.click('[data-reveal]');
   await page.click('[data-card="build"]');
   await page.screenshot({ path: `${out}/06-after-battle.png` });
+  // Gra z botem heurystycznym, zapis w przeglądarce, przeładowanie strony, wczytanie.
+  await page.goto('http://localhost:4179/');
+  await page.selectOption('[data-controller-select="1"]', 'heuristic');
+  await page.fill('[data-seed]', '11');
+  await page.click('[data-start]');
+  for (let i = 0; i < 20; i++) {
+    if (await page.locator('[data-action="followers"]:not([disabled])').count()) {
+      await page.click('[data-action="followers"]');
+      break;
+    }
+    await page.waitForTimeout(500);
+  }
+  await page.waitForSelector('[data-action="unlock"]:not([disabled])');
+  await page.click('[data-action="unlock"]');
+  if (await page.locator('[data-power]').count()) await page.locator('[data-power]').first().click();
+  await page.waitForSelector('[data-action="move"]:not([disabled])', { timeout: 30000 }); // bot zagrał swoją turę
+  await page.screenshot({ path: `${out}/10-vs-bot.png` });
+  await page.click('[data-save]');
+  await page.reload();
+  await page.locator('[data-load-save]').first().click();
+  if (!(await page.locator('[data-action="move"]:not([disabled])').count())) fail('wczytana gra nie wróciła do tury człowieka');
+  const botMoves = await page.locator('.log li').count();
+  console.log('wpisy w dzienniku po wczytaniu:', botMoves);
   console.log('pola ruchu:', dots, '| błędy strony:', errors.length ? errors : 'brak');
   if (errors.length) process.exitCode = 1;
 } finally {

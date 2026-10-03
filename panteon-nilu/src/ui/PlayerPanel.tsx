@@ -6,7 +6,7 @@ import { isInRed } from '../engine/devotion';
 import { godName } from '../engine/util';
 import type { GameState, PlayerId } from '../engine/types';
 
-export function PlayerPanel({ state, player, active }: { state: GameState; player: PlayerId; active: boolean }) {
+export function PlayerPanel({ state, player, active, controller }: { state: GameState; player: PlayerId; active: boolean; controller?: string }) {
   const p = state.players[player];
   const god = GODS[p.god];
   if (p.eliminated || p.mergedInto !== undefined) {
@@ -33,6 +33,7 @@ export function PlayerPanel({ state, player, active }: { state: GameState; playe
       <header>
         <span className="swatch" style={{ background: god.color }} />
         <strong>{godName(state, player)}</strong> <span className="muted">{p.extraGods.length ? 'bóg połączony' : god.epithet}</span>
+        {controller && controller !== 'Człowiek' && <span className="chip">{controller}</span>}
         {active && <span className="badge">tura</span>}
       </header>
       <div className="stats">

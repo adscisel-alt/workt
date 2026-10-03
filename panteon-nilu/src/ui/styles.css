@@ -60,7 +60,7 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: 
 .error { color: var(--red); }
 
 .topbar { display: flex; align-items: center; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
-.topbar button { margin-left: auto; }
+.topbar-actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; padding: 16px; }
 @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
 .board-wrap { min-width: 0; }
@@ -161,3 +161,12 @@ h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: 
 .status { font-size: 12px; margin-top: 4px; }
 .player-out { opacity: 0.6; }
 .partner-base { stroke: #fff; stroke-width: 1.5; }
+
+/* etap 6 */
+.message { background: rgba(181, 131, 42, 0.15); border-radius: 8px; padding: 6px 10px; margin: 0; }
+.seat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.saves { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.saves li { display: flex; align-items: center; gap: 8px; }
+.saves li button:first-child { flex: 1; text-align: left; }
+.newgame h2 { margin-top: 12px; }
+@media (max-width: 600px) { .topbar { flex-wrap: wrap; } }

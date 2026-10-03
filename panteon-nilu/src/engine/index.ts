@@ -1,4 +1,4 @@
-export { applyMove, runQueue } from './game';
+export { applyLegalMove, applyMove, runQueue } from './game';
 export { createGame, buildMap, type NewGameOptions } from './setup';
 export { legalMoves, isLegal, moveKey, pendingPlayers } from './legal';
 export { battleStrength, buildOptions } from './conflict';
@@ -9,3 +9,4 @@ export { devotionAscending, isInRed } from './devotion';
 export { IllegalMoveError } from './util';
 export { viewFor } from './view';
 export { entityOf, godName, isEntity, seatsOf } from './util';
+export { deserializeGame, SaveError, serializeGame, type SaveFile, type SaveMeta } from './save';

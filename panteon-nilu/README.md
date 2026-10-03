@@ -56,6 +56,7 @@ Miejsca, gdzie instrukcja i FAQ nie mówią wprost, kto decyduje albo jak dokła
 - **Mumia**: pole powrotu obok boga wybiera właściciel; Ra może przy tym nadać słońce (to przywołanie).
 - **Izyda**: ocalenie decydowane osobno dla każdej chronionej figurki.
 - **Wrota zaświatów**: stawiane na pustym polu lądowym (bez figurki i monumentu), innym niż istniejące wrota.
+- **Zew obelisków**: każdą figurkę można przestawić najwyżej raz w danej bitwie.
 - **Zapowiedź Amuna**: jawna, przed tajnym wyborem kart wszystkich graczy.
 - **Karawana**: linia to ścieżka po krawędziach heksów, której oba końce dotykają rzeki, wody, wielbłąda
   lub brzegu mapy; musi podzielić region na dokładnie dwa, każdy ≥ 6 pól lądowych.
@@ -74,4 +75,20 @@ miejsca (instrukcja: przy sporze rozstrzyga gracz wyższego boga).
 3. ✅ UI hot-seat dla 2 graczy: plansza SVG, podświetlanie legalnych ruchów, panele graczy, tory, dziennik, ukryty wybór kart i ofert plagi.
 4. ✅ Karawana, 12 mocy ankh, 6 strażników, zdolności 5 bogów.
 5. ✅ Łączenie bogów (po 3. konflikcie), zapomniani bogowie (po 4.), rozstawienia dla 3–5 graczy.
-6. Bot, zapis i wczytanie.
+6. ✅ Boty (losowy, heurystyczny) i zapis/wczytanie (przeglądarka + plik .json).
+
+## Boty
+
+- **Losowy** — dowolny legalny ruch, deterministyczny wg ziarna.
+- **Heurystyczny** — w decyzjach jawnych wybiera ruch najlepiej oceniany przez `src/bot/evaluate.ts`
+  (oddanie, wyznawcy, figurki, monumenty, moce, przewidywany wynik konfliktu w regionach, groźny rywal,
+  czerwona strefa), z zachłannym dokończeniem własnych decyzji w turze. Tajne decyzje (karta bitwy,
+  licytacja plagi) podejmuje regułami na **własnym widoku** (`viewFor`) — nie zna cudzych kart (jest na to test).
+- Siła (testy, 12 partii na każdą liczbę graczy, heurystyczny vs losowi): 2 graczy 12/12,
+  3 graczy 8/12, 4 graczy 9/12 wygranych.
+
+## Zapis i wczytanie
+
+`serializeGame` / `deserializeGame` (`src/engine/save.ts`): stan + metadane (nazwa, data, kto steruje
+graczami). Wczytanie sprawdza format, wersję i spójność stanu. W UI: „Zapisz” (pamięć przeglądarki,
+do 20 zapisów), „Pobierz zapis” (plik .json) oraz lista zapisów i wczytanie pliku na ekranie nowej gry.
