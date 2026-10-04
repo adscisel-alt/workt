@@ -29,6 +29,19 @@
     color-scheme: dark;
   }
 }
+/* jawny wybór ciemnego motywu (np. przez stronę-hosta) — te same wartości co wyżej */
+:root[data-theme='dark'] {
+  --bg: #1d1914;
+  --panel: #29231c;
+  --ink: #f1e6d2;
+  --muted: #b3a48d;
+  --line: #4a3f31;
+  --fertile: #5f8a45;
+  --desert: #b79a58;
+  --water: #3f6f99;
+  --river: #8cc0ef;
+  color-scheme: dark;
+}
 
 * { box-sizing: border-box; }
 body {

@@ -16,6 +16,7 @@ import { PlayerPanel } from './PlayerPanel';
 import { SecretDecision } from './SecretDecision';
 import { deleteSave, downloadSave, listSaves, storeSave, type StoredSave } from './storage';
 import { Tracks } from './Tracks';
+import { SafeBoundary } from '../ui3d/SafeBoundary';
 import { SettingsPanel } from '../ui3d/SettingsPanel';
 import { loadSettings, saveSettings, type Settings3D } from '../ui3d/settings';
 
@@ -202,18 +203,26 @@ function GameScreen({ game, setState, onNew }: { game: Game; setState(s: GameSta
         <div className="board-wrap">
           {mode === '3d' ? (
             <div className="scene-wrap">
-              <Suspense fallback={<p className="scene-loading">Ładowanie sceny 3D…</p>}>
-                <Scene3D
-                  state={view}
-                  interaction={interaction}
-                  selectedFigure={sel.figure}
-                  regionTint={regionTint}
-                  settings={settings3d}
-                  hudInset={400}
-                  fpsRef={settings3d.showFps ? fpsRef : undefined}
-                  {...boardHandlers}
-                />
-              </Suspense>
+              <SafeBoundary
+                fallback={null}
+                onError={() => {
+                  setModeState('2d');
+                  setMessage('Widok 3D nie uruchomił się w tej przeglądarce. Przełączono na 2D.');
+                }}
+              >
+                <Suspense fallback={<p className="scene-loading">Ładowanie sceny 3D…</p>}>
+                  <Scene3D
+                    state={view}
+                    interaction={interaction}
+                    selectedFigure={sel.figure}
+                    regionTint={regionTint}
+                    settings={settings3d}
+                    hudInset={400}
+                    fpsRef={settings3d.showFps ? fpsRef : undefined}
+                    {...boardHandlers}
+                  />
+                </Suspense>
+              </SafeBoundary>
               <div className="hud3d">
                 <button className="hud-btn" onClick={() => setShowSettings(!showSettings)} data-settings-toggle>
                   ⚙ Grafika

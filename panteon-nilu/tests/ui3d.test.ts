@@ -146,14 +146,14 @@ describe('3D: modele figurek', () => {
   });
 
   it('wybór pliku: pierwszy dostępny kandydat, brak — zastępnik (null)', () => {
-    const available = new Set(['god.glb', 'god-ra.glb']);
+    const available = new Map([['god.glb', 'god.glb'], ['god-ra.glb', 'god-ra.glb']]);
     expect(pickModel(['god-ra.glb', 'god.glb'], available)).toBe(`${MODELS_URL}god-ra.glb`);
     expect(pickModel(['god-amun.glb', 'god.glb'], available)).toBe(`${MODELS_URL}god.glb`);
     expect(pickModel(['guardian-apep.glb', 'guardian.glb'], available)).toBeNull();
   });
 
   it('manifest: błędny lub brakujący → pusta lista (same zastępniki), bez wyjątków', async () => {
-    expect(parseManifest({ models: ['a.glb', 3, 'b.txt', null] })).toEqual(new Set(['a.glb']));
+    expect([...parseManifest({ models: ['a.glb', 3, 'b.txt', null, '../x.glb', 'http://x/y.glb'] }).keys()]).toEqual(['a.glb']);
     expect(parseManifest(null).size).toBe(0);
     expect(parseManifest({ models: 'god.glb' }).size).toBe(0);
     resetManifestCache();
@@ -162,14 +162,24 @@ describe('3D: modele figurek', () => {
     expect((await loadManifest(async () => new Response('nie ma', { status: 404 }))).size).toBe(0);
     resetManifestCache();
     const ok = await loadManifest(async () => new Response(JSON.stringify({ models: ['god.glb'] })));
-    expect([...ok]).toEqual(['god.glb']);
+    expect([...ok.keys()]).toEqual(['god.glb']);
     resetManifestCache();
+  });
+
+  it('manifest może wskazać inny plik dla modelu (host bez .glb); obce adresy są ignorowane', () => {
+    const files = parseManifest({
+      models: ['god.glb', 'warrior.glb', 'guardian.glb'],
+      files: { 'god.glb': 'god.gltf.json', 'warrior.glb': 'data:application/octet-stream;base64,AAAA', 'guardian.glb': '../../etc' },
+    });
+    expect(pickModel(['god-ra.glb', 'god.glb'], files)).toBe(`${MODELS_URL}god.gltf.json`);
+    expect(pickModel(['warrior.glb'], files)).toBe(`${MODELS_URL}warrior.glb`);
+    expect(pickModel(['guardian.glb'], files)).toBe(`${MODELS_URL}guardian.glb`);
   });
 
   it('dołączone modele: każdy wpis manifestu istnieje, kompresja meshopt (bóg) i Draco (wojownik)', () => {
     const list = parseManifest(JSON.parse(readFileSync('public/models/manifest.json', 'utf8')));
-    expect([...list].sort()).toEqual(['god.glb', 'warrior.glb']);
-    for (const f of list) expect(existsSync(`public/models/${f}`)).toBe(true);
+    expect([...list.keys()].sort()).toEqual(['god.glb', 'warrior.glb']);
+    for (const f of list.values()) expect(existsSync(`public/models/${f}`)).toBe(true);
     const god = glbJson('public/models/god.glb');
     const warrior = glbJson('public/models/warrior.glb');
     expect(god.extensionsRequired).toContain('EXT_meshopt_compression');

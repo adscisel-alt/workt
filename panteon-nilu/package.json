@@ -14,7 +14,8 @@
     "smoke3d": "node scripts/smoke3d.mjs",
     "shot3d": "node scripts/shot3d.mjs",
     "models": "node scripts/build-models.mjs",
-    "models:manifest": "node scripts/build-models.mjs --manifest"
+    "models:manifest": "node scripts/build-models.mjs --manifest",
+    "pack:artifact": "npm run build && node scripts/pack-artifact.mjs"
   },
   "dependencies": {
     "@pmndrs/assets": "^1.7.0",

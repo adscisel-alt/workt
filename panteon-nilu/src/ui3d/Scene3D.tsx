@@ -1,8 +1,8 @@
 // Scena 3D: stylizowana makieta planszówki na stole. Czyta stan, wysyła akcje przez te same callbacki co plansza 2D.
 import { Environment, PerformanceMonitor } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useLayoutEffect, useMemo, useState, type RefObject } from 'react';
-import { PCFSoftShadowMap } from 'three';
+import { Suspense, useEffect, useLayoutEffect, useMemo, useState, type RefObject } from 'react';
+import { PCFShadowMap } from 'three';
 import type { EdgeKey, GameState, HexKey } from '../engine/types';
 import type { Interaction } from '../ui/interaction';
 import { Board3D } from './Board3D';
@@ -12,6 +12,7 @@ import { Effects } from './Effects';
 import { frameMaterial, woodMaterial } from './materials';
 import { SandProvider } from './Particles';
 import { Pieces3D } from './Pieces3D';
+import { SafeBoundary } from './SafeBoundary';
 import { effectiveSettings, type Settings3D } from './settings';
 
 export interface Scene3DProps {
@@ -44,10 +45,15 @@ export default function Scene3D(props: Scene3DProps) {
   const [dpr, setDpr] = useState(Math.min(window.devicePixelRatio || 1, s.maxDpr));
   useEffect(() => setDpr(Math.min(window.devicePixelRatio || 1, s.maxDpr)), [s.maxDpr]);
   const [hdri, setHdri] = useState<string | null>(null);
+  // Gdy HDRI się nie wczyta (np. host blokuje adresy data:), scena zostaje z samym światłem półsferycznym.
+  const [envFailed, setEnvFailed] = useState(false);
+  const env = hdri !== null && !envFailed;
   useEffect(() => {
     let live = true;
     // HDRI (CC0, Poly Haven) dołączone do paczki — bez pobierania z sieci.
-    import('@pmndrs/assets/hdri/apartment.exr').then((m) => live && setHdri(m.default));
+    import('@pmndrs/assets/hdri/apartment.exr')
+      .then((m) => live && setHdri(m.default))
+      .catch(() => live && setEnvFailed(true));
     return () => {
       live = false;
     };
@@ -63,7 +69,7 @@ export default function Scene3D(props: Scene3DProps) {
   return (
     <Canvas
       className="scene3d"
-      shadows={s.shadows ? { type: PCFSoftShadowMap } : false}
+      shadows={s.shadows ? { type: PCFShadowMap } : false}
       dpr={dpr}
       gl={s.postprocessing ? GL_NO_AA : GL_AA}
       camera={CAMERA}
@@ -79,8 +85,14 @@ export default function Scene3D(props: Scene3DProps) {
       )}
       <color attach="background" args={['#1e1611']} />
       <fog attach="fog" args={['#1e1611', 40, 90]} />
-      {hdri && <Environment files={hdri} environmentIntensity={0.42} />}
-      <hemisphereLight args={['#fff1d6', '#3a2a1c', hdri ? 0.25 : 0.8]} />
+      {env && (
+        <SafeBoundary fallback={null} onError={() => setEnvFailed(true)}>
+          <Suspense fallback={null}>
+            <Environment files={hdri} environmentIntensity={0.42} />
+          </Suspense>
+        </SafeBoundary>
+      )}
+      <hemisphereLight args={['#fff1d6', '#3a2a1c', env ? 0.25 : 0.8]} />
       <SunLight state={props.state} shadows={s.shadows} />
       <Table state={props.state} />
       <SandProvider enabled={s.particles} dustAreas={useDustAreas(props.state)}>

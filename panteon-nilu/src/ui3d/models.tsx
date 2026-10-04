@@ -1,8 +1,9 @@
 // Modele figurek z /public/models (*.glb, Draco lub meshopt). Brak pliku → pionek-zastępnik.
 import { useGLTF } from '@react-three/drei';
-import { Component, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Box3, Color, Mesh, type Group, type MeshStandardMaterial } from 'three';
 import { DRACO_URL, resolveModel } from './modelFiles';
+import { SafeBoundary } from './SafeBoundary';
 
 export { FIGURE_HEIGHT, modelCandidates } from './modelFiles';
 
@@ -17,16 +18,6 @@ export function useModelUrl(candidates: string[]): string | null | undefined {
     };
   }, [key]);
   return url;
-}
-
-class ModelBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? this.props.fallback : this.props.children;
-  }
 }
 
 /** Model GLB przeskalowany do zadanej wysokości, stopami na y = 0; materiały „team*” w kolorze gracza. */
@@ -59,10 +50,10 @@ export function FigureModel({ candidates, height, color, fallback }: { candidate
   const url = useModelUrl(candidates);
   if (!url) return <>{fallback}</>;
   return (
-    <ModelBoundary fallback={fallback}>
+    <SafeBoundary fallback={fallback}>
       <Suspense fallback={fallback}>
         <GltfFigure url={url} height={height} color={color} />
       </Suspense>
-    </ModelBoundary>
+    </SafeBoundary>
   );
 }

@@ -15,6 +15,7 @@ npm run smoke     # test dymny widoku 2D w Chromium (Playwright); CHROMIUM_PATH=
 npm run smoke3d -- <katalog>          # test dymny widoku 3D (WebGL przez SwiftShader) + zrzuty ekranu
 npm run shot3d -- <plik.png> [midgame|summon] [high|low]   # pojedynczy zrzut sceny 3D
 npm run models    # przebudowa modeli figurek (public/models/*.glb) i manifestu
+npm run pack:artifact -- <katalog>   # build dla hosta z własnym szkieletem HTML i bez .glb (np. strona-artefakt)
 ```
 
 ## Architektura
@@ -49,7 +50,10 @@ bez WebGL2 gra startuje w 2D. Kod 3D (`src/ui3d`) jest w osobnym, leniwie ładow
   kolor gracza. Model skaluje się do wysokości figurki. Brak pliku albo błąd wczytania → pionek-zastępnik.
   W repozytorium są własne, proceduralne statuetki (`npm run models`): bóg z kompresją **meshopt**,
   wojownik z **Draco**. Dekoder Draco (kopia z `three/examples/jsm/libs/draco/gltf`, Apache 2.0) leży w `public/draco`, bez CDN. Strażnicy celowo nie mają
-  modelu, więc pokazują pionek-zastępnik.
+  modelu, więc pokazują pionek-zastępnik. Manifest może wskazać inny plik dla modelu (pole `files`),
+  np. glTF w JSON tam, gdzie host nie serwuje `.glb`; robi to `npm run pack:artifact`.
+- **Odporność**: gdy HDRI albo model się nie wczyta, scena działa dalej (proste światło, pionek-zastępnik);
+  gdy scena 3D w ogóle nie ruszy, gra przełącza się na widok 2D z komunikatem.
 - **Światło**: HDRI `apartment.exr` z pakietu `@pmndrs/assets` (CC0, Poly Haven), jedno światło
   kierunkowe z miękkimi cieniami (PCF), tone mapping ACES.
 - **Postprocessing**: okluzja otoczenia (N8AO), bloom, tilt-shift, winieta (+ SMAA). Każdy efekt ma
