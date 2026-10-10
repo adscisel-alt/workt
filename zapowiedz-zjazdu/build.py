@@ -291,18 +291,23 @@ def T(t0, t1, x, y, text, font="ZjCinzelBold", size=100, color=WHITE, fsp=(0, 0)
 
 
 def plate(t0, t1, x, y, w, h, alpha="&H84&", fin=500, fout=400, blur=70):
-    """Miekki, owalny cien pod napisem (poprawia czytelnosc na jasnym tle)."""
-    w, h = w * 1.18, h * 1.25
+    """Miekki cien pod napisem: kilka wspolsrodkowych owali = gladki gradient bez widocznej krawedzi."""
+    target = 1 - int(alpha.strip("&H"), 16) / 255          # docelowe krycie w srodku
+    layers = (0.6, 0.85, 1.1, 1.4)
+    a_each = 1 - (1 - target) ** (1 / len(layers))
+    al = f"&H{int(round(255 * (1 - a_each))):02X}&"
     k = 0.5523
-    rx, ry = w / 2, h / 2
-    cx, cy = rx, ry
-    d = (f"m {cx - rx:.0f} {cy:.0f} "
-         f"b {cx - rx:.0f} {cy - k * ry:.0f} {cx - k * rx:.0f} {cy - ry:.0f} {cx:.0f} {cy - ry:.0f} "
-         f"b {cx + k * rx:.0f} {cy - ry:.0f} {cx + rx:.0f} {cy - k * ry:.0f} {cx + rx:.0f} {cy:.0f} "
-         f"b {cx + rx:.0f} {cy + k * ry:.0f} {cx + k * rx:.0f} {cy + ry:.0f} {cx:.0f} {cy + ry:.0f} "
-         f"b {cx - k * rx:.0f} {cy + ry:.0f} {cx - rx:.0f} {cy + k * ry:.0f} {cx - rx:.0f} {cy:.0f}")
-    dlg(0, t0, t1, "{\\an5\\pos(%d,%d)\\bord0\\shad0\\1c&H000000&\\1a%s\\blur%d\\fad(%d,%d)\\p1}%s{\\p0}"
-        % (x, y, alpha, blur, fin, fout, d))
+    for sc in layers:
+        ww, hh = w * 1.15 * sc, h * 1.2 * sc
+        rx, ry = ww / 2, hh / 2
+        cx, cy = rx, ry
+        d = (f"m {cx - rx:.0f} {cy:.0f} "
+             f"b {cx - rx:.0f} {cy - k * ry:.0f} {cx - k * rx:.0f} {cy - ry:.0f} {cx:.0f} {cy - ry:.0f} "
+             f"b {cx + k * rx:.0f} {cy - ry:.0f} {cx + rx:.0f} {cy - k * ry:.0f} {cx + rx:.0f} {cy:.0f} "
+             f"b {cx + rx:.0f} {cy + k * ry:.0f} {cx + k * rx:.0f} {cy + ry:.0f} {cx:.0f} {cy + ry:.0f} "
+             f"b {cx - k * rx:.0f} {cy + ry:.0f} {cx - rx:.0f} {cy + k * ry:.0f} {cx - rx:.0f} {cy:.0f}")
+        dlg(0, t0, t1, "{\\an5\\pos(%d,%d)\\bord0\\shad0\\1c&H000000&\\1a%s\\blur%d\\fad(%d,%d)\\p1}%s{\\p0}"
+            % (x, y, al, int(blur * (0.6 + 0.4 * sc)), fin, fout, d))
 
 
 def line(t0, t1, x, y, w, color=GOLD, fout=400, delay=0.15, thick=3):
@@ -371,9 +376,9 @@ def cmd_ass():
     T(70.4, 74.6, cx, 912, "ALBO POKOJE", "ZjCinzelBlack", 118, WHITE, (4, 12), glow=GOLD, fin=400)
     T(70.4, 74.6, cx, 1012, "W RÓŻNYCH WARIANTACH", "ZjMontSemi", 54, GOLD, (10, 18), delay=0.35, fin=400)
     # --- KULMINACJA
-    plate(75.0, 79.8, cx, 420, 1600, 420, "&H70&", fin=100)
-    T(75.0, 79.75, cx, 330, "NIE MOŻE CIĘ", "ZjMontXBold", 104, WHITE, (2, 8), anim="pop", glow=GOLD)
-    T(75.0, 79.75, cx, 500, "ZABRAKNĄĆ!!!", "ZjMontXBold", 190, GOLD, (2, 10), anim="slam", glow=GOLD,
+    plate(75.0, 79.8, cx, 385, 1600, 400, "&H70&", fin=100)
+    T(75.0, 79.75, cx, 290, "NIE MOŻE CIĘ", "ZjMontXBold", 104, WHITE, (2, 8), anim="pop", glow=GOLD)
+    T(75.0, 79.75, cx, 455, "ZABRAKNĄĆ!!!", "ZjMontXBold", 190, GOLD, (2, 10), anim="slam", glow=GOLD,
       delay=0.3, sweep=True)
     plate(80.0, 84.8, cx, 545, 1700, 400, "&H70&", fin=100)
     T(80.0, 84.75, cx, 455, "POBIJMY", "ZjMontXBold", 104, WHITE, (6, 14), anim="pop", glow=GOLD)
@@ -462,7 +467,7 @@ def cmd_final(preview=False):
         fc.append(f"[{prev}][v{i}]xfade=transition={TL[i]['tr']}:duration={TL[i]['d']}:offset={off:.4f}[x{i}]")
         prev = f"x{i}"
     flash = "+".join(f"{a}*exp(-(t-{t})/0.22)*gte(t,{t})" for t, a in FLASHES)
-    fc.append(f"[{prev}]vignette=angle=PI/5.6,noise=alls=3:allf=t,"
+    fc.append(f"[{prev}]vignette=angle=PI/5.6,noise=alls=2:allf=t,"
               f"eq=brightness='{flash}':eval=frame,"
               f"fade=t=in:st=0:d=1.2,"
               f"subtitles=filename={S}/titles.ass:fontsdir={FONTS},"
@@ -471,7 +476,8 @@ def cmd_final(preview=False):
     out = f"{OUTD}/zapowiedz_zjazd_2027.mp4"
     cmd = ["ffmpeg", "-nostdin", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(fc),
            "-map", "[vout]", "-map", "[aout]",
-           "-c:v", "libx264", "-preset", "slow", "-crf", "17", "-profile:v", "high", "-level", "4.1",
+           "-c:v", "libx264", "-preset", "slow", "-crf", "19", "-maxrate", "9M", "-bufsize", "18M",
+           "-profile:v", "high", "-level", "4.1",
            "-pix_fmt", "yuv420p", "-r", str(FPS), "-g", "60", "-bf", "2",
            "-c:a", "aac", "-b:a", "256k", "-ar", "48000", "-movflags", "+faststart", "-t", str(TOTAL), out]
     run(cmd)

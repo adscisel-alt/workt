@@ -4,7 +4,8 @@ Skrypty, z których powstał film zapowiadający zjazd w Grand Marina Resort
 (jezioro Dzierżno Małe, Górny Śląsk). Gotowy film, `zapowiedz_zjazd_2027.mp4`,
 nie jest trzymany w repozytorium (za duży). Można go odtworzyć tymi skryptami.
 
-- Film: 1920×1080, 30 kl./s, ok. 1:52, dźwięk AAC −14 LUFS (poziom głośności zalecany dla Facebooka).
+- Film: 1920×1080, 30 kl./s, 1:52, ok. 8 Mb/s (116 MB), dźwięk AAC −14 LUFS (poziom głośności zalecany dla Facebooka).
+  Lżejsza wersja 720p (35 MB) do wysyłania przez WhatsApp/Messenger.
 - Muzyka: oryginalna kompozycja (`music.py`), bez praw autorskich osób trzecich,
   więc Facebook nie powinien jej wyciszyć ani zablokować.
   Sample instrumentów: FluidR3_GM (licencja MIT), a uderzenia, narastania i talerze są syntezowane.
