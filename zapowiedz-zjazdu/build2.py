@@ -82,7 +82,7 @@ TL = [
          kb=((0, 0.22, 1.0), (0.05, 0.24, 0.90))),
     dict(cut=97.5, kind="v", src="v2", a=21.2, sp=1.0, stab=True, g="end", tr="fade", d=0.08),
     dict(cut=107.5, kind="v", src="drone", a=4.0, sp=0.5, stab=False, g="drone", tr="fade", d=0.08),
-    dict(cut=111.25, kind="v", src="drone", a=11.84, sp=0.5, stab=False, g="drone", tr="fade", d=0.8,
+    dict(cut=112.5, kind="v", src="drone", a=12.75, sp=0.4, stab=False, g="drone", tr="fade", d=0.8,
          maxsrc=14.4),
 ]
 FLASHES = [(2.5, 0.75), (22.5, 0.32), (62.5, 0.35), (77.5, 0.75), (82.5, 0.22), (87.5, 0.28),
