@@ -220,9 +220,9 @@ def cmd_ass():
         T(a + 22.8, a + 27.3, x, 1015, t2, "ZjMontSemi", 34, WHITE, (6, 10), delay=0.3, fin=400, rise=10)
     pair_cap(a + 27.8, a + 32.3, "PAROWOZY WCIĄŻ NA SZLAKU", "TARNOWSKIE GÓRY")
     # zielen
-    plate(a + 32.8, a + 39.8, cx, 545, 1600, 360)
-    T(a + 32.9, a + 39.7, cx, 480, "…I ODETCHNIJ ZIELENIĄ", "ZjCinzelBold", 104, WHITE, (2, 10), glow=GOLD, fin=500)
-    T(a + 32.9, a + 39.7, cx, 610, "PARK ŚLĄSKI  •  CHORZÓW", "ZjMontSemi", 58, GOLD, (10, 18), delay=0.4)
+    plate(a + 32.8, a + 39.8, cx, 230, 1600, 300)
+    T(a + 32.9, a + 39.7, cx, 180, "…I ODETCHNIJ ZIELENIĄ", "ZjCinzelBold", 104, WHITE, (2, 10), glow=GOLD, fin=500)
+    T(a + 32.9, a + 39.7, cx, 300, "PARK ŚLĄSKI  •  CHORZÓW", "ZjMontSemi", 58, GOLD, (10, 18), delay=0.4)
     plate(a + 50.3, a + 59.6, cx, 880, 1500, 280, blur=50)
     T(a + 50.4, a + 59.5, cx, 840, "REJS STATKIEM", "ZjCinzelBold", 96, WHITE, (2, 10), glow=GOLD, fin=600)
     T(a + 50.4, a + 59.5, cx, 945, "PO KANALE GLIWICKIM", "ZjMontSemi", 58, GOLD, (10, 18), delay=0.35, fin=600)
