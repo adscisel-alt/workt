@@ -29,6 +29,22 @@ python3 build.py final                   # montaż, przejścia, błyski, masteri
 Oś czasu (`TL` w `build.py`) jest zgrana z muzyką: każde cięcie wypada na początku taktu,
 a mocne uderzenia (15 s, 75 s, 95 s, 105 s) mają białe błyski obrazu.
 
+## Wersja 2 (oryginalne nagrania i zdjęcia)
+
+`build2.py` i `music2.py` składają nowszą wersję, ok. 1:59:
+- otwiera ją plansza „JUBILEUSZ / 10. / ZJAZD PRZYJACIÓŁ”, a potem idzie wstęp z drona
+  (nagranie ekranu z Facebooka, bez napisu „Plenerowe śluby…”, oczyszczone do 25 kl./s),
+- ujęcia nagrane telefonem są w oryginale (720p), a zdjęcia mają do 4000 px,
+- są w niej kolaże pokoi i atrakcji oraz kwadratowe nagranie sali bankietowej na rozmytym tle,
+- podkład ma 47 taktów i jest zgrany z nowym układem.
+
+```sh
+python3 music2.py samples music2.wav
+python3 build2.py shots && python3 build2.py ass && python3 build2.py final
+```
+
+Pliki źródłowe: `src2/` (zdjęcia, klatka z drona), `orig/` (drone25.mp4, a1–a3.mp4, b1_sala.mp4).
+
 ## Fragmenty z Facebooka
 
 Środowisko, w którym powstał film, nie miało dostępu do facebook.com, więc tych ujęć jeszcze
