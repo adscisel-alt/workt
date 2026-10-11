@@ -394,7 +394,7 @@ def cmd_final():
         off = TL[i]["cut"] - TL[i]["d"] / 2
         fc.append(f"[{prev}][v{i}]xfade=transition={TL[i]['tr']}:duration={TL[i]['d']}:offset={off:.4f}[x{i}]")
         prev = f"x{i}"
-    flash = "+".join(f"{a}*exp(-(t-{t})/0.22)*gte(t,{t})" for t, a in FLASHES)
+    flash = "+".join(f"{a}*exp(-max(t-{t},0)/0.22)*gte(t,{t})" for t, a in FLASHES)
     fc.append(f"[{prev}]vignette=angle=PI/5.6,eq=brightness='{flash}':eval=frame,fade=t=in:st=0:d=1.8,"
               f"subtitles=filename={S}/titles2.ass:fontsdir={FONTS},"
               f"fade=t=out:st=115.6:d=2.8,format=yuv420p[vout]")
