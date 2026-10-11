@@ -45,6 +45,23 @@ python3 build2.py shots && python3 build2.py ass && python3 build2.py final
 
 Pliki źródłowe: `src2/` (zdjęcia, klatka z drona), `orig/` (drone25.mp4, a1–a3.mp4, b1_sala.mp4).
 
+## Wersja 3: wstawka „Śląsk, jakiego nie znacie” (ok. 3:32)
+
+`build3.py` bierze wersję 2 i przed zachodem słońca wstawia 37 taktów (92,5 s) o Górnym Śląsku:
+Kopalnia Guido, Kopalnia Srebra (UNESCO), Nikiszowiec, kolej wąskotorowa w Tarnowskich Górach,
+Park Śląski, rejs po Kanale Gliwickim, Planetarium Śląskie i Legendię.
+
+- Filmy źródłowe (nagrania ekranu z YouTube'a i Facebooka) są oczyszczone z interfejsu, komentarzy,
+  napisów i znaków wodnych. Opis każdego jest w `slask/opis.tsv`.
+- Dźwięku z tych nagrań nie używamy. W filmie przy każdym ujęciu jest mały podpis źródła (`slask/zrodla.tsv`).
+- Pionowe filmy są pokazane parami, obok siebie, w złotych ramkach.
+- Muzyka do wstawki to `music_sil2.py` (aranżacja w `arr_sil2.py`), wklejona w podkład v2 (`music3.wav`).
+
+```sh
+python3 music_sil2.py samples music_sil2.wav   # potem sklejenie z music2.wav -> music3.wav
+python3 build3.py shots && python3 build3.py ass && python3 build3.py final
+```
+
 ## Fragmenty z Facebooka
 
 Środowisko, w którym powstał film, nie miało dostępu do facebook.com, więc tych ujęć jeszcze
