@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Argon English B2+ Trainer</title>
+    <meta name="claude:viewport-fit-sides" content="cover">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --card-hover: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --border: #334155;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding-bottom: 50px;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0 0 auto;
+            height: env(safe-area-inset-top, 0px);
+            z-index: 101;
+            background: var(--card);
+        }
+
+        header {
+            background-color: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding-block: 12px;
+            padding-left: max(16px, env(safe-area-inset-left, 0px));
+            padding-right: max(16px, env(safe-area-inset-right, 0px));
+            position: sticky;
+            top: env(safe-area-inset-top, 0px);
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .brand {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #60a5fa;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: var(--bg);
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid var(--border);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .xp-bar-container {
+            width: 60px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .xp-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        nav {
+            max-width: 900px;
+            margin: 15px auto 0;
+            padding-left: max(16px, env(safe-area-inset-left, 0px));
+            padding-right: max(16px, env(safe-area-inset-right, 0px));
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        @media (min-width: 650px) {
+            nav {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .nav-btn {
+            background: var(--card);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 10px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        main {
+            max-width: 900px;
+            margin: 15px auto;
+            padding-left: max(16px, env(safe-area-inset-left, 0px));
+            padding-right: max(16px, env(safe-area-inset-right, 0px));
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .pack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .pack-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .pack-card.locked {
+            opacity: 0.55;
+        }
+
+        .pack-card.current {
+            border-color: var(--primary);
+        }
+
+        .pack-title {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .pack-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background: var(--bg);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .exercise-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 16px;
+            margin-top: 10px;
+        }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .top-row .badge {
+            margin-bottom: 0;
+        }
+
+        .counter {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            margin-bottom: 10px;
+        }
+
+        .badge.tense-badge {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .prompt-pl {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .sentence-display {
+            font-size: 1.1rem;
+            background: var(--bg);
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin: 12px 0;
+        }
+
+        .gap-highlight {
+            color: var(--accent);
+            font-weight: 700;
+            border-bottom: 2px dashed var(--accent);
+            padding: 0 4px;
+        }
+
+        .gap-highlight.filled {
+            color: var(--success);
+            border-bottom: 2px solid var(--success);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+
+        input[readonly] {
+            opacity: 0.8;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 11px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--card-hover);
+            color: var(--text);
+            flex: 0 1 auto;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            flex: 0 1 auto;
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn:focus-visible, .nav-btn:focus-visible, select:focus-visible, summary:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .feedback-box {
+            margin-top: 15px;
+            padding: 14px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .feedback-box.correct {
+            display: block;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--success);
+            color: #6ee7b7;
+        }
+
+        .feedback-box.wrong {
+            display: block;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger);
+            color: #fca5a5;
+        }
+
+        .feedback-box.close {
+            display: block;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid var(--accent);
+            color: #fcd34d;
+        }
+
+        .feedback-box.info {
+            display: block;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .feedback-box .explain {
+            margin-top: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .feedback-box .model {
+            margin-top: 8px;
+            color: var(--text);
+        }
+
+        .diff-line {
+            background: var(--bg);
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            line-height: 1.9;
+            overflow-wrap: anywhere;
+        }
+
+        .diff-line del, .diff-legend del {
+            color: #fca5a5;
+            background: rgba(239, 68, 68, 0.18);
+            border-radius: 4px;
+            padding: 0 3px;
+        }
+
+        .diff-line ins, .diff-legend ins {
+            color: #6ee7b7;
+            background: rgba(16, 185, 129, 0.18);
+            text-decoration: none;
+            border-radius: 4px;
+            padding: 0 3px;
+        }
+
+        .diff-legend {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .summary p {
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .tense-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .tense-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .tense-card h3 {
+            color: var(--accent);
+            margin-bottom: 6px;
+            font-size: 1.05rem;
+        }
+
+        .formula {
+            font-family: monospace;
+            background: var(--bg);
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin: 6px 0;
+            color: #93c5fd;
+            font-size: 0.85rem;
+        }
+
+        .word-bank-chip {
+            display: inline-block;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            margin: 4px 4px 0 0;
+            color: var(--text-muted);
+        }
+
+        .status-ok {
+            color: var(--success);
+        }
+
+        .status-err {
+            color: var(--danger);
+        }
+
+        .format-help {
+            margin-top: 16px;
+        }
+
+        .format-help summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #93c5fd;
+            font-size: 0.9rem;
+        }
+
+        .format-help pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            overflow-x: auto;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font-family: monospace;
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            transform: translate(-50%, 20px);
+            max-width: calc(100% - 32px);
+            background: var(--card-hover);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+            z-index: 200;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">⚡ Argon English B2+</div>
+    <div class="stats-bar">
+        <div class="stat-pill" title="Dni nauki z rzędu">🔥 <span id="stat-streak">0</span></div>
+        <div class="stat-pill">
+            ⭐ Poz. <span id="stat-level">1</span>
+            <div class="xp-bar-container">
+                <div class="xp-bar-fill" id="xp-bar"></div>
+            </div>
+            <span id="stat-xp" style="font-size: 0.75rem; color: var(--text-muted);">0/200</span>
+        </div>
+    </div>
+</header>
+
+<nav>
+    <button class="nav-btn active" data-tab="vocab" onclick="switchTab('vocab')">📚 Słówka B2+ (Luki)</button>
+    <button class="nav-btn" data-tab="grammar" onclick="switchTab('grammar')">✍️ 6 Czasów (Zdania)</button>
+    <button class="nav-btn" data-tab="theory" onclick="switchTab('theory')">💡 Ściąga: 6 Czasów</button>
+    <button class="nav-btn" data-tab="data" onclick="switchTab('data')">⚙️ Baza / Import</button>
+</nav>
+
+<main>
+    <!-- TAB 1: VOCABULARY -->
+    <section id="tab-vocab" class="section active">
+        <div class="exercise-box" id="vocab-exercise-area" style="margin-bottom: 20px;">
+            <div class="top-row">
+                <span class="badge" id="v-pack-name">Pakiet 1</span>
+                <span class="counter" id="v-counter">1 / 12</span>
+            </div>
+
+            <div id="v-question">
+                <div class="prompt-pl" id="v-pl-meaning">Ładowanie...</div>
+                <div style="color: var(--text-muted); font-size: 0.85rem;" id="v-pos"></div>
+
+                <div class="sentence-display" id="v-sentence"></div>
+                <div style="color: var(--text-muted); font-size: 0.85rem; font-style: italic; margin-bottom: 10px;" id="v-sentence-pl"></div>
+
+                <input type="text" id="v-input" placeholder="Wpisz brakujące angielskie słowo..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+
+                <div class="input-group">
+                    <button class="btn" id="v-check-btn" onclick="checkVocabAnswer()">Sprawdź</button>
+                    <button class="btn btn-secondary" onclick="giveVocabHint()">💡 Litera</button>
+                    <button class="btn btn-secondary" onclick="speakCurrentVocab()" aria-label="Odsłuchaj">🔊</button>
+                </div>
+
+                <div class="feedback-box" id="v-feedback"></div>
+            </div>
+
+            <div class="summary" id="v-summary" hidden></div>
+        </div>
+
+        <h3 style="margin-bottom: 10px; font-size: 1.05rem;">Wybierz pakiet słownictwa (80% odblokowuje kolejny):</h3>
+        <div class="pack-grid" id="vocab-packs-container"></div>
+    </section>
+
+    <!-- TAB 2: GRAMMAR TRANSLATIONS -->
+    <section id="tab-grammar" class="section">
+        <div style="margin-bottom: 12px;">
+            <select id="grammar-filter" onchange="startGrammarSession()" style="width: 100%; background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 10px; border-radius: 8px; font-weight: 600;">
+                <option value="ALL">🔀 Wszystkie 6 czasów (Mix)</option>
+                <option value="Present Simple">Present Simple</option>
+                <option value="Present Continuous">Present Continuous</option>
+                <option value="Past Simple">Past Simple</option>
+                <option value="Past Continuous">Past Continuous</option>
+                <option value="Present Perfect">Present Perfect</option>
+                <option value="Past Perfect">Past Perfect</option>
+            </select>
+            <div class="pack-meta" id="g-stats" style="margin-top: 6px;"></div>
+        </div>
+
+        <div class="exercise-box" id="grammar-exercise-area">
+            <div class="top-row">
+                <span class="badge tense-badge" id="g-tense-tag">TRYB MIX</span>
+                <span class="counter" id="g-counter" style="margin-left: auto;"></span>
+                <button class="btn btn-secondary btn-sm" id="g-reveal-btn" onclick="revealTense()">👁️ Jaki to czas?</button>
+            </div>
+
+            <div id="g-question">
+                <div class="prompt-pl" id="g-pl-sentence" style="margin-top: 10px;"></div>
+
+                <div style="margin: 10px 0;">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Podpowiedzi B2+: </span>
+                    <div id="g-vocab-hint"></div>
+                </div>
+
+                <input type="text" id="g-input" placeholder="Przetłumacz całe zdanie na angielski..." autocomplete="off">
+
+                <div class="input-group">
+                    <button class="btn" id="g-check-btn" onclick="checkGrammarAnswer()">Sprawdź zdanie</button>
+                    <button class="btn btn-secondary" onclick="speakCurrentGrammar()" aria-label="Odsłuchaj">🔊</button>
+                </div>
+
+                <div class="feedback-box" id="g-feedback"></div>
+            </div>
+
+            <div class="summary" id="g-summary" hidden></div>
+        </div>
+    </section>
+
+    <!-- TAB 3: CHEAT SHEET (6 TENSES) -->
+    <section id="tab-theory" class="section">
+        <div class="tense-grid">
+            <div class="tense-card">
+                <h3>1. Present Simple</h3>
+                <div class="formula">[Podmiot] + V1 (s/es) | do/does not + V1</div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">
+                    Stałe prawdy, rutyna, rozkłady, czasowniki statyczne (<em>depend, believe, consist</em>) oraz zdania przyszłe po spójnikach czasu (<em>unless, as soon as, until</em>).
+                </p>
+            </div>
+            <div class="tense-card">
+                <h3>2. Present Continuous</h3>
+                <div class="formula">am / is / are + V-ing</div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">
+                    Czynności w trakcie, sytuacje tymczasowe, zmieniające się trendy, zaaranżowane plany na przyszłość oraz irytujące nawyki z <strong>always / constantly</strong>.
+                </p>
+            </div>
+            <div class="tense-card">
+                <h3>3. Past Simple</h3>
+                <div class="formula">[Podmiot] + V2 (ed) | did not + V1</div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">
+                    Zakończone czynności w określonym momencie w przeszłości (<em>yesterday, in 2020</em>) oraz kolejne zdarzenia w opowiadaniu.
+                </p>
+            </div>
+            <div class="tense-card">
+                <h3>4. Past Continuous</h3>
+                <div class="formula">was / were + V-ing</div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">
+                    Tło dla innego wydarzenia w przeszłości (przerwanego przez Past Simple) lub uprzejme zwroty na poziomie B2+ (<em>I was wondering if you could...</em>).
+                </p>
+            </div>
+            <div class="tense-card">
+                <h3>5. Present Perfect</h3>
+                <div class="formula">have / has + V3 (Past Participle)</div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">
+                    Przeszła czynność z widocznym skutkiem TERAZ, niezakończone okresy (<em>since, for, recently, so far</em>) oraz po zwrocie <em>This is the first time I have...</em>
+                </p>
+            </div>
+            <div class="tense-card">
+                <h3>6. Past Perfect</h3>
+                <div class="formula">had + V3 (Past Participle)</div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">
+                    Czynność, która wydarzyła się <strong>zanim</strong> nastąpiła inna czynność w przeszłości (<em>By the time we arrived, they had already left</em>).
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 4: DATA / IMPORT / EXPORT -->
+    <section id="tab-data" class="section">
+        <div class="exercise-box">
+            <h3 style="margin-bottom: 8px;">Rozbudowa Bazy Słówek i Zdań (JSON)</h3>
+            <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 0.85rem;">
+                Wklej tutaj nowy pakiet wygenerowany na czacie i kliknij <strong>Dodaj do bazy</strong>.
+                Tak samo przywrócisz kopię zapasową: wklej ją i kliknij ten sam przycisk.
+            </p>
+
+            <textarea id="json-import-box" rows="5" placeholder="Wklej tutaj kod JSON z nowymi słówkami..." style="margin-bottom: 10px;"></textarea>
+            <div class="input-group">
+                <button class="btn" onclick="importJSONData()">📥 Dodaj do bazy</button>
+                <button class="btn btn-secondary" onclick="exportProgress()">💾 Kopia zapasowa</button>
+            </div>
+            <p id="import-status" style="margin-top: 10px; font-weight: 600; font-size: 0.85rem;"></p>
+
+            <details class="format-help">
+                <summary>📋 Format JSON i gotowe polecenie dla czatu</summary>
+                <pre id="format-example"></pre>
+                <div class="input-group">
+                    <button class="btn btn-secondary" onclick="copyChatPrompt()">📋 Kopiuj polecenie dla czatu</button>
+                </div>
+            </details>
+        </div>
+    </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+// Bezpieczna obsługa pamięci (działa nawet w zablokowanych przeglądarkach about:blank)
+function safeGetStorage(key, fallback) {
+    try {
+        const val = window.localStorage.getItem(key);
+        return val ? JSON.parse(val) : fallback;
+    } catch (e) {
+        return fallback;
+    }
+}
+
+function safeSetStorage(key, val) {
+    try {
+        window.localStorage.setItem(key, JSON.stringify(val));
+    } catch (e) {
+        // Ignoruj błąd w trybie sandbox about:blank
+    }
+}
+
+const DEFAULT_DATA = {
+    vocabPacks: [
+        {
+            id: "pack_1",
+            name: "Pakiet 1: Codzienne wyzwania i decyzje (B2)",
+            words: [
+                { id: "w1", en: "inevitable", alts: [], pl: "nieunikniony, nieuchronny", pos: "przymiotnik (adj)", sentence: "With such tight deadlines, some mistakes were _____.", sentencePl: "Przy tak napiętych terminach pewne błędy były nieuniknione." },
+                { id: "w2", en: "reluctant", alts: [], pl: "niechętny (do zrobienia czegoś)", pos: "przymiotnik (adj)", sentence: "She was _____ to admit that her initial plan had failed.", sentencePl: "Była niechętna, by przyznać, że jej początkowy plan zawiódł." },
+                { id: "w3", en: "postpone", alts: ["postponed"], pl: "odkładać na później, przełożyć", pos: "czasownik (v)", sentence: "We had to _____ the trip due to unexpected weather conditions.", sentencePl: "Musieliśmy przełożyć wyjazd z powodu nieoczekiwanych warunków pogodowych." },
+                { id: "w4", en: "obstacle", alts: ["obstacles"], pl: "przeszkoda, bariera", pos: "rzeczownik (n)", sentence: "Lack of funding remains the biggest _____ to completing the project.", sentencePl: "Brak funduszy pozostaje największą przeszkodą w ukończeniu projektu." },
+                { id: "w5", en: "thorough", alts: [], pl: "gruntowny, dokładny, skrupulatny", pos: "przymiotnik (adj)", sentence: "The police carried out a _____ investigation into the incident.", sentencePl: "Policja przeprowadziła gruntowne śledztwo w sprawie incydentu." },
+                { id: "w6", en: "outcome", alts: [], pl: "wynik, rezultat, finał", pos: "rzeczownik (n)", sentence: "It is still too early to predict the final _____ of the negotiations.", sentencePl: "Jest wciąż za wcześnie, by przewidzieć ostateczny wynik negocjacji." },
+                { id: "w7", en: "overwhelming", alts: [], pl: "przytłaczający, ogromny", pos: "przymiotnik (adj)", sentence: "The amount of support we received from the community was _____.", sentencePl: "Ilość wsparcia, jaką otrzymaliśmy od społeczności, była przytłaczająca." },
+                { id: "w8", en: "compromise", alts: [], pl: "kompromis / iść na kompromis", pos: "rzeczownik / czasownik", sentence: "After hours of debate, both sides finally reached a _____.", sentencePl: "Po godzinach debaty obie strony w końcu osiągnęły kompromis." },
+                { id: "w9", en: "beneficial", alts: [], pl: "korzystny, pożyteczny", pos: "przymiotnik (adj)", sentence: "A short break from screens can be highly _____ to your mental health.", sentencePl: "Krótka przerwa od ekranów może być bardzo korzystna dla twojego zdrowia psychicznego." },
+                { id: "w10", en: "accurate", alts: [], pl: "dokładny, trafny, precyzyjny", pos: "przymiotnik (adj)", sentence: "The witness gave a remarkably _____ description of the suspect.", sentencePl: "Świadek podał niezwykle dokładny opis podejrzanego." },
+                { id: "w11", en: "significant", alts: [], pl: "znaczący, istotny", pos: "przymiotnik (adj)", sentence: "There has been a _____ decline in customer complaints this month.", sentencePl: "W tym miesiącu nastąpił znaczący spadek skarg klientów." },
+                { id: "w12", en: "adjust", alts: [], pl: "dostosować się, przystosować", pos: "czasownik (v)", sentence: "It took him several weeks to _____ to the new working hours.", sentencePl: "Zajęło mu kilka tygodni, aby dostosować się do nowych godzin pracy." }
+            ]
+        },
+        {
+            id: "pack_2",
+            name: "Pakiet 2: Relacje, emocje i komunikacja (B2+)",
+            words: [
+                { id: "w13", en: "ambiguous", alts: [], pl: "dwuznaczny, niejednoznaczny", pos: "przymiotnik (adj)", sentence: "His reply was deliberately _____, so nobody knew what he really meant.", sentencePl: "Jego odpowiedź była celowo dwuznaczna, więc nikt nie wiedział, co naprawdę miał na myśli." },
+                { id: "w14", en: "resent", alts: [], pl: "mieć za złe, czuć urazę", pos: "czasownik (v)", sentence: "I deeply _____ being treated like a beginner after ten years of experience.", sentencePl: "Głęboko mam za złe traktowanie mnie jak początkującego po dziesięciu latach doświadczenia." },
+                { id: "w15", en: "exaggerate", alts: ["exaggerating"], pl: "wyolbrzymiać, przesadzać", pos: "czasownik (v)", sentence: "Don't _____ — the traffic wasn't nearly as bad as you claim.", sentencePl: "Nie przesadzaj — korki nie były nawet w połowie tak złe, jak twierdzisz." },
+                { id: "w16", en: "genuine", alts: [], pl: "autentyczny, szczery, prawdziwy", pos: "przymiotnik (adj)", sentence: "She showed a _____ interest in helping us solve the problem.", sentencePl: "Wykazała szczere zainteresowanie pomocą w rozwiązaniu problemu." },
+                { id: "w17", en: "crucial", alts: [], pl: "kluczowy, decydujący", pos: "przymiotnik (adj)", sentence: "Clear communication is _____ if we want to avoid misunderstandings.", sentencePl: "Jasna komunikacja jest kluczowa, jeśli chcemy uniknąć nieporozumień." },
+                { id: "w18", en: "convince", alts: [], pl: "przekonać (kogoś)", pos: "czasownik (v)", sentence: "How did you manage to _____ the board to approve your budget?", sentencePl: "Jak udało ci się przekonać zarząd do zatwierdzenia twojego budżetu?" },
+                { id: "w19", en: "frustrating", alts: [], pl: "frustrujący, irytujący", pos: "przymiotnik (adj)", sentence: "It is extremely _____ when people cancel meetings at the last minute.", sentencePl: "To niezwykle frustrujące, gdy ludzie odwołują spotkania w ostatniej chwili." },
+                { id: "w20", en: "acknowledge", alts: [], pl: "uznać, przyznać", pos: "czasownik (v)", sentence: "They refused to _____ that there was a flaw in the system.", sentencePl: "Odmówili przyznania, że w systemie była luka." },
+                { id: "w21", en: "subtle", alts: [], pl: "subtelny, delikatny", pos: "przymiotnik (adj)", sentence: "There is a _____ difference between being confident and being arrogant.", sentencePl: "Istnieje subtelna różnica między pewnością siebie a arogancją." },
+                { id: "w22", en: "assumption", alts: ["assumptions"], pl: "założenie, przypuszczenie", pos: "rzeczownik (n)", sentence: "We shouldn't make any _____ before we see the official data.", sentencePl: "Nie powinniśmy czynić żadnych założeń, dopóki nie zobaczymy oficjalnych danych." },
+                { id: "w23", en: "elaborate", alts: [], pl: "rozwinąć myśl, podać szczegóły", pos: "czasownik (v)", sentence: "Could you _____ on your proposal during tomorrow's briefing?", sentencePl: "Czy mógłbyś rozwinąć swoją propozycję podczas jutrzejszej odprawy?" },
+                { id: "w24", en: "vulnerable", alts: [], pl: "podatny na zagrożenia / wrażliwy", pos: "przymiotnik (adj)", sentence: "Outdated software leaves your computer _____ to cyberattacks.", sentencePl: "Przestarzałe oprogramowanie sprawia, że komputer jest podatny na cyberataki." }
+            ]
+        }
+    ],
+    // W polu "en" warianty można zapisać w nawiasach klamrowych: "{if|whether}" (pusty wariant: "{| before}").
+    grammarSentences: [
+        {
+            id: "g1",
+            tense: "Present Simple",
+            pl: "Nasz ostateczny sukces zależy od tego, jak szybko dostosujemy się do nowych przepisów.",
+            en: [
+                "Our final success depends on how quickly we adjust to the new regulations.",
+                "Our ultimate success depends on how quickly we adapt to the new regulations.",
+                "Our final success depends on how fast we adjust to the new rules."
+            ],
+            hints: ["depend on (zależeć od)", "adjust to (dostosować się do)", "regulations (przepisy)"],
+            explanation: "Czasownik 'depend' jest czasownikiem statycznym (stative verb), używamy Present Simple."
+        },
+        {
+            id: "g2",
+            tense: "Present Simple",
+            pl: "Zazwyczaj nie zgadzam się na kompromis, chyba że widzę szczere zaangażowanie drugiej strony.",
+            en: [
+                "I usually do not agree to a compromise unless I see genuine commitment from the other side.",
+                "I usually don't compromise unless I see genuine commitment from the other side."
+            ],
+            hints: ["compromise (kompromis)", "unless (chyba że)", "genuine commitment (szczere zaangażowanie)"],
+            explanation: "Stała zasada (usually) + po spójniku 'unless' używamy Present Simple w formie twierdzącej."
+        },
+        {
+            id: "g3",
+            tense: "Present Continuous",
+            pl: "On ciągle wyolbrzymia drobne przeszkody, co staje się coraz bardziej frustrujące.",
+            en: [
+                "He is constantly exaggerating minor obstacles, which is becoming more and more frustrating.",
+                "He's always exaggerating minor obstacles, which is getting increasingly frustrating."
+            ],
+            hints: ["constantly (ciągle)", "exaggerate (wyolbrzymiać)", "minor obstacles (drobne przeszkody)"],
+            explanation: "Present Continuous z 'constantly/always' wyraża irytujący nawyk, a 'is becoming' opisuje zmieniający się trend."
+        },
+        {
+            id: "g4",
+            tense: "Present Continuous",
+            pl: "Obecnie przeprowadzamy gruntowne śledztwo, dlatego przekładamy jutrzejszą konferencję.",
+            en: [
+                "We are currently carrying out a thorough investigation, so we are postponing tomorrow's conference.",
+                "Currently we are conducting a thorough investigation, so we're postponing tomorrow's conference."
+            ],
+            hints: ["carry out (przeprowadzać)", "thorough investigation (gruntowne śledztwo)", "postpone (przekładać)"],
+            explanation: "Czynność w toku wokół chwili obecnej (currently) oraz zaaranżowany plan na najbliższą przyszłość."
+        },
+        {
+            id: "g5",
+            tense: "Past Simple",
+            pl: "Wczoraj zarząd niechętnie przyznał, że początkowe założenia nie były wystarczająco dokładne.",
+            en: [
+                "Yesterday the board reluctantly acknowledged that the initial assumptions were not accurate enough.",
+                "Yesterday the board reluctantly admitted that the initial assumptions weren't accurate enough."
+            ],
+            hints: ["reluctantly (niechętnie)", "acknowledge (przyznać)", "initial assumptions (początkowe założenia)", "accurate (dokładny)"],
+            explanation: "Określony moment w przeszłości ('yesterday') wymusza użycie czasu Past Simple."
+        },
+        {
+            id: "g6",
+            tense: "Past Simple",
+            pl: "Jak udało ci się przekonać ich do podpisania umowy pomimo tak dwuznacznych warunków?",
+            en: [
+                "How did you manage to convince them to sign the contract despite such ambiguous terms?",
+                "How did you manage to convince them to sign the agreement despite such ambiguous conditions?"
+            ],
+            hints: ["manage to (udać się)", "convince (przekonać)", "despite (pomimo)", "ambiguous terms (dwuznaczne warunki)"],
+            explanation: "Pytanie o zakończone wydarzenie z przeszłości: Did + podmiot + bezokolicznik (manage)."
+        },
+        {
+            id: "g7",
+            tense: "Past Continuous",
+            pl: "Właśnie przeprowadzaliśmy gruntowną analizę wyników, kiedy zadzwonił szef.",
+            en: [
+                "We were {carrying out|conducting|doing} a thorough analysis of the results when the {boss|manager} called.",
+                "When the {boss|manager} called, we were {carrying out|conducting|doing} a thorough analysis of the results."
+            ],
+            hints: ["carry out (przeprowadzać)", "thorough analysis (gruntowna analiza)", "results (wyniki)", "when (kiedy)"],
+            explanation: "Dłuższa czynność w toku (tło) – Past Continuous – przerwana krótkim zdarzeniem w Past Simple ('when the boss called')."
+        },
+        {
+            id: "g8",
+            tense: "Past Continuous",
+            pl: "Zastanawiałem się, czy mógłbyś rozwinąć swoją propozycję podczas jutrzejszego spotkania.",
+            en: [
+                "I was wondering {if|whether} you could elaborate on your proposal during tomorrow's {meeting|briefing}."
+            ],
+            hints: ["I was wondering if (zastanawiałem się, czy)", "elaborate on (rozwinąć)", "proposal (propozycja)"],
+            explanation: "Uprzejma prośba na poziomie B2+: 'I was wondering if you could...' brzmi grzeczniej niż 'Can you...'. Forma jest przeszła, ale prośba dotyczy teraźniejszości."
+        },
+        {
+            id: "g9",
+            tense: "Present Perfect",
+            pl: "To pierwszy raz, kiedy nasz zespół osiągnął kompromis bez przekładania terminu.",
+            en: [
+                "{This|It} is the first time our team has {reached|come to|made} a compromise without postponing the deadline."
+            ],
+            hints: ["This is the first time (to pierwszy raz)", "reach a compromise (osiągnąć kompromis)", "without + -ing (bez ...)", "deadline (termin)"],
+            explanation: "Po zwrocie 'This is the first time' zawsze używamy Present Perfect. Po przyimku 'without' czasownik ma końcówkę -ing."
+        },
+        {
+            id: "g10",
+            tense: "Present Perfect",
+            pl: "Od zeszłego roku liczba skarg klientów znacząco spadła.",
+            en: [
+                "The number of customer complaints has {decreased|dropped|fallen|gone down} significantly since last year.",
+                "The number of customer complaints has significantly {decreased|dropped|fallen|gone down} since last year.",
+                "Since last year{,|} the number of customer complaints has {decreased|dropped|fallen|gone down} significantly.",
+                "Since last year{,|} the number of customer complaints has significantly {decreased|dropped|fallen|gone down}."
+            ],
+            hints: ["since (od)", "the number of (liczba)", "customer complaints (skargi klientów)", "significantly (znacząco)", "decrease (spadać)"],
+            explanation: "'Since' + punkt w czasie i skutek widoczny teraz → Present Perfect (has + V3)."
+        },
+        {
+            id: "g11",
+            tense: "Past Perfect",
+            pl: "Zanim dotarliśmy na miejsce, policja już przeprowadziła gruntowne śledztwo.",
+            en: [
+                "{By the time|Before} we {arrived|got there}, the police had already {carried out|conducted|completed} a thorough investigation.",
+                "The police had already {carried out|conducted|completed} a thorough investigation {by the time|before} we {arrived|got there}."
+            ],
+            hints: ["by the time (zanim, do czasu gdy)", "carry out (przeprowadzić)", "already (już)", "thorough investigation (gruntowne śledztwo)"],
+            explanation: "Śledztwo zakończyło się przed inną czynnością w przeszłości ('we arrived' – Past Simple), więc używamy Past Perfect (had + V3)."
+        },
+        {
+            id: "g12",
+            tense: "Past Perfect",
+            pl: "Zarząd przyznał, że wcześniej zignorował kilka istotnych przeszkód.",
+            en: [
+                "The board {admitted|acknowledged} that {it|they} had previously ignored {several|a few|some} significant obstacles.",
+                "The board {admitted|acknowledged} that {it|they} had ignored {several|a few|some} significant obstacles {before|earlier}."
+            ],
+            hints: ["admit / acknowledge (przyznać)", "previously (wcześniej)", "ignore (zignorować)", "significant obstacles (istotne przeszkody)"],
+            explanation: "Ignorowanie nastąpiło przed przyznaniem się ('admitted' – Past Simple). Czynność wcześniejszą wyrażamy w Past Perfect (had + V3)."
+        }
+    ]
+};
+
+// ===== Stałe i stan aplikacji =====
+const STORAGE_PROGRESS = 'argon_progress_v1';
+const STORAGE_CUSTOM = 'argon_custom_v1';
+const UNLOCK_THRESHOLD = 0.8;
+const GAP = '_____';
+const GAP_RE = /_{3,}/;
+
+function isPlainObject(x) {
+    return !!x && typeof x === 'object' && !Array.isArray(x);
+}
+
+function defaultProgress() {
+    return { xp: 0, level: 1, streak: 0, lastDay: null, words: {}, grammar: {}, unlocked: {}, currentPack: null, grammarFilter: 'ALL' };
+}
+
+function loadProgress(stored) {
+    const p = Object.assign(defaultProgress(), isPlainObject(stored) ? stored : {});
+    ['words', 'grammar', 'unlocked'].forEach(k => { if (!isPlainObject(p[k])) p[k] = {}; });
+    p.xp = Math.max(0, Number(p.xp) || 0);
+    p.level = Math.max(1, Math.floor(Number(p.level) || 1));
+    p.streak = Math.max(0, Math.floor(Number(p.streak) || 0));
+    return p;
+}
+
+function loadCustom(stored) {
+    const c = isPlainObject(stored) ? stored : {};
+    return {
+        vocabPacks: Array.isArray(c.vocabPacks) ? c.vocabPacks : [],
+        grammarSentences: Array.isArray(c.grammarSentences) ? c.grammarSentences : []
+    };
+}
+
+let progress = loadProgress(safeGetStorage(STORAGE_PROGRESS, null));
+let customData = loadCustom(safeGetStorage(STORAGE_CUSTOM, null));
+let DB = buildDB();
+
+function buildDB() {
+    return {
+        vocabPacks: DEFAULT_DATA.vocabPacks.concat(customData.vocabPacks),
+        grammarSentences: DEFAULT_DATA.grammarSentences.concat(customData.grammarSentences)
+    };
+}
+
+function saveProgress() { safeSetStorage(STORAGE_PROGRESS, progress); }
+function saveCustom() { safeSetStorage(STORAGE_CUSTOM, customData); }
+
+// ===== Pomocnicze =====
+function $(id) { return document.getElementById(id); }
+
+function escapeHTML(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function dayKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function todayKey() { return dayKey(new Date()); }
+
+function yesterdayKey() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return dayKey(d);
+}
+
+let uidCounter = 0;
+function uid(prefix) { return `${prefix}_${Date.now().toString(36)}_${(uidCounter++).toString(36)}`; }
+
+// Odległość edycyjna – działa dla napisów (litery) i tablic (słowa)
+function levenshtein(a, b) {
+    let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+        const cur = [i];
+        for (let j = 1; j <= b.length; j++) {
+            cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        }
+        prev = cur;
+    }
+    return prev[b.length];
+}
+
+function setFeedback(id, type, html) {
+    const el = $(id);
+    el.className = 'feedback-box' + (type ? ' ' + type : '');
+    el.innerHTML = html || '';
+}
+
+let toastTimer = null;
+function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// plural(5, 'słówko', 'słówka', 'słówek') -> "5 słówek"
+function plural(n, one, few, many) {
+    const word = n === 1 ? one : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? few : many;
+    return `${n} ${word}`;
+}
+
+function shortName(name) { return String(name).split(':')[0].trim() || String(name); }
+
+function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// ===== XP, poziomy, seria dni =====
+function xpNeeded(level) { return 200 + (level - 1) * 50; }
+
+function addXP(amount) {
+    if (amount <= 0) return;
+    progress.xp += amount;
+    let leveled = false;
+    while (progress.xp >= xpNeeded(progress.level)) {
+        progress.xp -= xpNeeded(progress.level);
+        progress.level++;
+        leveled = true;
+    }
+    saveProgress();
+    renderStats();
+    if (leveled) showToast(`🎉 Awans! Poziom ${progress.level}`);
+}
+
+function currentStreak() {
+    return (progress.lastDay === todayKey() || progress.lastDay === yesterdayKey()) ? progress.streak : 0;
+}
+
+function touchStreak() {
+    const today = todayKey();
+    if (progress.lastDay === today) return;
+    progress.streak = progress.lastDay === yesterdayKey() ? progress.streak + 1 : 1;
+    progress.lastDay = today;
+    saveProgress();
+    renderStats();
+}
+
+function renderStats() {
+    const need = xpNeeded(progress.level);
+    $('stat-streak').textContent = currentStreak();
+    $('stat-level').textContent = progress.level;
+    $('stat-xp').textContent = `${progress.xp}/${need}`;
+    $('xp-bar').style.width = Math.min(100, progress.xp / need * 100) + '%';
+}
+
+// ===== Zakładki =====
+const TABS = ['vocab', 'grammar', 'theory', 'data'];
+
+function switchTab(tab) {
+    if (!TABS.includes(tab)) tab = 'vocab';
+    document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === 'tab-' + tab));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+}
+
+// ===== Mowa (Web Speech API) =====
+function pickVoice() {
+    const voices = window.speechSynthesis.getVoices();
+    return voices.find(v => v.lang === 'en-GB') || voices.find(v => /^en[-_]/i.test(v.lang)) || null;
+}
+
+function speak(text) {
+    if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+        showToast('🔇 Ta przeglądarka nie obsługuje czytania na głos.');
+        return;
+    }
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-GB';
+    u.rate = 0.95;
+    const v = pickVoice();
+    if (v) u.voice = v;
+    window.speechSynthesis.speak(u);
+}
+
+// ===== SŁÓWKA =====
+const vocab = { packId: null, queue: [], index: 0, answered: false, hints: 0, typoRetry: false, filled: '', results: {} };
+
+function normWord(s) {
+    return String(s).toLowerCase().replace(/[’‘`´]/g, "'").replace(/[^a-z0-9' -]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function packStats(pack) {
+    const total = pack.words.length;
+    const mastered = pack.words.filter(w => progress.words[w.id] && progress.words[w.id].mastered).length;
+    return { total, mastered, ratio: total ? mastered / total : 0 };
+}
+
+function isPackUnlocked(index) {
+    if (index === 0) return true;
+    const pack = DB.vocabPacks[index];
+    return !!progress.unlocked[pack.id] || packStats(DB.vocabPacks[index - 1]).ratio >= UNLOCK_THRESHOLD;
+}
+
+// Odblokowanie jest trwałe: późniejszy błąd w starym pakiecie nie zamyka nowego
+function checkUnlocks(silent) {
+    DB.vocabPacks.forEach((p, i) => {
+        if (i === 0 || progress.unlocked[p.id]) return;
+        if (packStats(DB.vocabPacks[i - 1]).ratio >= UNLOCK_THRESHOLD) {
+            progress.unlocked[p.id] = true;
+            if (!silent) showToast(`🔓 Odblokowano: ${shortName(p.name)}`);
+        }
+    });
+}
+
+function renderPacks() {
+    $('vocab-packs-container').innerHTML = DB.vocabPacks.map((p, i) => {
+        const s = packStats(p);
+        const pct = Math.round(s.ratio * 100);
+        const unlocked = isPackUnlocked(i);
+        const isCurrent = p.id === vocab.packId;
+        const id = escapeHTML(p.id);
+        let btn;
+        if (!unlocked) btn = `<button class="btn btn-secondary btn-sm" disabled>🔒 Opanuj 80% poprzedniego pakietu</button>`;
+        else if (isCurrent) btn = `<button class="btn btn-secondary btn-sm" data-pack="${id}">🔁 Zacznij od nowa</button>`;
+        else btn = `<button class="btn btn-sm" data-pack="${id}">${pct >= 100 ? '🔁 Powtórka' : '▶️ Ćwicz'}</button>`;
+        return `<div class="pack-card${unlocked ? '' : ' locked'}${isCurrent ? ' current' : ''}">
+            <div>
+                <div class="pack-title">${escapeHTML(p.name)}</div>
+                <div class="pack-meta">${plural(s.total, 'słówko', 'słówka', 'słówek')} · opanowane ${s.mastered}/${s.total} (${pct}%)</div>
+                <div class="progress-track"><div class="progress-fill" style="width: ${pct}%"></div></div>
+            </div>
+            <div>${btn}</div>
+        </div>`;
+    }).join('');
+}
+
+function startVocabPack(packId, scroll) {
+    const pack = DB.vocabPacks.find(p => p.id === packId);
+    if (!pack) return;
+    vocab.packId = pack.id;
+    progress.currentPack = pack.id;
+    saveProgress();
+    const isMastered = w => progress.words[w.id] && progress.words[w.id].mastered;
+    vocab.queue = shuffle(pack.words.filter(w => !isMastered(w))).concat(shuffle(pack.words.filter(isMastered)));
+    vocab.index = 0;
+    vocab.results = {};
+    $('v-pack-name').textContent = shortName(pack.name);
+    renderPacks();
+    showVocabWord();
+    if (scroll) $('vocab-exercise-area').scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+}
+
+function currentWord() { return vocab.queue[vocab.index]; }
+
+function renderSentence(w, filled) {
+    const gap = filled == null
+        ? `<span class="gap-highlight">${GAP}</span>`
+        : `<span class="gap-highlight filled">${escapeHTML(filled)}</span>`;
+    $('v-sentence').innerHTML = String(w.sentence).split(GAP_RE).map(escapeHTML).join(gap);
+}
+
+function showVocabWord() {
+    const w = currentWord();
+    if (!w) { showVocabSummary(); return; }
+    vocab.answered = false;
+    vocab.hints = 0;
+    vocab.typoRetry = false;
+    vocab.filled = '';
+    $('v-question').hidden = false;
+    $('v-summary').hidden = true;
+    $('v-counter').textContent = `${vocab.index + 1} / ${vocab.queue.length}`;
+    $('v-pl-meaning').textContent = w.pl;
+    const known = progress.words[w.id] && progress.words[w.id].mastered;
+    $('v-pos').textContent = (w.pos || '') + (known ? ' · ✓ już opanowane' : '');
+    renderSentence(w, null);
+    $('v-sentence-pl').textContent = w.sentencePl || '';
+    const input = $('v-input');
+    input.value = '';
+    input.readOnly = false;
+    $('v-check-btn').textContent = 'Sprawdź';
+    setFeedback('v-feedback', null);
+}
+
+function requeue(queue, index, item) {
+    if (queue.indexOf(item, index + 1) !== -1) return -1;
+    const pos = Math.min(queue.length, index + 4);
+    queue.splice(pos, 0, item);
+    return pos;
+}
+
+function checkVocabAnswer() {
+    const w = currentWord();
+    if (!w) return;
+    if (vocab.answered) { nextVocab(); return; }
+    const raw = $('v-input').value.trim();
+    const given = normWord(raw);
+    if (!given) {
+        setFeedback('v-feedback', 'info', 'Wpisz słowo albo użyj podpowiedzi 💡 Litera.');
+        return;
+    }
+    const accepted = [w.en].concat(w.alts || []).map(normWord);
+    const stat = progress.words[w.id] || (progress.words[w.id] = { correct: 0, wrong: 0, mastered: false });
+    touchStreak();
+
+    if (accepted.includes(given)) {
+        const clean = vocab.hints <= 1;
+        const xp = Math.max(2, 10 - vocab.hints * 3);
+        vocab.answered = true;
+        vocab.filled = raw;
+        stat.correct++;
+        if (clean) stat.mastered = true;
+        else requeue(vocab.queue, vocab.index, w);
+        if (!(w.id in vocab.results)) vocab.results[w.id] = clean ? 'ok' : 'bad';
+        renderSentence(w, raw);
+        setFeedback('v-feedback', 'correct',
+            `✅ <strong>Dobrze!</strong> ${escapeHTML(w.en)} = ${escapeHTML(w.pl)} · +${xp} XP` +
+            (clean ? '' : '<div class="explain">Było sporo podpowiedzi, więc słowo wróci jeszcze w tej serii. Spróbuj bez nich.</div>'));
+        addXP(xp);
+        checkUnlocks(false);
+    } else if (!vocab.typoRetry && accepted.some(a => a.length >= 5 && levenshtein(a, given) === 1)) {
+        vocab.typoRetry = true;
+        setFeedback('v-feedback', 'close', '🤏 <strong>Prawie!</strong> Jedna litera się nie zgadza. Popraw pisownię i sprawdź jeszcze raz.');
+        return;
+    } else {
+        vocab.answered = true;
+        vocab.filled = w.en;
+        stat.wrong++;
+        stat.mastered = false;
+        requeue(vocab.queue, vocab.index, w);
+        if (!(w.id in vocab.results)) vocab.results[w.id] = 'bad';
+        renderSentence(w, w.en);
+        const alts = (w.alts || []).length ? ` (też: ${w.alts.map(escapeHTML).join(', ')})` : '';
+        setFeedback('v-feedback', 'wrong',
+            `❌ Poprawna odpowiedź: <strong>${escapeHTML(w.en)}</strong>${alts}` +
+            `<div class="explain">Twoja odpowiedź: ${escapeHTML(raw)}. Słowo wróci za chwilę.</div>`);
+    }
+
+    $('v-input').readOnly = true;
+    $('v-check-btn').textContent = 'Dalej →';
+    $('v-counter').textContent = `${vocab.index + 1} / ${vocab.queue.length}`;
+    saveProgress();
+    renderPacks();
+}
+
+function nextVocab() {
+    vocab.index++;
+    showVocabWord();
+    if (currentWord()) $('v-input').focus({ preventScroll: true });
+}
+
+function giveVocabHint() {
+    const w = currentWord();
+    if (!w || vocab.answered) return;
+    const target = w.en;
+    const typed = $('v-input').value;
+    let prefix = 0;
+    while (prefix < typed.length && prefix < target.length && typed[prefix].toLowerCase() === target[prefix].toLowerCase()) prefix++;
+    if (prefix >= target.length) return;
+    vocab.hints++;
+    $('v-input').value = target.slice(0, Math.max(prefix + 1, vocab.hints));
+    $('v-input').focus({ preventScroll: true });
+    setFeedback('v-feedback', 'info', `💡 Podpowiedzi: ${vocab.hints} · ${vocab.hints <= 1 ? 'słowo nadal zaliczysz do opanowanych' : 'mniej XP, słowo wróci w tej serii'}.`);
+}
+
+function speakCurrentVocab() {
+    const w = currentWord();
+    if (!w) return;
+    if (vocab.answered) speak(`${vocab.filled}. ${String(w.sentence).replace(GAP_RE, vocab.filled)}`);
+    else speak(String(w.sentence).replace(GAP_RE, ', ... ,'));
+}
+
+function showVocabSummary() {
+    const pack = DB.vocabPacks.find(p => p.id === vocab.packId);
+    if (!pack) return;
+    const idx = DB.vocabPacks.indexOf(pack);
+    const s = packStats(pack);
+    const pct = Math.round(s.ratio * 100);
+    const results = Object.values(vocab.results);
+    const firstOk = results.filter(r => r === 'ok').length;
+    const next = DB.vocabPacks[idx + 1];
+    const nextUnlocked = next && isPackUnlocked(idx + 1);
+    $('v-question').hidden = true;
+    $('v-summary').hidden = false;
+    $('v-counter').textContent = `${vocab.queue.length} / ${vocab.queue.length}`;
+    $('v-summary').innerHTML = `
+        <div class="prompt-pl">🏁 Seria ukończona!</div>
+        <p>Za pierwszym razem: <strong>${firstOk} / ${results.length}</strong>. Opanowanie pakietu: <strong>${pct}%</strong> (${s.mastered}/${s.total}).</p>
+        ${next && !nextUnlocked ? `<p>Do odblokowania pakietu „${escapeHTML(shortName(next.name))}” potrzebujesz 80% opanowanych słówek.</p>` : ''}
+        ${!next ? '<p>To ostatni pakiet. Nowe słówka dodasz w zakładce ⚙️ Baza / Import.</p>' : ''}
+        <div class="input-group">
+            <button class="btn btn-secondary" data-pack="${escapeHTML(pack.id)}">🔁 Jeszcze raz</button>
+            ${nextUnlocked ? `<button class="btn" data-pack="${escapeHTML(next.id)}">➡️ ${escapeHTML(shortName(next.name))}</button>` : ''}
+        </div>`;
+}
+
+// ===== GRAMATYKA (6 czasów) =====
+const grammar = { queue: [], index: 0, answered: false, revealed: false, outcome: null, raw: '', model: '', requeuedAt: -1, firstAttempt: false, results: {} };
+
+// "{a|b} c" -> ["a c", "b c"]
+function expandVariants(text) {
+    const m = String(text).match(/\{([^{}]*)\}/);
+    if (!m) return [String(text).replace(/\s+/g, ' ').replace(/\s+([,.!?;:])/g, '$1').trim()];
+    const before = text.slice(0, m.index);
+    const after = text.slice(m.index + m[0].length);
+    return m[1].split('|').flatMap(opt => expandVariants(before + opt + after)).slice(0, 500);
+}
+
+function answerVariants(s) {
+    const extra = (progress.grammar[s.id] && progress.grammar[s.id].extra) || [];
+    return [].concat(s.en || []).concat(extra).flatMap(expandVariants);
+}
+
+const S_CONTRACT = new Set(['he', 'she', 'it', 'that', 'there', 'what', 'who', 'where', 'here', 'how', 'when', 'why', 'this']);
+const D_CONTRACT = new Set(['i', 'you', 'he', 'she', 'it', 'we', 'they', 'there', 'who', 'that']);
+
+function tokenForms(t) {
+    if (t === "won't") return ['will not'];
+    if (t === "can't" || t === 'cannot') return ['can not'];
+    if (t === "shan't") return ['shall not'];
+    if (t === "let's") return ['let us'];
+    let m;
+    if ((m = t.match(/^(.+)n't$/))) return [m[1] + ' not'];
+    if ((m = t.match(/^(.+)'re$/))) return [m[1] + ' are'];
+    if ((m = t.match(/^(.+)'m$/))) return [m[1] + ' am'];
+    if ((m = t.match(/^(.+)'ve$/))) return [m[1] + ' have'];
+    if ((m = t.match(/^(.+)'ll$/))) return [m[1] + ' will'];
+    if ((m = t.match(/^(.+)'d$/)) && D_CONTRACT.has(m[1])) return [m[1] + ' had', m[1] + ' would'];
+    if ((m = t.match(/^(.+)'s$/)) && S_CONTRACT.has(m[1])) return [m[1] + ' is', m[1] + ' has'];
+    return [t];
+}
+
+function baseNorm(s) {
+    return String(s).toLowerCase()
+        .replace(/[’‘`´]/g, "'")
+        .replace(/[^a-z0-9'\s]/g, ' ')
+        .replace(/(^|\s)'+|'+(?=\s|$)/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+// Wszystkie znormalizowane postacie zdania (skróty rozwinięte: don't -> do not, he's -> he is / he has)
+function sentenceForms(s) {
+    let forms = [''];
+    for (const t of baseNorm(s).split(' ').filter(Boolean)) {
+        const next = [];
+        for (const f of forms) for (const o of tokenForms(t)) next.push(f ? f + ' ' + o : o);
+        forms = next.slice(0, 64);
+    }
+    return forms;
+}
+
+function diffWords(user, model) {
+    const m = user.length, n = model.length;
+    const L = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+    for (let i = m - 1; i >= 0; i--) {
+        for (let j = n - 1; j >= 0; j--) {
+            L[i][j] = user[i] === model[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+        }
+    }
+    const out = [];
+    let i = 0, j = 0;
+    while (i < m && j < n) {
+        if (user[i] === model[j]) { out.push(escapeHTML(user[i])); i++; j++; }
+        else if (L[i + 1][j] >= L[i][j + 1]) out.push(`<del>${escapeHTML(user[i++])}</del>`);
+        else out.push(`<ins>${escapeHTML(model[j++])}</ins>`);
+    }
+    while (i < m) out.push(`<del>${escapeHTML(user[i++])}</del>`);
+    while (j < n) out.push(`<ins>${escapeHTML(model[j++])}</ins>`);
+    return out.join(' ');
+}
+
+function renderGrammarFilterOptions() {
+    const sel = $('grammar-filter');
+    const existing = new Set(Array.from(sel.options).map(o => o.value));
+    DB.grammarSentences.forEach(s => {
+        if (s.tense && !existing.has(s.tense)) {
+            const o = document.createElement('option');
+            o.value = s.tense;
+            o.textContent = s.tense;
+            sel.appendChild(o);
+            existing.add(s.tense);
+        }
+    });
+}
+
+function renderGrammarStats() {
+    const filter = $('grammar-filter').value;
+    const isMastered = s => progress.grammar[s.id] && progress.grammar[s.id].mastered;
+    const all = DB.grammarSentences;
+    let text = `Opanowane zdania: ${all.filter(isMastered).length} / ${all.length}`;
+    if (filter !== 'ALL') {
+        const pool = all.filter(s => s.tense === filter);
+        text += ` · ${filter}: ${pool.filter(isMastered).length} / ${pool.length}`;
+    }
+    $('g-stats').textContent = text;
+}
+
+function currentSentence() { return grammar.queue[grammar.index]; }
+
+function startGrammarSession() {
+    const filter = $('grammar-filter').value;
+    progress.grammarFilter = filter;
+    saveProgress();
+    const pool = DB.grammarSentences.filter(s => filter === 'ALL' || s.tense === filter);
+    const isMastered = s => progress.grammar[s.id] && progress.grammar[s.id].mastered;
+    grammar.queue = shuffle(pool.filter(s => !isMastered(s))).concat(shuffle(pool.filter(isMastered)));
+    grammar.index = 0;
+    grammar.results = {};
+    $('g-reveal-btn').hidden = filter !== 'ALL';
+    renderGrammarStats();
+    showGrammarSentence();
+}
+
+function updateTenseTag() {
+    const s = currentSentence();
+    const filter = $('grammar-filter').value;
+    $('g-tense-tag').textContent = s && (filter !== 'ALL' || grammar.revealed || grammar.answered) ? s.tense : 'TRYB MIX';
+}
+
+function showGrammarSentence() {
+    const s = currentSentence();
+    if (!s) { showGrammarSummary(); return; }
+    grammar.answered = false;
+    grammar.revealed = false;
+    grammar.outcome = null;
+    grammar.requeuedAt = -1;
+    $('g-question').hidden = false;
+    $('g-summary').hidden = true;
+    $('g-counter').textContent = `${grammar.index + 1} / ${grammar.queue.length}`;
+    updateTenseTag();
+    $('g-pl-sentence').textContent = s.pl;
+    const hints = s.hints || [];
+    $('g-vocab-hint').innerHTML = hints.length
+        ? hints.map(h => `<span class="word-bank-chip">${escapeHTML(h)}</span>`).join('')
+        : '<span class="word-bank-chip">brak podpowiedzi</span>';
+    const input = $('g-input');
+    input.value = '';
+    input.readOnly = false;
+    $('g-check-btn').textContent = 'Sprawdź zdanie';
+    setFeedback('g-feedback', null);
+}
+
+function revealTense() {
+    if (!currentSentence()) return;
+    grammar.revealed = true;
+    updateTenseTag();
+}
+
+function explanationHTML(s) {
+    return s.explanation ? `<div class="explain">💡 <strong>${escapeHTML(s.tense)}:</strong> ${escapeHTML(s.explanation)}</div>` : '';
+}
+
+function checkGrammarAnswer() {
+    const s = currentSentence();
+    if (!s) return;
+    if (grammar.answered) { nextGrammar(); return; }
+    const raw = $('g-input').value.trim();
+    if (!raw) {
+        setFeedback('g-feedback', 'info', 'Napisz tłumaczenie całego zdania po angielsku.');
+        return;
+    }
+    touchStreak();
+    const variants = answerVariants(s);
+    const accepted = new Set(variants.flatMap(sentenceForms));
+    const userForms = sentenceForms(raw);
+    const stat = progress.grammar[s.id] || (progress.grammar[s.id] = { correct: 0, wrong: 0, mastered: false });
+    grammar.answered = true;
+    grammar.raw = raw;
+    grammar.firstAttempt = !(s.id in grammar.results);
+    updateTenseTag();
+    $('g-input').readOnly = true;
+    $('g-check-btn').textContent = 'Dalej →';
+
+    if (userForms.some(f => accepted.has(f))) {
+        grammar.outcome = 'ok';
+        stat.correct++;
+        stat.mastered = true;
+        if (grammar.firstAttempt) grammar.results[s.id] = 'ok';
+        const model = variants[0];
+        const differs = !sentenceForms(model).some(f => userForms.includes(f));
+        setFeedback('g-feedback', 'correct',
+            '✅ <strong>Świetnie! Zdanie poprawne.</strong> +20 XP' +
+            (differs ? `<div class="model">Inna poprawna wersja: <em>${escapeHTML(model)}</em></div>` : '') +
+            explanationHTML(s));
+        addXP(20);
+    } else {
+        // Najbliższy wzór (odległość liczona w słowach)
+        let best = null;
+        for (const v of variants) {
+            for (const vf of sentenceForms(v)) {
+                const vt = vf.split(' ');
+                for (const uf of userForms) {
+                    const ut = uf.split(' ');
+                    const d = levenshtein(ut, vt);
+                    if (!best || d < best.d) best = { v, vt, ut, d };
+                }
+            }
+        }
+        const tolerance = Math.max(1, Math.round(best.vt.length * 0.12));
+        const close = best.d <= tolerance;
+        grammar.outcome = close ? 'close' : 'wrong';
+        grammar.model = best.v;
+        if (!close) { stat.wrong++; stat.mastered = false; }
+        grammar.requeuedAt = requeue(grammar.queue, grammar.index, s);
+        if (grammar.firstAttempt) grammar.results[s.id] = 'bad';
+        setFeedback('g-feedback', close ? 'close' : 'wrong',
+            (close
+                ? `🤏 <strong>Prawie!</strong> Różnica: ${best.d} ${best.d === 1 ? 'słowo' : 'słowa'}. +5 XP`
+                : '❌ <strong>Nie do końca.</strong> Porównaj z wzorem:') +
+            `<div class="diff-line">${diffWords(best.ut, best.vt)}</div>` +
+            '<div class="diff-legend"><del>przekreślone</del> = zbędne lub błędne w Twojej wersji · <ins>zielone</ins> = brakuje w Twojej wersji</div>' +
+            `<div class="model">Wzór: <strong>${escapeHTML(best.v)}</strong></div>` +
+            explanationHTML(s) +
+            '<div class="input-group"><button class="btn btn-secondary btn-sm" onclick="acceptOwnGrammar()">✅ Moja wersja też jest poprawna</button></div>');
+        if (close) addXP(5);
+    }
+    $('g-counter').textContent = `${grammar.index + 1} / ${grammar.queue.length}`;
+    saveProgress();
+    renderGrammarStats();
+}
+
+// Samoocena: tłumaczeń bywa wiele – własna wersja zostaje zapamiętana jako poprawna
+function acceptOwnGrammar() {
+    const s = currentSentence();
+    if (!s || !grammar.answered || (grammar.outcome !== 'close' && grammar.outcome !== 'wrong')) return;
+    const stat = progress.grammar[s.id];
+    if (grammar.outcome === 'wrong') stat.wrong = Math.max(0, stat.wrong - 1);
+    stat.correct++;
+    stat.mastered = true;
+    stat.extra = Array.from(new Set((stat.extra || []).concat(grammar.raw)));
+    if (grammar.requeuedAt !== -1 && grammar.queue[grammar.requeuedAt] === s) grammar.queue.splice(grammar.requeuedAt, 1);
+    grammar.requeuedAt = -1;
+    if (grammar.firstAttempt) grammar.results[s.id] = 'ok';
+    const xp = grammar.outcome === 'close' ? 10 : 15;
+    grammar.outcome = 'accepted';
+    setFeedback('g-feedback', 'correct',
+        `✅ <strong>Uznano Twoją wersję</strong> i zapamiętano ją jako poprawną. +${xp} XP` +
+        `<div class="model">Wzór dla porównania: <em>${escapeHTML(grammar.model)}</em></div>` +
+        explanationHTML(s));
+    addXP(xp);
+    $('g-counter').textContent = `${grammar.index + 1} / ${grammar.queue.length}`;
+    saveProgress();
+    renderGrammarStats();
+}
+
+function nextGrammar() {
+    grammar.index++;
+    showGrammarSentence();
+    if (currentSentence()) $('g-input').focus({ preventScroll: true });
+}
+
+function speakCurrentGrammar() {
+    const s = currentSentence();
+    if (!s) return;
+    if (!grammar.answered) {
+        showToast('Najpierw sprawdź zdanie, potem odsłuchasz wzór.');
+        return;
+    }
+    speak(grammar.outcome === 'ok' ? grammar.raw : (grammar.model || answerVariants(s)[0]));
+}
+
+function showGrammarSummary() {
+    const results = Object.values(grammar.results);
+    const firstOk = results.filter(r => r === 'ok').length;
+    $('g-question').hidden = true;
+    $('g-summary').hidden = false;
+    $('g-counter').textContent = grammar.queue.length ? `${grammar.queue.length} / ${grammar.queue.length}` : '';
+    $('g-tense-tag').textContent = $('grammar-filter').value === 'ALL' ? 'TRYB MIX' : $('grammar-filter').value;
+    $('g-summary').innerHTML = grammar.queue.length
+        ? `<div class="prompt-pl" style="margin-top: 10px;">🏁 Seria ukończona!</div>
+           <p>Poprawnie za pierwszym razem: <strong>${firstOk} / ${results.length}</strong>.</p>
+           <div class="input-group"><button class="btn" onclick="startGrammarSession()">🔁 Nowa seria</button></div>`
+        : `<div class="prompt-pl" style="margin-top: 10px;">Brak zdań dla tego czasu.</div>
+           <p>Dodaj je w zakładce ⚙️ Baza / Import albo wybierz inny czas.</p>`;
+}
+
+// ===== IMPORT / EKSPORT =====
+const TENSE_NAMES = ['Present Simple', 'Present Continuous', 'Past Simple', 'Past Continuous', 'Present Perfect', 'Past Perfect'];
+
+const EXAMPLE_JSON = {
+    vocabPacks: [{
+        id: "pack_3",
+        name: "Pakiet 3: Praca i kariera (B2+)",
+        words: [{
+            en: "deadline", alts: ["deadlines"], pl: "termin (ostateczny)", pos: "rzeczownik (n)",
+            sentence: "We managed to meet the _____ despite several setbacks.",
+            sentencePl: "Udało nam się dotrzymać terminu pomimo kilku niepowodzeń."
+        }]
+    }],
+    grammarSentences: [{
+        tense: "Past Perfect",
+        pl: "Zanim zaczęło się spotkanie, przygotowałem wszystkie dokumenty.",
+        en: ["{Before|By the time} the meeting started, I had prepared all the documents."],
+        hints: ["prepare (przygotować)", "documents (dokumenty)"],
+        explanation: "Przygotowanie zakończyło się przed inną czynnością w przeszłości."
+    }]
+};
+
+const CHAT_PROMPT = `Przygotuj kolejny materiał do mojej aplikacji „Argon English B2+” jako sam kod JSON (bez komentarzy):
+- "vocabPacks": 1 pakiet z 12 słówkami B2+ (pola: en, alts – inne poprawne formy, pl, pos, sentence – zdanie z luką _____ w miejscu słowa, sentencePl),
+- "grammarSentences": 6 polskich zdań do przetłumaczenia, po jednym na każdy czas: Present Simple, Present Continuous, Past Simple, Past Continuous, Present Perfect, Past Perfect (pola: tense, pl, en – lista poprawnych tłumaczeń, hints, explanation). Warianty w "en" możesz zapisać w nawiasach klamrowych, np. "I {usually|often} work late."
+Nie powtarzaj słówek, które już mam. Wzór formatu:
+${JSON.stringify(EXAMPLE_JSON, null, 2)}`;
+
+function setStatus(msg, kind) {
+    const el = $('import-status');
+    el.textContent = msg;
+    el.className = kind === 'err' ? 'status-err' : 'status-ok';
+}
+
+function extractJSON(text) {
+    const t = text.replace(/```[a-z]*\s*/gi, '').trim();
+    const start = t.search(/[[{]/);
+    if (start < 0) throw new Error('nie znaleziono kodu JSON (brak { lub [).');
+    const end = Math.max(t.lastIndexOf('}'), t.lastIndexOf(']'));
+    return JSON.parse(end > start ? t.slice(start, end + 1) : t.slice(start));
+}
+
+function collectItems(x, found) {
+    if (Array.isArray(x)) { x.forEach(item => collectItems(item, found)); return; }
+    if (!isPlainObject(x)) return;
+    if (Array.isArray(x.vocabPacks) || Array.isArray(x.grammarSentences) || Array.isArray(x.packs) || Array.isArray(x.sentences)) {
+        collectItems(x.vocabPacks || x.packs || [], found);
+        collectItems(x.grammarSentences || x.sentences || [], found);
+        return;
+    }
+    if (Array.isArray(x.words)) found.packs.push(x);
+    else if (x.tense && x.pl && x.en) found.sentences.push(x);
+    else if (x.en && x.pl) found.words.push(x);
+    else found.invalid++;
+}
+
+function cleanWord(w) {
+    const en = String(w.en || '').trim();
+    const pl = String(w.pl || '').trim();
+    const alts = Array.isArray(w.alts) ? w.alts.map(a => String(a).trim()).filter(Boolean) : [];
+    let sentence = String(w.sentence || '').trim();
+    if (!en || !pl || !sentence) return null;
+    if (!GAP_RE.test(sentence)) {
+        // Zdanie bez luki: wytnij z niego samo słowo (lub jego formę z "alts")
+        const form = [en].concat(alts).find(f => new RegExp(`\\b${escapeRegExp(f)}\\b`, 'i').test(sentence));
+        if (!form) return null;
+        sentence = sentence.replace(new RegExp(`\\b${escapeRegExp(form)}\\b`, 'i'), GAP);
+    }
+    return {
+        id: w.id ? String(w.id) : '',
+        en, alts, pl,
+        pos: String(w.pos || '').trim(),
+        sentence: sentence.replace(/_{3,}/g, GAP),
+        sentencePl: String(w.sentencePl || '').trim()
+    };
+}
+
+function cleanSentence(s) {
+    const pl = String(s.pl || '').trim();
+    const en = [].concat(s.en).map(e => String(e || '').trim()).filter(Boolean);
+    const rawTense = String(s.tense || '').trim();
+    if (!pl || !en.length || !rawTense) return null;
+    const tense = TENSE_NAMES.find(t => t.toLowerCase() === rawTense.toLowerCase())
+        || rawTense.replace(/\s+/g, ' ').replace(/(^|\s)\S/g, c => c.toUpperCase());
+    return {
+        id: s.id ? String(s.id) : '',
+        tense, pl, en,
+        hints: Array.isArray(s.hints) ? s.hints.map(h => String(h).trim()).filter(Boolean) : [],
+        explanation: String(s.explanation || '').trim()
+    };
+}
+
+function importJSONData() {
+    const text = $('json-import-box').value.trim();
+    if (!text) { setStatus('Najpierw wklej kod JSON.', 'err'); return; }
+    let data;
+    try { data = extractJSON(text); } catch (e) { setStatus('❌ Błąd JSON: ' + e.message, 'err'); return; }
+    if (isPlainObject(data) && data.app === 'argon-english') { restoreBackup(data); return; }
+
+    const found = { packs: [], words: [], sentences: [], invalid: 0 };
+    collectItems(data, found);
+
+    const wordIds = new Set(DB.vocabPacks.flatMap(p => p.words.map(w => w.id)));
+    const wordKeys = new Set(DB.vocabPacks.flatMap(p => p.words.map(w => normWord(w.en) + '|' + w.sentence.toLowerCase())));
+    const packIds = new Set(DB.vocabPacks.map(p => p.id));
+    let addedWords = 0, addedPacks = 0, addedSentences = 0, duplicates = 0, invalid = found.invalid;
+
+    const takeWords = list => {
+        const out = [];
+        list.forEach(raw => {
+            const w = isPlainObject(raw) ? cleanWord(raw) : null;
+            if (!w) { invalid++; return; }
+            const key = normWord(w.en) + '|' + w.sentence.toLowerCase();
+            if (wordKeys.has(key)) { duplicates++; return; }
+            wordKeys.add(key);
+            if (!w.id || wordIds.has(w.id)) w.id = uid('cw');
+            wordIds.add(w.id);
+            out.push(w);
+        });
+        return out;
+    };
+
+    const addPack = (rawPack, fallbackName) => {
+        const name = String(rawPack.name || '').trim() || fallbackName;
+        const rawId = rawPack.id != null ? String(rawPack.id) : '';
+        const words = takeWords(rawPack.words || []);
+        if (!words.length) return;
+        addedWords += words.length;
+        const existing = customData.vocabPacks.find(p => p.id === rawId && p.name === name);
+        if (existing) { existing.words.push(...words); return; }
+        const id = rawId && !packIds.has(rawId) ? rawId : uid('cp');
+        packIds.add(id);
+        customData.vocabPacks.push({ id, name, words });
+        addedPacks++;
+    };
+
+    const nextNumber = () => DB.vocabPacks.length + addedPacks + 1;
+    found.packs.forEach(p => addPack(p, `Pakiet ${nextNumber()}: Własne słówka`));
+    if (found.words.length) addPack({ words: found.words }, `Pakiet ${nextNumber()}: Własne słówka`);
+
+    const sentenceIds = new Set(DB.grammarSentences.map(s => s.id));
+    const sentenceKeys = new Set(DB.grammarSentences.map(s => s.pl.toLowerCase()));
+    found.sentences.forEach(raw => {
+        const s = cleanSentence(raw);
+        if (!s) { invalid++; return; }
+        if (sentenceKeys.has(s.pl.toLowerCase())) { duplicates++; return; }
+        sentenceKeys.add(s.pl.toLowerCase());
+        if (!s.id || sentenceIds.has(s.id)) s.id = uid('cg');
+        sentenceIds.add(s.id);
+        customData.grammarSentences.push(s);
+        addedSentences++;
+    });
+
+    if (!addedWords && !addedSentences) {
+        setStatus(`Nic nie dodano. Duplikaty: ${duplicates}, wpisy z brakami: ${invalid}. Słówko potrzebuje pól en, pl i sentence (z luką _____), zdanie – tense, pl i en.`, 'err');
+        return;
+    }
+    saveCustom();
+    DB = buildDB();
+    checkUnlocks(true);
+    saveProgress();
+    renderPacks();
+    renderGrammarFilterOptions();
+    renderGrammarStats();
+    $('json-import-box').value = '';
+    let msg = `✅ Dodano: ${plural(addedWords, 'słówko', 'słówka', 'słówek')}` + (addedPacks ? ` (nowe pakiety: ${addedPacks})` : '') + `, ${plural(addedSentences, 'zdanie', 'zdania', 'zdań')}.`;
+    if (duplicates) msg += ` Pominięte duplikaty: ${duplicates}.`;
+    if (invalid) msg += ` Pominięte wpisy z brakami: ${invalid}.`;
+    setStatus(msg, 'ok');
+}
+
+function restoreBackup(data) {
+    progress = loadProgress(data.progress);
+    customData = loadCustom(data.customData);
+    DB = buildDB();
+    saveProgress();
+    saveCustom();
+    renderStats();
+    renderGrammarFilterOptions();
+    initSessions();
+    $('json-import-box').value = '';
+    const when = data.exportedAt ? new Date(data.exportedAt).toLocaleString('pl-PL') : 'nieznanej daty';
+    setStatus(`✅ Przywrócono kopię zapasową z ${when}.`, 'ok');
+}
+
+function exportProgress() {
+    const json = JSON.stringify({ app: 'argon-english', version: 1, exportedAt: new Date().toISOString(), progress, customData }, null, 2);
+    const box = $('json-import-box');
+    box.value = json;
+    // Plik .json pobierze się tam, gdzie przeglądarka na to pozwala (np. strona otwarta z dysku)
+    try {
+        const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `argon-english-kopia-${todayKey()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) { /* pobieranie zablokowane – kopia i tak jest w polu tekstowym */ }
+    const report = copied => setStatus(copied
+        ? '💾 Kopia skopiowana do schowka i wstawiona w pole powyżej. Zachowaj ją np. w notatkach. Aby przywrócić, wklej ją tutaj i kliknij „Dodaj do bazy”.'
+        : '💾 Kopia jest w polu powyżej (zaznaczona). Skopiuj ją i zachowaj. Aby przywrócić, wklej ją tutaj i kliknij „Dodaj do bazy”.', 'ok');
+    const fallback = () => { box.focus(); box.select(); report(false); };
+    try {
+        navigator.clipboard.writeText(json).then(() => report(true), fallback);
+    } catch (e) { fallback(); }
+}
+
+function copyChatPrompt() {
+    const fallback = () => {
+        const range = document.createRange();
+        range.selectNodeContents($('format-example'));
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        showToast('Zaznaczono tekst. Skopiuj go ręcznie.');
+    };
+    try {
+        navigator.clipboard.writeText(CHAT_PROMPT).then(() => showToast('📋 Skopiowano polecenie dla czatu.'), fallback);
+    } catch (e) { fallback(); }
+}
+
+// ===== Start =====
+function initSessions() {
+    checkUnlocks(true);
+    const idx = DB.vocabPacks.findIndex(p => p.id === progress.currentPack);
+    const packId = idx >= 0 && isPackUnlocked(idx) ? progress.currentPack : DB.vocabPacks[0].id;
+    startVocabPack(packId, false);
+    const sel = $('grammar-filter');
+    sel.value = Array.from(sel.options).some(o => o.value === progress.grammarFilter) ? progress.grammarFilter : 'ALL';
+    startGrammarSession();
+}
+
+document.addEventListener('click', e => {
+    const btn = e.target.closest('[data-pack]');
+    if (btn && !btn.disabled) startVocabPack(btn.dataset.pack, true);
+});
+
+$('v-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); checkVocabAnswer(); }
+});
+
+$('g-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); checkGrammarAnswer(); }
+});
+
+if ('speechSynthesis' in window) {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+window.addEventListener('hashchange', () => switchTab(location.hash.slice(1)));
+
+$('format-example').textContent = CHAT_PROMPT;
+renderStats();
+renderGrammarFilterOptions();
+initSessions();
+switchTab(location.hash.slice(1));
+</script>
+</body>
+</html>

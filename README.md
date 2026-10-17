@@ -204,3 +204,10 @@ Grywalne osie czasu i Forum Romanum zostały przeniesione do repozytorium
 i są publikowane niezależnie pod adresem
 https://adscisel-alt.github.io/gry-historyczne/ — ten adres (workt) serwuje
 wyłącznie aplikację protokołów.
+
+## Trener angielskiego B2+ — osobny plik
+
+`angielski/index.html` to samodzielna aplikacja do nauki angielskiego (słówka B2+ w lukach,
+tłumaczenie zdań w 6 czasach, ściąga, import pakietów JSON i kopia zapasowa postępów).
+Nie jest częścią aplikacji protokołów ani jej builda — wystarczy otworzyć plik w przeglądarce.
+Postępy zapisują się lokalnie w przeglądarce (localStorage).
