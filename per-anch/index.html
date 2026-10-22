@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Per-Anch: Akademia Hieroglifów – interaktywna nauka czytania inskrypcji ze ścian egipskich świątyń i grobowców.">
+<title>Per-Anch: Akademia Hieroglifów</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=Gentium+Plus:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Sans+Egyptian+Hieroglyphs&display=swap">
+<style>
+/* Układ: nadproże (nagłówek) → trzy sale (zakładki) → kamienna ściana z reliefem jako główna scena;
+   panele informacyjne jak papirusowe karty skryby obok ściany. */
+:root{
+  --bg:#efe6d2;          /* piaskowiec oświetlony słońcem */
+  --bg2:#e4d7bb;         /* cieplejszy blok kamienia */
+  --panel:#faf5e9;       /* papirus */
+  --fg:#2a2218;          /* sadza / tusz skryby */
+  --muted:#6e604c;
+  --line:#cdbd9a;
+  --accent:#1f4f8f;      /* lapis lazuli */
+  --accent-fg:#ffffff;
+  --gold:#b8862b;        /* złoto / ochra */
+  --green:#2f7a5b;       /* fajans */
+  --red:#9c3b2a;         /* czerwień rubrykowa */
+  --carve-light:rgba(255,255,255,.55);
+  --carve-dark:rgba(60,40,10,.45);
+  --shadow:0 10px 30px rgba(70,50,20,.15);
+  --f-display:"Marcellus",Georgia,"Times New Roman",serif;
+  --f-body:"Source Sans 3","Segoe UI",Roboto,system-ui,sans-serif;
+  --f-tr:"Gentium Plus","Gentium Basic","Charis SIL",Georgia,serif;
+  --f-hiero:"Noto Sans Egyptian Hieroglyphs","Segoe UI Historic","Aegyptus",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1712; --bg2:#262019; --panel:#2b241b; --fg:#efe4cf; --muted:#b4a58b; --line:#4a3f30;
+    --accent:#7fb0ea; --accent-fg:#0f1a2b; --gold:#d9a94a; --green:#6fbf98; --red:#e07a66;
+    --carve-light:rgba(255,235,200,.14); --carve-dark:rgba(0,0,0,.75);
+    --shadow:0 10px 30px rgba(0,0,0,.45); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1712; --bg2:#262019; --panel:#2b241b; --fg:#efe4cf; --muted:#b4a58b; --line:#4a3f30;
+  --accent:#7fb0ea; --accent-fg:#0f1a2b; --gold:#d9a94a; --green:#6fbf98; --red:#e07a66;
+  --carve-light:rgba(255,235,200,.14); --carve-dark:rgba(0,0,0,.75);
+  --shadow:0 10px 30px rgba(0,0,0,.45); color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg2)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(1.7rem,3.5vw,2.6rem);letter-spacing:.01em}
+h2{font-size:clamp(1.3rem,2.4vw,1.75rem)}
+h3{font-size:1.1rem}
+p{margin:0}
+.hiero{font-family:var(--f-hiero);line-height:1}
+.tr{font-family:var(--f-tr);font-style:italic;font-size:1.08em}
+.eyebrow{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Nadproże */
+.lintel{background:var(--bg2);border-bottom:4px solid var(--gold);box-shadow:inset 0 -1px 0 var(--carve-light)}
+.lintel .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding-block:18px 14px}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.brand .mark{font-family:var(--f-hiero);font-size:2.6rem;color:var(--fg);text-shadow:1px 1px 0 var(--carve-light),-1px -1px 0 var(--carve-dark);flex:none}
+.brand .sub{color:var(--muted);font-size:.95rem}
+.brand .sub .tr{font-size:1em}
+nav.halls{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-left:auto;max-width:100%}
+nav.halls::-webkit-scrollbar{display:none}
+nav.halls button{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:10px;padding:9px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:150px;text-align:left}
+nav.halls button .k{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+nav.halls button .n{font-family:var(--f-display);font-size:1.05rem}
+nav.halls button[aria-selected="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+nav.halls button[aria-selected="true"] .k{color:var(--accent-fg);opacity:.8}
+
+main section.hall{display:none;padding-top:26px}
+main section.hall.active{display:block}
+.intro{display:grid;grid-template-columns:1fr auto;gap:10px 24px;align-items:end;margin-bottom:18px}
+.intro p{max-width:66ch;color:var(--muted)}
+@media (max-width:700px){.intro{grid-template-columns:1fr}}
+
+/* Ściana świątyni */
+.wall-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.wall-layout{grid-template-columns:1fr}}
+.picker{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.picker button{border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:6px 12px;font-size:.9rem;display:flex;gap:8px;align-items:center}
+.picker button .num{font-family:var(--f-display);color:var(--gold)}
+.picker button[aria-selected="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--accent)}
+.stone{
+  position:relative;border-radius:6px;padding:22px 20px 18px;min-width:0;
+  background:
+    repeating-linear-gradient(0deg,transparent 0 118px,var(--carve-dark) 118px 120px),
+    radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.18),transparent 55%),
+    radial-gradient(ellipse at 80% 90%,rgba(0,0,0,.08),transparent 60%),
+    var(--bg2);
+  box-shadow:var(--shadow),inset 0 0 0 1px var(--carve-light);
+  border:1px solid var(--line)
+}
+.stone .cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.stone .cap .site{font-size:.9rem;color:var(--muted)}
+.dirtog{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.dirtog button{border:0;background:transparent;color:var(--fg);padding:6px 12px;font-size:.88rem;font-weight:600}
+.dirtog button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.relief{display:flex;flex-wrap:wrap;gap:14px 10px;align-items:flex-end;padding:14px 6px 10px;min-height:120px}
+.relief[data-dir="rtl"]{flex-direction:row-reverse;justify-content:flex-start}
+.grp{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border-radius:8px;padding:6px 4px 4px;border:2px solid transparent;transition:transform .15s,border-color .15s}
+.grp:hover{transform:translateY(-2px)}
+.grp.current{border-color:var(--gold);background:rgba(184,134,43,.10)}
+.grp.done .lab{color:var(--fg)}
+.grp .glyphs{display:flex;align-items:flex-end;gap:2px}
+.grp .glyphs.col{flex-direction:column;align-items:center;gap:0}
+.grp .glyphs.col .sg{font-size:1.5rem;line-height:.95}
+.sg{font-family:var(--f-hiero);font-size:2.8rem;line-height:1;color:var(--fg);text-shadow:1px 1px 0 var(--carve-light),-1px -1px 1px var(--carve-dark);display:inline-block;transition:color .15s}
+.relief[data-dir="rtl"] .sg{transform:scaleX(-1)}
+.grp:hover .sg{color:var(--accent)}
+.grp .lab{font-family:var(--f-tr);font-style:italic;font-size:.95rem;color:var(--muted);text-align:center;line-height:1.1}
+.cart{display:flex;align-items:flex-end;gap:4px;border:3px solid var(--fg);border-radius:999px;padding:8px 10px 8px 12px;position:relative;margin-right:10px;box-shadow:inset 1px 1px 0 var(--carve-light)}
+.cart::after{content:"";position:absolute;right:-10px;top:50%;height:70%;width:5px;transform:translateY(-50%);background:var(--fg);border-radius:2px}
+.relief[data-dir="rtl"] .cart{margin-right:0;margin-left:10px}
+.relief[data-dir="rtl"] .cart::after{right:auto;left:-10px}
+.cart .grp{padding:2px 3px}
+.readout{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px;display:grid;gap:6px}
+.readout .tr{font-size:1.15rem}
+.readout .pl{font-size:1.05rem}
+.steps{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:8px;padding:8px 14px;font-weight:600;font-size:.92rem}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:default}
+.progress{flex:1;min-width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--gold);width:0;transition:width .25s}
+
+.scribe{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;display:grid;gap:14px;min-width:0;box-shadow:var(--shadow)}
+.scribe .big{display:flex;gap:14px;align-items:center}
+.scribe .big .sg{font-size:4rem;text-shadow:none;cursor:default}
+.scribe .code{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:.95rem}
+.kv dt{color:var(--muted);font-weight:600}
+.kv dd{margin:0}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78rem;font-weight:700;letter-spacing:.03em;border:1px solid var(--line);color:var(--muted)}
+.pill.uni{color:var(--accent);border-color:var(--accent)}
+.pill.bi{color:var(--green);border-color:var(--green)}
+.pill.tri{color:var(--gold);border-color:var(--gold)}
+.pill.ideo{color:var(--red);border-color:var(--red)}
+.pill.det{color:var(--fg);border-color:var(--fg)}
+.note{font-size:.95rem;background:var(--bg);border-left:3px solid var(--gold);padding:10px 12px;border-radius:0 6px 6px 0}
+.riddle{border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:grid;gap:10px;background:var(--panel);margin-top:18px}
+.riddle .opts{display:grid;gap:8px}
+.riddle .opts button{text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:9px 12px}
+.riddle .opts button.ok{border-color:var(--green);background:rgba(47,122,91,.12)}
+.riddle .opts button.bad{border-color:var(--red);background:rgba(156,59,42,.12)}
+.riddle .why{display:none;font-size:.95rem}
+.riddle.answered .why{display:block}
+
+/* Baza znaków */
+.search{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.search input{flex:1;min-width:220px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:8px;padding:10px 14px;font:inherit;font-size:1rem}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:5px 11px;font-size:.85rem}
+.chips button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.count{font-size:.9rem;color:var(--muted);margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:start;cursor:pointer;min-width:0}
+.card:hover{border-color:var(--accent)}
+.card .sg{font-size:3.1rem;grid-row:span 3;text-shadow:none}
+.card .code{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;gap:8px;align-items:center;justify-content:space-between}
+.card .name{font-weight:600;line-height:1.25}
+.card .tr{font-size:1.05rem}
+.card .mean{font-size:.9rem;color:var(--muted);grid-column:1/-1}
+.detail{position:fixed;inset:auto 0 0 0;max-height:85vh;overflow:auto;background:var(--panel);border-top:3px solid var(--gold);box-shadow:0 -10px 40px rgba(0,0,0,.25);padding:20px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:30;display:none}
+.detail.open{display:block}
+.detail .inner{max-width:760px;margin:0 auto;display:grid;gap:14px}
+.detail .close{position:absolute;top:10px;right:max(12px,env(safe-area-inset-right,0px));border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;width:36px;height:36px}
+.detail .sg{font-size:5rem;text-shadow:none}
+.detail .sg.flip{transform:scaleX(-1)}
+.scrim{position:fixed;inset:0;background:rgba(20,14,6,.45);z-index:29;display:none}
+.scrim.open{display:block}
+
+/* Trening */
+.games{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:18px}
+@media (max-width:800px){.games{grid-template-columns:1fr}}
+.games button{border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:14px;text-align:left;display:grid;gap:4px}
+.games button .sg{font-size:2rem;text-shadow:none}
+.games button[aria-selected="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.games button .t{font-family:var(--f-display);font-size:1.1rem}
+.games button .d{font-size:.9rem;color:var(--muted)}
+.game{display:none}.game.active{display:block}
+.board{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;display:grid;gap:14px;box-shadow:var(--shadow)}
+.blocks{display:flex;flex-wrap:wrap;gap:10px;min-height:90px;padding:10px;border-radius:6px;background:var(--bg);border:1px dashed var(--line)}
+.blocks.target{border-style:solid;background:var(--bg2);min-height:100px;box-shadow:inset 0 0 0 1px var(--carve-light)}
+.block{border:1px solid var(--line);background:var(--bg2);border-radius:4px;padding:8px 12px;cursor:pointer;display:grid;justify-items:center;gap:4px;box-shadow:2px 3px 0 var(--carve-dark),inset 1px 1px 0 var(--carve-light);user-select:none}
+.block .sg{font-size:2.2rem}
+.block .lab{font-size:.78rem;color:var(--muted)}
+.block.ok{border-color:var(--green);box-shadow:0 0 0 2px var(--green)}
+.block.bad{border-color:var(--red);box-shadow:0 0 0 2px var(--red)}
+.blocks.target .block .lab{display:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.status{font-weight:600}
+.status.ok{color:var(--green)}.status.bad{color:var(--red)}
+.quizq{display:grid;gap:14px;justify-items:center;text-align:center}
+.quizq .sg{font-size:6rem;text-shadow:1px 1px 0 var(--carve-light),-1px -1px 1px var(--carve-dark)}
+.quizq .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;max-width:620px}
+@media (max-width:520px){.quizq .opts{grid-template-columns:1fr}}
+.quizq .opts button{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:12px;font-size:1rem;min-height:52px}
+.quizq .opts button .sg{font-size:2.2rem;text-shadow:none}
+.quizq .opts button.ok{border-color:var(--green);background:rgba(47,122,91,.15)}
+.quizq .opts button.bad{border-color:var(--red);background:rgba(156,59,42,.15)}
+.meter{display:flex;gap:4px}
+.meter i{width:18px;height:8px;border-radius:2px;background:var(--line)}
+.meter i.ok{background:var(--green)}.meter i.bad{background:var(--red)}
+.ranks{display:grid;gap:6px;font-size:.92rem}
+.ranks div{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:6px 10px;border-radius:6px;border:1px solid var(--line)}
+.ranks div.me{border-color:var(--gold);background:rgba(184,134,43,.12)}
+.ranks .pts{font-variant-numeric:tabular-nums;color:var(--muted)}
+.gen{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:800px){.gen{grid-template-columns:1fr}}
+.gen label{display:grid;gap:4px;font-size:.9rem;font-weight:600;color:var(--muted)}
+.gen input[type=text]{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:10px 14px;font:inherit;font-size:1.1rem}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg)}
+.seg button{border:0;background:transparent;color:var(--fg);padding:7px 12px;font-size:.88rem;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.cartout{display:flex;justify-content:center;align-items:center;padding:24px 10px;background:var(--bg2);border-radius:6px;border:1px solid var(--line);box-shadow:inset 0 0 0 1px var(--carve-light);min-height:160px;overflow-x:auto}
+.cartout .cart{gap:6px;padding:12px 14px 12px 16px}
+.cartout .cart.v{flex-direction:column;align-items:center;padding:16px 12px 22px;border-radius:40px/28px;margin-right:0;margin-bottom:12px}
+.cartout .cart.v::after{right:auto;left:50%;top:auto;bottom:-12px;height:5px;width:70%;transform:translateX(-50%)}
+.cartout .sg{font-size:2.8rem}
+.cartout .tail{display:flex;align-items:center;margin-left:22px;gap:2px}
+.cartout .tail .sg{font-size:2.4rem}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.map div{border:1px solid var(--line);border-radius:6px;padding:8px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;background:var(--bg);font-size:.85rem}
+.map .sg{font-size:1.9rem;grid-row:span 2;text-shadow:none}
+.map b{font-size:1rem}
+.map .muted{font-size:.8rem}
+footer{margin-top:40px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padding-top:14px;display:grid;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="lintel"><div class="wrap">
+  <div class="brand">
+    <div class="mark" aria-hidden="true">𓉐𓋹</div>
+    <div>
+      <h1>Per-Anch: Akademia Hieroglifów</h1>
+      <div class="sub"><span class="tr">pr-ꜥnḫ</span> · Dom Życia · nauka czytania inskrypcji ze ścian świątyń i grobowców</div>
+    </div>
+  </div>
+  <nav class="halls" role="tablist" aria-label="Sale Akademii">
+    <button role="tab" data-hall="sciana" aria-selected="true"><span class="k">Sala I</span><span class="n">Analizator Ściany</span></button>
+    <button role="tab" data-hall="znaki" aria-selected="false"><span class="k">Sala II</span><span class="n">Baza Znaków</span></button>
+    <button role="tab" data-hall="trening" aria-selected="false"><span class="k">Dziedziniec</span><span class="n">Trening i Zabawa</span></button>
+  </nav>
+</div></header>
+
+<main class="wrap">
+<!-- ============ SALA I ============ -->
+<section class="hall active" id="hall-sciana">
+  <div class="intro">
+    <div>
+      <div class="eyebrow">Analizator Ściany Świątyni</div>
+      <h2>Sześć autentycznych inskrypcji, krok po kroku</h2>
+      <p>Kliknij dowolny wykuty znak, aby poznać jego kod Gardinera i rolę w zapisie. Przełącz kierunek czytania: Egipcjanie pisali w obie strony, a znaki zawsze „patrzą” w stronę początku tekstu. Na końcu każdej ściany czeka zagadka.</p>
+    </div>
+  </div>
+  <div class="picker" id="picker" role="tablist" aria-label="Inskrypcje"></div>
+  <div class="wall-layout">
+    <div>
+      <div class="stone">
+        <div class="cap">
+          <div><h3 id="ins-title"></h3><div class="site" id="ins-site"></div></div>
+          <div class="dirtog" role="group" aria-label="Kierunek czytania">
+            <button id="dir-ltr" aria-pressed="true">L → P</button>
+            <button id="dir-rtl" aria-pressed="false">P → L</button>
+          </div>
+        </div>
+        <div class="relief" id="relief" data-dir="ltr"></div>
+        <div class="readout">
+          <div class="eyebrow">Transliteracja</div>
+          <div class="tr" id="ins-tr"></div>
+          <div class="eyebrow" style="margin-top:4px">Tłumaczenie</div>
+          <div class="pl" id="ins-pl"></div>
+        </div>
+        <div class="steps">
+          <button class="btn" id="step-prev">◂ Wstecz</button>
+          <button class="btn primary" id="step-next">Następny znak ▸</button>
+          <div class="progress"><i id="step-bar"></i></div>
+          <span class="muted" id="step-count" style="font-variant-numeric:tabular-nums"></span>
+        </div>
+      </div>
+      <div class="riddle" id="riddle"></div>
+    </div>
+    <aside class="scribe" id="scribe" aria-live="polite"></aside>
+  </div>
+</section>
+
+<!-- ============ SALA II ============ -->
+<section class="hall" id="hall-znaki">
+  <div class="intro">
+    <div>
+      <div class="eyebrow">Interaktywna Baza Znaków Gardinera</div>
+      <h2>Katalog znaków ze ścian świątyń</h2>
+      <p>Szukaj po tym, co przedstawia rysunek („sowa”, „chleb”, „kobra”, „sandał”), po kodzie Gardinera (G17, X1) albo po wymowie (m, t, ankh). Kliknij kartę, aby zobaczyć znak w dużym rozmiarze i w odbiciu lustrzanym.</p>
+    </div>
+  </div>
+  <div class="search">
+    <input id="q" type="search" placeholder="np. sowa, chleb, kobra, sandał, G17, ankh…" aria-label="Szukaj znaku">
+    <div class="chips" id="chips" role="group" aria-label="Rodzaj znaku">
+      <button data-typ="" aria-pressed="true">Wszystkie</button>
+      <button data-typ="uni" aria-pressed="false">Jednoliterowe</button>
+      <button data-typ="bi" aria-pressed="false">Dwuliterowe</button>
+      <button data-typ="tri" aria-pressed="false">Trzyliterowe</button>
+      <button data-typ="ideo" aria-pressed="false">Ideogramy</button>
+      <button data-typ="det" aria-pressed="false">Determinatywy</button>
+    </div>
+  </div>
+  <div class="count" id="count"></div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<!-- ============ DZIEDZINIEC ============ -->
+<section class="hall" id="hall-trening">
+  <div class="intro">
+    <div>
+      <div class="eyebrow">Strefa Treningu i Zabawy</div>
+      <h2>Trzy ćwiczenia ucznia Domu Życia</h2>
+      <p>Ułóż rozbite bloki inskrypcji we właściwej kolejności, zdobądź rangę skryby w szybkim quizie i zapisz dowolne imię w królewskim kartuszu.</p>
+    </div>
+  </div>
+  <div class="games" role="tablist" aria-label="Gry">
+    <button role="tab" data-game="puzzle" aria-selected="true"><span class="sg">𓊌</span><span class="t">Układanka bloków kamiennych</span><span class="d">Odbuduj rozbitą inskrypcję z sześciu ścian.</span></button>
+    <button role="tab" data-game="quiz" aria-selected="false"><span class="sg">𓏞</span><span class="t">Szybki quiz znaków</span><span class="d">10 pytań, czas się liczy. Awansuj od ucznia do kapłana-lektora.</span></button>
+    <button role="tab" data-game="cart" aria-selected="false"><span class="sg">𓍷</span><span class="t">Generator Królewskiego Kartusza</span><span class="d">Zapisz swoje imię znakami fonetycznymi.</span></button>
+  </div>
+
+  <div class="game active" id="game-puzzle"><div class="board">
+    <div class="row" style="justify-content:space-between">
+      <div><div class="eyebrow">Inskrypcja do odbudowy</div><h3 id="pz-title"></h3></div>
+      <div class="row"><button class="btn" id="pz-hint">Podpowiedź</button><button class="btn" id="pz-new">Inna ściana</button></div>
+    </div>
+    <p class="muted" id="pz-goal"></p>
+    <div class="eyebrow">Ściana (ułóż tutaj, od lewej do prawej)</div>
+    <div class="blocks target" id="pz-target"></div>
+    <div class="eyebrow">Rozbite bloki (kliknij, aby wmurować)</div>
+    <div class="blocks" id="pz-pool"></div>
+    <div class="row"><button class="btn primary" id="pz-check">Sprawdź ścianę</button><button class="btn ghost" id="pz-reset">Zacznij od nowa</button><span class="status" id="pz-status"></span></div>
+    <div class="note" id="pz-hintbox" hidden></div>
+  </div></div>
+
+  <div class="game" id="game-quiz"><div class="board" id="quiz-board"></div></div>
+
+  <div class="game" id="game-cart"><div class="board">
+    <div class="gen">
+      <div style="display:grid;gap:14px">
+        <label>Imię do zapisania<input type="text" id="cg-name" value="Kleopatra" maxlength="24" autocomplete="off"></label>
+        <label>Determinatyw osoby
+          <div class="seg" role="group"><button data-det="" aria-pressed="false">brak</button><button data-det="A1" aria-pressed="false">𓀀 mężczyzna</button><button data-det="B1" aria-pressed="true">𓁐 kobieta</button></div>
+        </label>
+        <label>Układ kartusza
+          <div class="seg" role="group"><button data-ori="h" aria-pressed="true">poziomy</button><button data-ori="v" aria-pressed="false">pionowy</button></div>
+        </label>
+        <label>Formuła po kartuszu
+          <div class="seg" role="group"><button data-tail="" aria-pressed="false">brak</button><button data-tail="di" aria-pressed="true">𓏙𓋹 „obdarzony życiem”</button><button data-tail="full" aria-pressed="false">𓋹𓊽𓌀 „życie, trwałość, władza”</button></div>
+        </label>
+        <div class="note" id="cg-note"></div>
+      </div>
+      <div style="display:grid;gap:12px">
+        <div class="cartout" id="cg-out"></div>
+        <div class="eyebrow">Jak czytać</div>
+        <div class="tr" id="cg-tr"></div>
+        <div class="eyebrow">Litera → znak</div>
+        <div class="map" id="cg-map"></div>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<footer>
+  <div>Kody znaków według listy Alana Gardinera (<i>Egyptian Grammar</i>, 1927). Transliteracja w konwencji egiptologicznej: <span class="tr">ꜣ ꜥ ḥ ḫ ẖ š ḳ ṯ ḏ</span>. Znaki renderowane fontem Noto Sans Egyptian Hieroglyphs (Unicode 13000–1342F).</div>
+  <div>Formuły i tytulatury pochodzą z autentycznych tekstów: Karnak, Abu Simbel, Ramesseum, Abydos (świątynia Setiego I), grobowiec Tutanchamona (KV62) oraz stele ofiarne Średniego Państwa.</div>
+</footer>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<div class="detail" id="detail" role="dialog" aria-modal="true" aria-label="Szczegóły znaku"><button class="close" id="detail-close" aria-label="Zamknij">✕</button><div class="inner" id="detail-inner"></div></div>
+<script>
+/* ===================== BAZA ZNAKÓW ===================== */
+// typ: uni (jednoliterowy), bi (dwuliterowy), tri (trzyliterowy), ideo (ideogram), det (determinatyw)
+const SIGNS = [
+ // --- alfabet 24 znaków jednoliterowych (+ warianty) ---
+ {c:'G1',g:'𓄿',t:'ꜣ',typ:'uni',pl:'sęp egipski',snd:'„a” (głębokie, zapisywane 3 / ꜣ)',mean:'',kw:'ptak sęp alef a'},
+ {c:'M17',g:'𓇋',t:'i / j',typ:'uni',pl:'kwitnąca trzcina',snd:'„i”, na początku słowa też „j”',mean:'',kw:'trzcina roślina i j'},
+ {c:'M17A',g:'𓇌',t:'y',typ:'uni',pl:'dwie trzciny',snd:'„y” / „ij”',mean:'',kw:'trzciny podwójne y'},
+ {c:'Z4',g:'𓏭',t:'y',typ:'uni',pl:'dwie ukośne kreski',snd:'„y”; częsta końcówka przymiotników',mean:'',kw:'kreski ukośne y'},
+ {c:'D36',g:'𓂝',t:'ꜥ',typ:'uni',pl:'przedramię z dłonią',snd:'gardłowe ajin; umownie czytane „a”',mean:'jako ideogram: ramię, ꜥ',kw:'ramię ręka przedramię ajin a'},
+ {c:'G43',g:'𓅱',t:'w',typ:'uni',pl:'pisklę przepiórki',snd:'„u” lub „w”',mean:'',kw:'ptak pisklę przepiórka kurczak u w'},
+ {c:'D58',g:'𓃀',t:'b',typ:'uni',pl:'noga (stopa z golenią)',snd:'„b”',mean:'',kw:'noga stopa b'},
+ {c:'Q3',g:'𓊪',t:'p',typ:'uni',pl:'stołek lub mata z trzciny',snd:'„p”',mean:'',kw:'stołek mata taboret p'},
+ {c:'I9',g:'𓆑',t:'f',typ:'uni',pl:'żmija rogata',snd:'„f”',mean:'jako ideogram: on, jego (=f)',kw:'żmija wąż rogata f'},
+ {c:'G17',g:'𓅓',t:'m',typ:'uni',pl:'sowa',snd:'„m”',mean:'także przyimek „w, z, jako”',kw:'sowa ptak m'},
+ {c:'N35',g:'𓈖',t:'n',typ:'uni',pl:'fala wody',snd:'„n”',mean:'także przyimek „dla, do”',kw:'woda fala zygzak n'},
+ {c:'D21',g:'𓂋',t:'r',typ:'uni',pl:'usta',snd:'„r”',mean:'także przyimek „do, przy”',kw:'usta wargi r'},
+ {c:'O4',g:'𓉔',t:'h',typ:'uni',pl:'zagroda / szałas z trzciny (plan)',snd:'„h” (jak w „hak”)',mean:'',kw:'zagroda dziedziniec szałas plan h'},
+ {c:'V28',g:'𓎛',t:'ḥ',typ:'uni',pl:'skręcony knot lnu',snd:'„h” mocne, chrapliwe',mean:'',kw:'knot lina sznur h'},
+ {c:'Aa1',g:'𓐍',t:'ḫ',typ:'uni',pl:'sito (dawniej: łożysko)',snd:'„ch” (jak w „chleb”)',mean:'',kw:'sito łożysko koło ch'},
+ {c:'F32',g:'𓄡',t:'ẖ',typ:'uni',pl:'brzuch zwierzęcia z ogonem i sutkami',snd:'„ch” miękkie (jak niem. „ich”)',mean:'',kw:'brzuch zwierzę ogon ch'},
+ {c:'O34',g:'𓊃',t:'z / s',typ:'uni',pl:'rygiel drzwi',snd:'„z”, później „s”',mean:'',kw:'rygiel zasuwa drzwi z s'},
+ {c:'S29',g:'𓋴',t:'s',typ:'uni',pl:'złożone płótno',snd:'„s”',mean:'',kw:'płótno tkanina złożone s'},
+ {c:'N37',g:'𓈙',t:'š',typ:'uni',pl:'sadzawka (basen ogrodowy)',snd:'„sz”',mean:'',kw:'sadzawka basen staw sz'},
+ {c:'N29',g:'𓈎',t:'ḳ / q',typ:'uni',pl:'zbocze piaszczystego wzgórza',snd:'„k” tylne (jak arabskie q)',mean:'',kw:'wzgórze zbocze piasek k q'},
+ {c:'V31',g:'𓎡',t:'k',typ:'uni',pl:'kosz z uchwytem',snd:'„k”',mean:'także zaimek „ty, twój” (=k)',kw:'kosz koszyk uchwyt k'},
+ {c:'W11',g:'𓎼',t:'g',typ:'uni',pl:'stojak na dzban',snd:'„g”',mean:'',kw:'stojak dzban podstawka g'},
+ {c:'X1',g:'𓏏',t:'t',typ:'uni',pl:'bochenek chleba',snd:'„t”',mean:'końcówka rodzaju żeńskiego',kw:'chleb bochenek bułka t'},
+ {c:'V13',g:'𓍿',t:'ṯ',typ:'uni',pl:'pętla do krępowania zwierząt',snd:'„cz”',mean:'',kw:'pętla lina sznur cz'},
+ {c:'D46',g:'𓂧',t:'d',typ:'uni',pl:'dłoń',snd:'„d”',mean:'',kw:'dłoń ręka d'},
+ {c:'I10',g:'𓆓',t:'ḏ',typ:'uni',pl:'kobra',snd:'„dż”',mean:'',kw:'kobra wąż dż'},
+ // --- dwuliterowe ---
+ {c:'R11',g:'𓊽',t:'ḏd',typ:'bi',pl:'filar dżed (wiązka trzcin / kręgosłup Ozyrysa)',snd:'„dżed”',mean:'trwałość, stałość',kw:'filar kolumna dżed kręgosłup trwałość'},
+ {c:'W19',g:'𓏇',t:'mi',typ:'bi',pl:'dzban na mleko w siatce',snd:'„mi”',mean:'„jak, tak jak”',kw:'dzban mleko siatka jak'},
+ {c:'Y5',g:'𓏠',t:'mn',typ:'bi',pl:'plansza do gry senet',snd:'„men”',mean:'trwać; w imieniu Amona (Imn)',kw:'plansza gra senet men amon'},
+ {c:'D4',g:'𓁹',t:'ir',typ:'bi',pl:'oko',snd:'„ir”',mean:'czynić, robić; w imieniu Ozyrysa',kw:'oko widzieć czynić ir'},
+ {c:'V30',g:'𓎟',t:'nb',typ:'bi',pl:'kosz bez uchwytu',snd:'„neb”',mean:'pan, władca; każdy, wszystko',kw:'kosz pan władca neb'},
+ {c:'M23',g:'𓇓',t:'sw',typ:'bi',pl:'sitowie (roślina Górnego Egiptu)',snd:'„su”',mean:'król (nsw), zaimek „on”',kw:'sitowie roślina król górny egipt su'},
+ {c:'X8',g:'𓏙',t:'di',typ:'bi',pl:'stożkowy bochenek chleba',snd:'„di”',mean:'dawać, obdarzać',kw:'chleb stożek dawać dać di'},
+ {c:'O1',g:'𓉐',t:'pr',typ:'bi',pl:'plan domu z wejściem',snd:'„per”',mean:'dom; wychodzić (pri)',kw:'dom plan budynek per'},
+ {c:'D28',g:'𓂓',t:'kꜣ',typ:'bi',pl:'dwa ramiona wzniesione w górę',snd:'„ka”',mean:'ka, siła życiowa, dusza',kw:'ramiona ręce dusza ka'},
+ {c:'G39',g:'𓅭',t:'sꜣ',typ:'bi',pl:'kaczka krzyżówka',snd:'„sa”',mean:'syn',kw:'kaczka ptak syn sa'},
+ {c:'U6',g:'𓌸',t:'mr',typ:'bi',pl:'motyka',snd:'„mer”',mean:'kochać; piramida (mr)',kw:'motyka narzędzie kochać mer'},
+ {c:'N36',g:'𓈘',t:'mr',typ:'bi',pl:'kanał nawadniający',snd:'„mer”',mean:'kochać (ukochany); kanał',kw:'kanał woda kochać mer'},
+ {c:'F31',g:'𓄟',t:'ms',typ:'bi',pl:'trzy skóry lisów związane razem',snd:'„mes”',mean:'rodzić (msi); „zrodzony przez”',kw:'skóry lisy rodzić mes'},
+ {c:'D2',g:'𓁷',t:'ḥr',typ:'bi',pl:'twarz widziana z przodu',snd:'„her”',mean:'twarz; „na, nad”',kw:'twarz głowa her'},
+ {c:'E34',g:'𓃹',t:'wn',typ:'bi',pl:'zając pustynny',snd:'„un”',mean:'istnieć, otwierać',kw:'zając królik un istnieć'},
+ {c:'G36',g:'𓅨',t:'wr',typ:'bi',pl:'jaskółka',snd:'„ur”',mean:'wielki',kw:'jaskółka ptak wielki ur'},
+ {c:'Q1',g:'𓊨',t:'st',typ:'bi',pl:'tron (siedzisko)',snd:'„set”',mean:'miejsce, tron; w imionach Izydy i Ozyrysa',kw:'tron siedzisko krzesło miejsce izyda ozyrys'},
+ {c:'P8',g:'𓊤',t:'ḫrw',typ:'tri',pl:'wiosło',snd:'„cheru”',mean:'głos',kw:'wiosło głos cheru'},
+ {c:'Aa11',g:'𓐙',t:'mꜣꜥ',typ:'tri',pl:'cokół / podstawa posągu',snd:'„maa”',mean:'prawdziwy, sprawiedliwy (Maat)',kw:'cokół podstawa prawda maat'},
+ {c:'U23',g:'𓍋',t:'ꜣb',typ:'bi',pl:'dłuto',snd:'„ab”',mean:'w nazwie Abydos (Ꜣbḏw)',kw:'dłuto narzędzie abydos ab'},
+ {c:'N26',g:'𓈋',t:'ḏw',typ:'bi',pl:'dwa wzgórza (góra)',snd:'„dżu”',mean:'góra; zły (ḏw)',kw:'góra wzgórza pustynia dżu'},
+ {c:'W24',g:'𓏌',t:'nw',typ:'bi',pl:'okrągłe naczynie',snd:'„nu”',mean:'',kw:'naczynie garnek dzbanek nu'},
+ {c:'N28',g:'𓈍',t:'ḫꜥ',typ:'bi',pl:'słońce wschodzące nad wzgórzem',snd:'„cha”',mean:'pojawiać się, jaśnieć; wschodzić',kw:'słońce wzgórze wschód jaśnieć cha'},
+ {c:'F39',g:'𓄪',t:'imꜣḫ',typ:'tri',pl:'kręgosłup z rdzeniem',snd:'„imach”',mean:'czczony, godny szacunku (o zmarłym)',kw:'kręgosłup rdzeń czczony imach'},
+ {c:'U21',g:'𓍉',t:'stp',typ:'tri',pl:'ciosło / strug stolarski',snd:'„setep”',mean:'wybierać; wybrany',kw:'ciosło strug narzędzie wybrany setep'},
+ {c:'F12',g:'𓄊',t:'wsr',typ:'tri',pl:'głowa i szyja szakala (psa) na drążku',snd:'„user”',mean:'potężny, silny',kw:'szakal pies głowa potężny user'},
+ {c:'M3',g:'𓆱',t:'ḫt',typ:'bi',pl:'gałąź drzewa',snd:'„chet”',mean:'drewno; rzecz (w nḫt „silny”)',kw:'gałąź drewno patyk chet'},
+ {c:'T3',g:'𓌉',t:'ḥḏ',typ:'bi',pl:'buława z gruszkowatą głowicą',snd:'„hedż”',mean:'biały, jasny; srebro',kw:'buława maczuga biały srebro hedż'},
+ {c:'H6',g:'𓆄',t:'šw',typ:'bi',pl:'pióro strusie',snd:'„szu”',mean:'Maat (prawda), Szu; pusty',kw:'pióro strusie maat prawda szu'},
+ {c:'S12',g:'𓋞',t:'nbw',typ:'tri',pl:'naszyjnik z paciorków (kołnierz)',snd:'„nebu”',mean:'złoto',kw:'naszyjnik kołnierz złoto nebu'},
+ {c:'L2',g:'𓆤',t:'bit',typ:'bi',pl:'pszczoła',snd:'„bit”',mean:'król Dolnego Egiptu (bity); miód',kw:'pszczoła owad miód dolny egipt król'},
+ {c:'R4',g:'𓊵',t:'ḥtp',typ:'tri',pl:'bochenek chleba na macie ofiarnej',snd:'„hotep”',mean:'ofiara; być zadowolonym, spokój',kw:'ofiara mata chleb hotep pokój'},
+ {c:'G25',g:'𓅜',t:'ꜣḫ',typ:'bi',pl:'ibis czubaty',snd:'„ach”',mean:'ach – duch przemieniony; pożyteczny',kw:'ibis ptak duch ach'},
+ // --- trzyliterowe ---
+ {c:'S34',g:'𓋹',t:'ꜥnḫ',typ:'tri',pl:'pętla sandała (rzemień)',snd:'„anch”',mean:'życie, żyć',kw:'sandał pętla krzyż życie anch ankh'},
+ {c:'S40',g:'𓌀',t:'wꜣs',typ:'tri',pl:'berło uas z głową zwierzęcia (Seta)',snd:'„uas”',mean:'władza, panowanie; Teby (Wꜣst)',kw:'berło laska władza uas was teby'},
+ {c:'L1',g:'𓆣',t:'ḫpr',typ:'tri',pl:'skarabeusz (żuk gnojarz)',snd:'„cheper”',mean:'stawać się, przemiana; Chepri',kw:'skarabeusz żuk chrząszcz cheper przemiana'},
+ {c:'F35',g:'𓄤',t:'nfr',typ:'tri',pl:'serce z tchawicą',snd:'„nefer”',mean:'piękny, dobry, doskonały',kw:'serce tchawica piękny dobry nefer'},
+ {c:'S38',g:'𓋾',t:'ḥḳꜣ',typ:'tri',pl:'laska pasterska (kij z zakrzywioną rączką)',snd:'„heka”',mean:'władca, rządzić',kw:'laska pasterska kij władca heka'},
+ {c:'R8',g:'𓊹',t:'nṯr',typ:'tri',pl:'proporzec na drążku (sztandar kultowy)',snd:'„neczer”',mean:'bóg',kw:'proporzec sztandar flaga bóg neczer'},
+ {c:'N14',g:'𓇼',t:'sbꜣ / dwꜣ',typ:'tri',pl:'gwiazda pięcioramienna',snd:'„seba” / „dua”',mean:'gwiazda; uczyć; wielbić, poranek',kw:'gwiazda seba dua uczyć'},
+ {c:'M4',g:'𓆳',t:'rnp',typ:'tri',pl:'gałązka palmy z nacięciami',snd:'„renep”',mean:'rok (rnpt); młody',kw:'palma gałązka rok renep'},
+ {c:'D40',g:'𓂡',t:'nḫt',typ:'det',pl:'ramię trzymające kij',snd:'',mean:'determinatyw siły, wysiłku, przemocy',kw:'ramię kij siła uderzać'},
+ {c:'O29',g:'𓉻',t:'ꜥꜣ',typ:'bi',pl:'drewniana kolumna (pozioma)',snd:'„aa”',mean:'wielki',kw:'kolumna drewno wielki aa'},
+ // --- ideogramy ---
+ {c:'N5',g:'𓇳',t:'rꜥ',typ:'ideo',pl:'tarcza słoneczna',snd:'„ra”',mean:'słońce, dzień; bóg Ra',kw:'słońce tarcza dzień ra'},
+ {c:'N1',g:'𓇯',t:'pt',typ:'ideo',pl:'niebo (sklepienie)',snd:'„pet”',mean:'niebo',kw:'niebo sklepienie pet'},
+ {c:'N16',g:'𓇾',t:'tꜣ',typ:'ideo',pl:'płaska ziemia z ziarnami piasku',snd:'„ta”',mean:'ziemia, kraj; podwojony: Oba Kraje (tꜣwy)',kw:'ziemia kraj piasek ta'},
+ {c:'N17',g:'𓇿',t:'tꜣ',typ:'ideo',pl:'płaska ziemia (wariant)',snd:'„ta”',mean:'ziemia; determinatyw w ḏt „wieczność”',kw:'ziemia kraj ta wieczność'},
+ {c:'O49',g:'𓊖',t:'niwt',typ:'ideo',pl:'plan osady ze skrzyżowaniem ulic',snd:'„niut”',mean:'miasto; determinatyw nazw miejscowości',kw:'miasto osada plan ulice niut'},
+ {c:'E1',g:'𓃒',t:'kꜣ',typ:'ideo',pl:'byk',snd:'„ka”',mean:'byk, wół',kw:'byk wół krowa bydło ka'},
+ {c:'F1',g:'𓃾',t:'kꜣ',typ:'ideo',pl:'głowa wołu',snd:'„ka”',mean:'wół; w listach ofiar: woły',kw:'głowa wół byk rogi ka'},
+ {c:'H1',g:'𓅿',t:'ꜣpd',typ:'ideo',pl:'głowa kaczki (ptaka)',snd:'„aped”',mean:'ptactwo, drób',kw:'głowa kaczka ptak drób'},
+ {c:'X2',g:'𓏐',t:'t',typ:'ideo',pl:'bochenek chleba (wysoki)',snd:'„t” / „ta”',mean:'chleb (jako ofiara)',kw:'chleb bochenek ofiara'},
+ {c:'W22',g:'𓏊',t:'ḥnḳt',typ:'ideo',pl:'dzban na piwo',snd:'„henket”',mean:'piwo',kw:'dzban piwo naczynie henket'},
+ {c:'O28',g:'𓉺',t:'iwn',typ:'ideo',pl:'kolumna z kapitelem tenonowym',snd:'„iun”',mean:'kolumna; Iwnw – Heliopolis',kw:'kolumna filar heliopolis iun'},
+ {c:'M26',g:'𓇗',t:'šmꜥ',typ:'ideo',pl:'kwitnące sitowie',snd:'„szema”',mean:'Górny Egipt (Šmꜥw)',kw:'sitowie roślina górny egipt szema'},
+ {c:'C10',g:'𓁦',t:'Mꜣꜥt',typ:'ideo',pl:'siedząca bogini z piórem na głowie',snd:'„Maat”',mean:'bogini Maat – prawda, ład',kw:'bogini pióro maat prawda ład'},
+ {c:'G5',g:'𓅃',t:'Ḥr',typ:'ideo',pl:'sokół',snd:'„Hor”',mean:'bóg Horus; otwiera imię horusowe króla',kw:'sokół ptak horus hor'},
+ {c:'G26',g:'𓅝',t:'Ḏḥwty',typ:'ideo',pl:'ibis na drążku',snd:'„Dżehuti”',mean:'bóg Thot',kw:'ibis ptak thot dżehuti'},
+ {c:'I12',g:'𓆗',t:'',typ:'det',pl:'wyprężona kobra (ureusz)',snd:'',mean:'determinatyw bogini',kw:'kobra ureusz bogini'},
+ {c:'M12',g:'𓆼',t:'ḫꜣ',typ:'ideo',pl:'łodyga lotosu z liściem',snd:'„cha”',mean:'liczba 1000',kw:'lotos łodyga tysiąc 1000 liczba'},
+ {c:'V10',g:'𓍷',t:'šnw',typ:'ideo',pl:'kartusz (pętla liny szen)',snd:'„szenu”',mean:'otacza imię króla: „to, co okrąża słońce”',kw:'kartusz lina pętla imię król szen'},
+ {c:'O6',g:'𓉗',t:'ḥwt',typ:'ideo',pl:'plan ogrodzonego budynku',snd:'„hut”',mean:'świątynia, pałac, posiadłość',kw:'budynek świątynia pałac plan hut'},
+ {c:'D10',g:'𓂀',t:'wḏꜣt',typ:'ideo',pl:'oko Horusa (udżat)',snd:'„udżat”',mean:'oko Horusa – całość, zdrowie, ochrona',kw:'oko horus udżat amulet'},
+ {c:'Z1',g:'𓏤',t:'',typ:'ideo',pl:'pojedyncza kreska',snd:'',mean:'kreska ideograficzna: „czytaj znak dosłownie”; liczba 1',kw:'kreska jeden 1 liczba'},
+ {c:'Z2',g:'𓏥',t:'',typ:'det',pl:'trzy kreski',snd:'',mean:'liczba mnoga (3 = „wiele”)',kw:'kreski trzy liczba mnoga'},
+ // --- determinatywy ---
+ {c:'A1',g:'𓀀',t:'',typ:'det',pl:'siedzący mężczyzna',snd:'',mean:'mężczyzna, osoba; zaimek „ja”',kw:'mężczyzna człowiek osoba siedzi ja'},
+ {c:'B1',g:'𓁐',t:'',typ:'det',pl:'siedząca kobieta',snd:'',mean:'kobieta; imiona żeńskie',kw:'kobieta osoba siedzi'},
+ {c:'A2',g:'𓀁',t:'',typ:'det',pl:'mężczyzna z dłonią przy ustach',snd:'',mean:'jeść, pić, mówić, myśleć, czuć',kw:'mężczyzna usta jeść pić mówić myśleć'},
+ {c:'A40',g:'𓀭',t:'',typ:'det',pl:'siedzący bóg z brodą',snd:'',mean:'bóg; imiona bogów i króla',kw:'bóg siedzi broda'},
+ {c:'D54',g:'𓂻',t:'',typ:'det',pl:'idące nogi',snd:'',mean:'ruch: iść, przychodzić, biec',kw:'nogi iść chodzić ruch'},
+ {c:'Y1',g:'𓏛',t:'',typ:'det',pl:'zwinięty i zapieczętowany zwój papirusu',snd:'',mean:'pojęcia abstrakcyjne: pismo, wiedza, myśl',kw:'zwój papirus księga abstrakcja pismo'},
+ {c:'N25',g:'𓈉',t:'ḫꜣst',typ:'det',pl:'trzy wzgórza (pustynia)',snd:'„chaset”',mean:'obce kraje, pustynia, góry',kw:'wzgórza pustynia góry obcy kraj'},
+ {c:'N33',g:'𓈒',t:'',typ:'det',pl:'ziarno piasku / grudka',snd:'',mean:'minerały, metale, lekarstwa, ziarno',kw:'ziarno piasek grudka minerał'},
+ {c:'A28',g:'𓀠',t:'',typ:'det',pl:'człowiek z ramionami wzniesionymi',snd:'',mean:'radość, wysokość, uniesienie',kw:'człowiek ramiona radość wysoki'},
+ {c:'A17',g:'𓀔',t:'',typ:'det',pl:'dziecko z palcem w ustach',snd:'',mean:'dziecko, młodość',kw:'dziecko palec usta młody'},
+ {c:'T14',g:'𓌙',t:'',typ:'det',pl:'kij do rzucania',snd:'',mean:'cudzoziemcy, obce ludy',kw:'kij rzucać obcy cudzoziemiec'},
+ {c:'M2',g:'𓆰',t:'ḥn',typ:'det',pl:'roślina (kwitnąca trzcina?)',snd:'',mean:'rośliny, kwiaty',kw:'roślina kwiat trawa'},
+ {c:'Q7',g:'𓊮',t:'',typ:'det',pl:'palenisko z płomieniem',snd:'',mean:'ogień, gotować, gorąco',kw:'ogień płomień palenisko gorąco'},
+ {c:'N8',g:'𓇶',t:'',typ:'det',pl:'słońce z promieniami',snd:'',mean:'blask, świecić, światło',kw:'słońce promienie blask świecić'},
+ {c:'A24',g:'𓀜',t:'',typ:'det',pl:'człowiek uderzający kijem',snd:'',mean:'siła, uderzać, nauczać',kw:'człowiek kij uderzać bić nauczać'},
+ {c:'G7',g:'𓅆',t:'',typ:'det',pl:'sokół na drążku (sztandarze)',snd:'',mean:'bóg; król (po imionach i zaimkach)',kw:'sokół drążek sztandar bóg król'},
+];
+const BY = Object.fromEntries(SIGNS.map(s=>[s.c,s]));
+const TYPN = {uni:'jednoliterowy',bi:'dwuliterowy',tri:'trzyliterowy',ideo:'ideogram',det:'determinatyw'};
+const ROLE = {fon:'fonogram',ideo:'ideogram',det:'determinatyw',komp:'dopełnienie fonetyczne',log:'logogram'};
+
+/* ===================== INSKRYPCJE ===================== */
+// grupa: s = kody znaków, col = układ pionowy, tr = transliteracja, pl = znaczenie, fn = funkcja, note = objaśnienie kroku, cart = id kartusza
+const INSCRIPTIONS = [
+ {id:'formula', num:'I', title:'Formuła „Obdarzony życiem, trwałością i władzą”',
+  site:'Zakończenie tytulatury królewskiej na ścianach świątyń (m.in. Karnak, Luksor, Medinet Habu)',
+  tr:'dỉ ꜥnḫ ḏd wꜣs mỉ Rꜥ ḏt', pl:'Obdarzony życiem, trwałością i władzą jak Ra, na wieki.',
+  about:'To najczęstsza formuła dobrodziejstw po imieniu króla. Znajdziesz ją na niemal każdym murze świątynnym Nowego Państwa, zwykle tuż za kartuszem.',
+  groups:[
+   {s:['X8'],tr:'dỉ',pl:'dany, obdarzony',fn:'ideo',note:'Stożkowy bochenek X8 to logogram czasownika „dawać”. Tu w formie imiesłowu: „dany, obdarzony”. Często zamiast niego rzeźbiono ramię podające chleb (D37).'},
+   {s:['S34'],tr:'ꜥnḫ',pl:'życie',fn:'ideo',note:'Anch – pętla sandała, czytany ꜥnḫ „życie”. Jeden znak zapisuje całe trzyliterowe słowo (trzyliterowy znak użyty jako ideogram).'},
+   {s:['R11'],tr:'ḏd',pl:'trwałość',fn:'ideo',note:'Filar dżed – stylizowana wiązka trzcin, później utożsamiona z kręgosłupem Ozyrysa. Oznacza stałość i trwałość.'},
+   {s:['S40'],tr:'wꜣs',pl:'władza, panowanie',fn:'ideo',note:'Berło uas z głową zwierzęcia Seta – atrybut bogów. Zapisuje słowo wꜣs „władza”. Ten sam znak pojawia się w nazwie Teb (Wꜣst), zob. ścianę VI.'},
+   {s:['W19'],tr:'mỉ',pl:'jak, tak jak',fn:'fon',note:'Dzban na mleko w siatce to dwuliterowy fonogram mi. Tu zapisuje przyimek „jak”.'},
+   {s:['N5','Z1'],col:true,tr:'Rꜥ',pl:'Ra (bóg słońca)',fn:'ideo',note:'Tarcza słoneczna z kreską ideograficzną Z1: kreska mówi „czytaj znak dosłownie” – słońce, czyli bóg Ra.'},
+   {s:['I10','X1','N17'],tr:'ḏt',pl:'wieczność',fn:'fon',note:'Kobra ḏ + chleb t dają ḏt, a płaska ziemia N17 jest determinatywem. ḏt to wieczność liniowa, „na zawsze” (inna niż cykliczna nḥḥ).'},
+  ],
+  quiz:{q:'Co dosłownie przedstawia znak wꜣs 𓌀, który czytamy jako „władza”?',
+        opts:['Berło z głową zwierzęcia Seta','Laskę pasterską z zakrzywioną rączką','Filar z wiązki trzcin','Rzemień sandała'],ans:0,
+        why:'Berło uas zwieńczone głową zwierzęcia Seta trzymali bogowie i królowie. Laska pasterska to ḥḳꜣ (S38), filar to ḏd (R11), a rzemień sandała to ꜥnḫ (S34).'}},
+
+ {id:'tut', num:'II', title:'Kartusze Tutanchamona',
+  site:'Grobowiec KV62 w Dolinie Królów; sprzęty grobowe i kaplice (ok. 1330 p.n.e.)',
+  tr:'nswt-bỉty Nb-ḫprw-Rꜥ sꜣ-Rꜥ Twt-ꜥnḫ-Ỉmn ḥḳꜣ-Ỉwnw-šmꜥ', pl:'Król Górnego i Dolnego Egiptu Nebcheperure („Pan przemian jest Ra”), Syn Ra Tutanchamon („Żywy obraz Amona”), władca Heliopolis Górnoegipskiego (Teb).',
+  about:'Król miał pięć imion, ale w kartuszach zamykano tylko dwa: imię tronowe (po tytule „Król Górnego i Dolnego Egiptu”) i imię własne (po tytule „Syn Ra”).',
+  groups:[
+   {s:['M23','X1','L2','X1'],tr:'nswt-bỉty',pl:'Król Górnego i Dolnego Egiptu',fn:'ideo',note:'Sitowie (Górny Egipt) i pszczoła (Dolny Egipt), każde z chlebem t. Dosłownie „ten od sitowia i pszczoły” – tytuł poprzedzający imię tronowe.'},
+   {s:['N5'],cart:'A',tr:'Rꜥ',pl:'Ra',fn:'ideo',note:'Imię boga Ra stoi na początku kartusza, choć czytamy je na końcu: to transpozycja honoryfikacyjna – bóg ma pierwszeństwo w zapisie.'},
+   {s:['V30'],cart:'A',tr:'nb',pl:'pan',fn:'ideo',note:'Kosz nb „pan”. Imię tronowe brzmi Nb-ḫprw-Rꜥ: „Pan przemian [jest] Ra”.'},
+   {s:['L1','Z2'],col:true,cart:'A',tr:'ḫprw',pl:'przemiany, formy',fn:'ideo',note:'Skarabeusz ḫpr „stawać się” z trzema kreskami liczby mnogiej: ḫprw „przemiany, postacie”.'},
+   {s:['G39','N5'],tr:'sꜣ Rꜥ',pl:'Syn Ra',fn:'ideo',note:'Kaczka sꜣ „syn” i słońce Ra. Tytuł wprowadzający imię własne króla, używany od IV dynastii.'},
+   {s:['M17','Y5','N35'],col:true,cart:'B',tr:'Ỉmn',pl:'Amon',fn:'fon',note:'Trzcina i + plansza mn + woda n = Imn, Amon. Znowu transpozycja honoryfikacyjna: bóg na początku, choć w wymowie imienia jest na końcu (Tut-anch-Amon).'},
+   {s:['X1','G43','X1'],cart:'B',tr:'twt',pl:'obraz, podobizna',fn:'fon',note:'Chleb t, pisklę w, chleb t: twt „obraz, podobizna”. Słowo to oznacza również „posąg”.'},
+   {s:['S34'],cart:'B',tr:'ꜥnḫ',pl:'żywy',fn:'ideo',note:'Anch – „żywy”. Całość: Twt-ꜥnḫ-Ỉmn „Żywy obraz Amona”. Wcześniej król nosił imię Tutanchaton („Żywy obraz Atona”).'},
+   {s:['S38'],cart:'B',tr:'ḥḳꜣ',pl:'władca',fn:'ideo',note:'Laska pasterska ḥḳꜣ „władca” – epitet dodawany w kartuszu.'},
+   {s:['O28'],cart:'B',tr:'Ỉwnw',pl:'Heliopolis (Iunu)',fn:'ideo',note:'Kolumna iwn zapisuje Iwnw – Heliopolis, święte miasto słońca.'},
+   {s:['M26'],cart:'B',tr:'šmꜥ',pl:'Górnego Egiptu',fn:'ideo',note:'Kwitnące sitowie šmꜥ „Górny Egipt”. „Heliopolis Górnoegipskie” to Teby – epitet łączy króla z kultem Amona tebańskiego.'},
+  ],
+  quiz:{q:'Dlaczego imię Amona 𓇋𓏠𓈖 stoi na początku kartusza, choć wymawiamy je na końcu (Tut-anch-AMON)?',
+        opts:['Imię boga ma pierwszeństwo w zapisie (transpozycja honoryfikacyjna)','Rzeźbiarz pomylił kolejność','Kartusz czyta się zawsze od końca','Amon był pierwszym tytułem króla'],ans:0,
+        why:'Egipcjanie wysuwali imiona bogów i słowo „król” na początek grupy niezależnie od wymowy. Dlatego Ra i Amon otwierają oba kartusze.'}},
+
+ {id:'ram', num:'III', title:'Kartusze Ramzesa II',
+  site:'Abu Simbel, Ramesseum, Karnak (sala hypostylowa), ok. 1279–1213 p.n.e.',
+  tr:'nswt-bỉty Wsr-mꜣꜥt-Rꜥ stp-n-Rꜥ sꜣ-Rꜥ Rꜥ-ms-sw mry-Ỉmn', pl:'Król Górnego i Dolnego Egiptu Usermaatre Setepenre („Potężna jest Maat Ra, wybrany przez Ra”), Syn Ra Ramzes („Ra go zrodził”), ukochany Amona.',
+  about:'Najczęściej powtarzane kartusze w Egipcie. Ramzes II kazał je rzeźbić głęboko, by następcy nie mogli ich łatwo usunąć.',
+  groups:[
+   {s:['M23','X1','L2','X1'],tr:'nswt-bỉty',pl:'Król Górnego i Dolnego Egiptu',fn:'ideo',note:'Tytuł „Ten od sitowia i pszczoły” – zapowiada imię tronowe.'},
+   {s:['N5'],cart:'A',tr:'Rꜥ',pl:'Ra',fn:'ideo',note:'Jedna tarcza słoneczna obsługuje oba „Ra” w imieniu Wsr-mꜣꜥt-Rꜥ stp-n-Rꜥ. Zapis oszczędny, czytany dwukrotnie.'},
+   {s:['F12'],cart:'A',tr:'wsr',pl:'potężny',fn:'ideo',note:'Głowa i szyja szakala na drążku – trzyliterowy znak wsr „potężny, silny”.'},
+   {s:['C10'],cart:'A',tr:'mꜣꜥt',pl:'Maat (prawda, ład)',fn:'ideo',note:'Siedząca bogini z piórem na głowie to Maat. „Potężna jest Maat Ra” – ład kosmiczny gwarantowany przez słońce.'},
+   {s:['U21','N35'],col:true,cart:'A',tr:'stp-n',pl:'wybrany przez',fn:'fon',note:'Ciosło stp „wybierać” i n „przez”: stp-n-Rꜥ „wybrany przez Ra” – epitet tronowy dodany po kilku latach panowania.'},
+   {s:['G39','N5'],tr:'sꜣ Rꜥ',pl:'Syn Ra',fn:'ideo',note:'Wprowadza imię własne.'},
+   {s:['M17','Y5','N35'],col:true,cart:'B',tr:'Ỉmn',pl:'Amon',fn:'fon',note:'Amon wysunięty na początek (transpozycja honoryfikacyjna). W wymowie: Ramzes mery-AMON.'},
+   {s:['N36'],cart:'B',tr:'mry',pl:'ukochany',fn:'fon',note:'Kanał nawadniający mr „kochać” – mry-Ỉmn „ukochany Amona”. W innych wersjach rzeźbiono motykę U6, która też czyta się mr.'},
+   {s:['N5'],cart:'B',tr:'Rꜥ',pl:'Ra',fn:'ideo',note:'Tu Ra naprawdę stoi na początku imienia: Rꜥ-ms-sw „Ra go zrodził”.'},
+   {s:['F31','S29'],cart:'B',tr:'ms',pl:'zrodził',fn:'fon',note:'Trzy skóry lisów ms „rodzić” z dopełnieniem fonetycznym s (złożone płótno), które powtarza ostatnią spółgłoskę.'},
+   {s:['M23'],cart:'B',tr:'sw',pl:'go (jego)',fn:'fon',note:'Sitowie sw – zaimek „on, go”. Rꜥ-ms-sw: „Ra go zrodził”. Stąd greckie „Ramesses”.'},
+  ],
+  quiz:{q:'Znak ms 𓄟 w imieniu Ramzesa przedstawia…',
+        opts:['Trzy skóry lisów związane razem','Wiązkę zboża','Trzy strusie pióra','Sieć rybacką'],ans:0,
+        why:'F31 to trzy skóry lisów (lub lisie ogony) związane u góry – znak czytany ms „rodzić”. Stąd imiona Ra-mes-su, Thot-mes, Ah-mes.'}},
+
+ {id:'htp', num:'IV', title:'Wielka Formuła Ofiarna (ḥtp-dỉ-nswt)',
+  site:'Stele i ściany grobowców (Abydos, Teby, Sakkara), od Starego Państwa po epokę grecko-rzymską',
+  tr:'ḥtp-dỉ-nswt Wsỉr nb Ḏdw nṯr ꜥꜣ nb Ꜣbḏw dỉ=f prt-ḫrw t ḥnḳt kꜣw ꜣpdw n kꜣ n ỉmꜣḫy Ỉntf mꜣꜥ-ḫrw',
+  pl:'Ofiara, którą daje król [oraz] Ozyrys, pan Dżedu, wielki bóg, pan Abydos: aby dał on ofiarę inwokacyjną – chleb, piwo, woły i ptactwo – dla ka czczonego Antefa, usprawiedliwionego.',
+  about:'Formuła, dzięki której zmarły otrzymywał pokarm w zaświatach. Każdy, kto ją odczytał na stelli, „karmił” zmarłego – dlatego warto ją znać.',
+  groups:[
+   {s:['M23','X8','R4'],tr:'ḥtp-dỉ-nswt',pl:'ofiara, którą daje król',fn:'ideo',note:'Zapis: sitowie (król), chleb di (dawać), mata z chlebem ḥtp (ofiara). Czytamy odwrotnie: ḥtp-dỉ-nswt. Słowo „król” wysunięto na początek z szacunku.'},
+   {s:['Q1','D4','A40'],tr:'Wsỉr',pl:'Ozyrys',fn:'fon',note:'Tron st + oko ir = Wsir, Ozyrys. Siedzący bóg A40 to determinatyw bóstwa.'},
+   {s:['V30'],tr:'nb',pl:'pan',fn:'ideo',note:'Kosz nb „pan”.'},
+   {s:['R11','R11','G43','O49'],tr:'Ḏdw',pl:'Dżedu (Busiris)',fn:'fon',note:'Dwa filary dżed + pisklę w: Ḏdw, miasto Ozyrysa w Delcie. Plan osady O49 to determinatyw nazw miast.'},
+   {s:['R8','O29'],tr:'nṯr ꜥꜣ',pl:'wielki bóg',fn:'ideo',note:'Proporzec nṯr „bóg” i drewniana kolumna ꜥꜣ „wielki”.'},
+   {s:['V30'],tr:'nb',pl:'pan',fn:'ideo',note:'Drugi epitet: pan Abydos.'},
+   {s:['U23','D58','N26','O49'],tr:'Ꜣbḏw',pl:'Abydos',fn:'fon',note:'Dłuto ꜣb + noga b (dopełnienie) + góra ḏw + determinatyw miasta. Abydos – główne sanktuarium Ozyrysa.'},
+   {s:['X8','I9'],tr:'dỉ=f',pl:'aby dał on',fn:'fon',note:'Chleb di „dawać” i żmija f „on”: „aby dał on” (forma życzeniowa).'},
+   {s:['O1','D21','X1','P8'],tr:'prt-ḫrw',pl:'ofiara inwokacyjna',fn:'fon',note:'Dom pr + usta r + chleb t + wiosło ḫrw „głos”: prt-ḫrw, dosłownie „wyjście głosu” – ofiara wywołana samym wypowiedzeniem formuły.'},
+   {s:['X2','W22'],tr:'t ḥnḳt',pl:'chleb i piwo',fn:'ideo',note:'Wysoki bochenek t „chleb” i dzban ḥnḳt „piwo” – podstawowy pokarm Egipcjan i zmarłych.'},
+   {s:['F1','H1'],tr:'kꜣw ꜣpdw',pl:'woły i ptactwo',fn:'ideo',note:'Głowa wołu kꜣ i głowa kaczki ꜣpd – skróty ideograficzne listy ofiar.'},
+   {s:['N35','D28','N35'],tr:'n kꜣ n',pl:'dla ka (duszy)',fn:'fon',note:'Woda n „dla” + wzniesione ramiona kꜣ „ka, siła życiowa” + n „(należącego) do”.'},
+   {s:['M17','F39','Aa1','Z4'],tr:'ỉmꜣḫy',pl:'czczonego',fn:'fon',note:'Trzcina i + kręgosłup imꜣḫ + sito ḫ (dopełnienie) + kreski y: imꜣḫy „czczony, godny szacunku” – standardowy tytuł zmarłego.'},
+   {s:['M17','N35','X1','I9'],tr:'Ỉntf',pl:'Antef (Intef)',fn:'fon',note:'Imię zmarłego zapisane literami: i-n-t-f. Antef (Intef) to popularne imię Średniego Państwa, noszone też przez królów XI dynastii.'},
+   {s:['Aa11','P8'],tr:'mꜣꜥ-ḫrw',pl:'usprawiedliwiony (głosem)',fn:'ideo',note:'Cokół mꜣꜥ „prawdziwy” i wiosło ḫrw „głos”: mꜣꜥ-ḫrw „prawdziwy głosem” – epitet zmarłego, który pomyślnie przeszedł sąd Ozyrysa.'},
+  ],
+  quiz:{q:'Co oznacza znak 𓊖 na końcu nazw Dżedu i Abydos?',
+        opts:['Determinatyw „miasto, osada”','Fonogram „w”','Słońce nad horyzontem','Znak liczby mnogiej'],ans:0,
+        why:'O49 to plan osady ze skrzyżowaniem ulic. Nie czyta się go, tylko sygnalizuje, że poprzedzające znaki tworzą nazwę miejscowości.'}},
+
+ {id:'karnak', num:'V', title:'Inskrypcja dedykacyjna z Karnaku',
+  site:'Świątynia Amona-Ra w Karnaku – architrawy, pylony i bazy posągów (Nowe Państwo)',
+  tr:'ỉr.n=f m mnw=f n ỉt=f Ỉmn-Rꜥ nb nswt tꜣwy', pl:'Uczynił on [to] jako swój pomnik dla ojca swego Amona-Ra, pana tronów Obu Krajów.',
+  about:'Standardowa formuła dedykacyjna: król „czyni pomnik” dla boga-ojca. Jej fragmenty powtarzają się na architrawach wszystkich wielkich świątyń.',
+  groups:[
+   {s:['D4','N35','I9'],tr:'ỉr.n=f',pl:'uczynił on',fn:'fon',note:'Oko ir „czynić”, woda n (wykładnik czasu przeszłego) i żmija f „on”. Podmiot to król, nazwany wcześniej w tytulaturze.'},
+   {s:['G17'],tr:'m',pl:'jako',fn:'fon',note:'Sowa m – przyimek „jako, w charakterze”.'},
+   {s:['Y5','N35','W24','G43','I9'],tr:'mnw=f',pl:'pomnik swój',fn:'fon',note:'Plansza mn + n + naczynie nw + pisklę w = mnw „pomnik, dzieło”; żmija f „jego”.'},
+   {s:['N35'],tr:'n',pl:'dla',fn:'fon',note:'Woda n jako przyimek „dla”.'},
+   {s:['M17','X1','I9'],tr:'ỉt=f',pl:'ojca swego',fn:'fon',note:'Trzcina i + chleb t = it „ojciec”, żmija f „jego”. Bóg jest „ojcem” króla.'},
+   {s:['M17','Y5','N35'],col:true,tr:'Ỉmn',pl:'Amon',fn:'fon',note:'Imn „Ukryty” – główny bóg Teb, zapisany trzema fonogramami.'},
+   {s:['N5','Z1'],col:true,tr:'Rꜥ',pl:'Ra',fn:'ideo',note:'Słońce z kreską ideograficzną. Amon-Ra: połączenie boga tebańskiego z bogiem słońca, od Średniego Państwa.'},
+   {s:['V30'],tr:'nb',pl:'pan',fn:'ideo',note:'Kosz nb „pan”.'},
+   {s:['Q1','X1','Z2'],tr:'nswt',pl:'tronów',fn:'ideo',note:'Tron st z chlebem t i kreskami liczby mnogiej: nswt „trony, siedziby”. Nie mylić z nswt „król”!'},
+   {s:['N16','N16'],tr:'tꜣwy',pl:'Obu Krajów',fn:'ideo',note:'Dwa znaki ziemi tꜣ = liczba podwójna tꜣwy „Oba Kraje” (Górny i Dolny Egipt). Nb nswt tꜣwy to stały epitet Amona w Karnaku.'},
+  ],
+  quiz:{q:'Jak zapisano liczbę podwójną „Oba Kraje” (tꜣwy) w tej inskrypcji?',
+        opts:['Podwajając znak ziemi: 𓇾𓇾','Trzema kreskami 𓏥','Jedną kreską 𓏤','Dodając pisklę 𓅱'],ans:0,
+        why:'Liczbę podwójną zapisywano podwajając znak (lub dwiema kreskami), liczbę mnogą potrajając go lub dodając trzy kreski Z2.'}},
+
+ {id:'abydos', num:'VI', title:'Imię horusowe Setiego I z Abydos',
+  site:'Świątynia Setiego I w Abydos – ściany, Galeria Królów (ok. 1290–1279 p.n.e.)',
+  tr:'ꜥnḫ Ḥr Kꜣ-nḫt ḫꜥ-m-Wꜣst nswt-bỉty Mn-mꜣꜥt-Rꜥ', pl:'Niech żyje Horus: Byk Potężny, Jaśniejący w Tebach; Król Górnego i Dolnego Egiptu Menmaatre („Trwała jest Maat Ra”, Seti I).',
+  about:'Imię horusowe to najstarsze z pięciu imion króla, pisane w serechu (prostokącie z fasadą pałacu) z sokołem na szczycie. Tu w wersji linearnej z ściany.',
+  groups:[
+   {s:['S34'],tr:'ꜥnḫ',pl:'niech żyje',fn:'ideo',note:'Anch otwiera tytulaturę: „Niech żyje…” – życzenie dla króla.'},
+   {s:['G5'],tr:'Ḥr',pl:'Horus',fn:'ideo',note:'Sokół – bóg Horus. Każdy król był wcieleniem Horusa na ziemi, stąd „imię horusowe”.'},
+   {s:['E1'],tr:'kꜣ',pl:'byk',fn:'ideo',note:'Byk kꜣ – od Nowego Państwa niemal każdy faraon jest w imieniu horusowym „Bykiem Potężnym” (Kꜣ-nḫt).'},
+   {s:['N35','M3','X1','D40'],tr:'nḫt',pl:'potężny, zwycięski',fn:'fon',note:'n + gałąź ḫt + chleb t: nḫt „silny”. Ramię z kijem D40 to determinatyw siły.'},
+   {s:['N28','D36'],tr:'ḫꜥ',pl:'jaśniejący, ukazujący się',fn:'fon',note:'Słońce wschodzące nad wzgórzem ḫꜥ „ukazywać się w blasku” z dopełnieniem fonetycznym ꜥ (ramię). Tak opisywano koronację króla.'},
+   {s:['G17'],tr:'m',pl:'w',fn:'fon',note:'Sowa m – przyimek „w”.'},
+   {s:['S40','X1','O49'],tr:'Wꜣst',pl:'Teby (Waset)',fn:'fon',note:'Berło uas + chleb t + determinatyw miasta: Wꜣst, egipska nazwa Teb – „Miasto berła”. Ten sam znak wꜣs, który w ścianie I znaczył „władza”.'},
+   {s:['M23','X1','L2','X1'],tr:'nswt-bỉty',pl:'Król Górnego i Dolnego Egiptu',fn:'ideo',note:'Sitowie i pszczoła – tytuł przed imieniem tronowym.'},
+   {s:['N5'],cart:'A',tr:'Rꜥ',pl:'Ra',fn:'ideo',note:'Ra na początku kartusza, czytany na końcu (transpozycja honoryfikacyjna).'},
+   {s:['Y5'],cart:'A',tr:'mn',pl:'trwały',fn:'fon',note:'Plansza senet mn „trwać”. Mn-mꜣꜥt-Rꜥ: „Trwała jest Maat Ra”.'},
+   {s:['C10'],cart:'A',tr:'mꜣꜥt',pl:'Maat',fn:'ideo',note:'Bogini Maat z piórem – prawda i ład. Imię tronowe Setiego I, ojca Ramzesa II.'},
+  ],
+  quiz:{q:'Nazwa Teb (Wꜣst) zawiera znak 𓌀 – ten sam, który w formule ze ściany I oznaczał…',
+        opts:['władzę (wꜣs)','życie (ꜥnḫ)','trwałość (ḏd)','prawdę (mꜣꜥt)'],ans:0,
+        why:'Berło uas czyta się wꜣs „władza”. Teby to Wꜣst – „[Miasto] berła”, a Egipcjanie często nazywali je po prostu „Miastem” (Nỉwt).'}},
+];
+
+/* ===================== NARZĘDZIA ===================== */
+const $ = s=>document.querySelector(s);
+const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const glyph=c=>(BY[c]?BY[c].g:'?');
+const glyphs=arr=>arr.map(glyph).join('');
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+// zamienia 𓅓 w tekstach zagadek na glif w <span class="hiero">
+const inl=s=>esc(s).replace(/\{([A-Z][a-z]?\d+[A-Z]?)\}/g,(m,c)=>`<span class="hiero">${glyph(c)}</span>`);
+
+/* ===================== SALE (zakładki) ===================== */
+const HALLS=['sciana','znaki','trening'];
+function showHall(h){
+  if(!HALLS.includes(h))h='sciana';
+  document.querySelectorAll('nav.halls button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.hall===h)));
+  document.querySelectorAll('section.hall').forEach(s=>s.classList.toggle('active',s.id==='hall-'+h));
+  try{history.replaceState(null,'','#'+h);}catch(e){}
+}
+document.querySelectorAll('nav.halls button').forEach(b=>b.addEventListener('click',()=>showHall(b.dataset.hall)));
+
+/* ===================== SALA I: ANALIZATOR ===================== */
+let curIns=0, curStep=-1, dir='ltr';
+function renderPicker(){
+  const p=$('#picker');p.innerHTML='';
+  INSCRIPTIONS.forEach((ins,i)=>{
+    const b=el('button','',`<span class="num">${ins.num}</span><span>${esc(ins.title)}</span>`);
+    b.setAttribute('role','tab');b.setAttribute('aria-selected',String(i===curIns));
+    b.addEventListener('click',()=>{curIns=i;curStep=-1;renderPicker();renderWall();});
+    p.appendChild(b);
+  });
+}
+function groupNode(g,idx){
+  const n=el('div','grp');n.dataset.idx=idx;n.tabIndex=0;n.setAttribute('role','button');
+  const gl=el('div','glyphs'+(g.col?' col':''));
+  g.s.forEach(c=>{const s=el('span','sg',glyph(c));s.title=c;s.dataset.code=c;gl.appendChild(s);});
+  n.appendChild(gl);n.appendChild(el('div','lab',esc(g.tr)));
+  const open=()=>{curStep=idx;renderWall(true);};
+  n.addEventListener('click',open);
+  n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
+  return n;
+}
+function renderWall(keepScroll){
+  const ins=INSCRIPTIONS[curIns];
+  $('#ins-title').textContent=ins.num+'. '+ins.title;
+  $('#ins-site').textContent=ins.site;
+  $('#ins-tr').textContent=ins.tr;
+  $('#ins-pl').textContent=ins.pl;
+  const r=$('#relief');r.innerHTML='';r.dataset.dir=dir;
+  let i=0;
+  while(i<ins.groups.length){
+    const g=ins.groups[i];
+    if(g.cart){
+      const c=el('div','cart');c.title='Kartusz – imię królewskie';
+      const id=g.cart;
+      while(i<ins.groups.length&&ins.groups[i].cart===id){c.appendChild(groupNode(ins.groups[i],i));i++;}
+      if(dir==='rtl'){Array.from(c.children).reverse().forEach(ch=>c.appendChild(ch));}
+      r.appendChild(c);
+    }else{r.appendChild(groupNode(g,i));i++;}
+  }
+  r.querySelectorAll('.grp').forEach(n=>{const k=+n.dataset.idx;n.classList.toggle('current',k===curStep);n.classList.toggle('done',k<curStep);});
+  const total=ins.groups.length;
+  $('#step-bar').style.width=((curStep+1)/total*100)+'%';
+  $('#step-count').textContent=curStep<0?`0 / ${total}`:`${curStep+1} / ${total}`;
+  $('#step-prev').disabled=curStep<0;
+  $('#step-next').textContent=curStep<0?'Zacznij czytać ▸':(curStep>=total-1?'Od początku':'Następny znak ▸');
+  renderScribe();
+  renderRiddle();
+}
+function renderScribe(){
+  const ins=INSCRIPTIONS[curIns];const box=$('#scribe');
+  if(curStep<0){
+    box.innerHTML=`<div class="eyebrow">Notatki skryby</div><h3>${esc(ins.title)}</h3><p>${esc(ins.about)}</p>
+    <div class="note">Kliknij znak na ścianie lub naciśnij „Zacznij czytać”, aby przejść przez inskrypcję krok po kroku. W trybie P → L znaki są odbite lustrzanie, bo zawsze patrzą w stronę początku tekstu.</div>
+    <div class="kv"><dt>Znaków</dt><dd>${ins.groups.reduce((a,g)=>a+g.s.length,0)}</dd><dt>Grup</dt><dd>${ins.groups.length}</dd><dt>Kartusze</dt><dd>${new Set(ins.groups.filter(g=>g.cart).map(g=>g.cart)).size||'brak'}</dd></div>`;
+    return;
+  }
+  const g=ins.groups[curStep];
+  const signsHtml=g.s.map(c=>{const s=BY[c];return `<button class="btn ghost" data-sign="${c}" style="display:flex;gap:10px;align-items:center;text-align:left;padding:6px 10px"><span class="sg" style="font-size:2rem;text-shadow:none">${glyph(c)}</span><span><span class="code">${c}</span><br>${s?esc(s.pl):'—'} <span class="pill ${s?s.typ:''}">${s?TYPN[s.typ]:''}</span></span></button>`;}).join('');
+  box.innerHTML=`<div class="eyebrow">Krok ${curStep+1} z ${ins.groups.length}${g.cart?' · w kartuszu':''}</div>
+    <div class="big"><span class="sg" style="font-size:3.4rem">${glyphs(g.s)}</span><div><div class="tr" style="font-size:1.5rem">${esc(g.tr)}</div><div style="font-size:1.1rem">${esc(g.pl)}</div><span class="pill">${ROLE[g.fn]||g.fn}</span></div></div>
+    <p>${esc(g.note)}</p>
+    <div class="eyebrow">Znaki w tej grupie (kliknij po szczegóły)</div>
+    <div style="display:grid;gap:6px">${signsHtml}</div>`;
+  box.querySelectorAll('[data-sign]').forEach(b=>b.addEventListener('click',()=>openDetail(b.dataset.sign)));
+}
+function renderRiddle(){
+  const ins=INSCRIPTIONS[curIns];const q=ins.quiz;const box=$('#riddle');box.className='riddle';
+  box.innerHTML=`<div class="eyebrow">Zagadka pod reliefem</div><h3>${inl(q.q)}</h3><div class="opts"></div><div class="why"></div>`;
+  const opts=box.querySelector('.opts');
+  const order=shuffle(q.opts.map((o,i)=>i));
+  order.forEach(i=>{
+    const b=el('button','',inl(q.opts[i]));
+    b.addEventListener('click',()=>{
+      if(box.classList.contains('answered'))return;
+      box.classList.add('answered');
+      b.classList.add(i===q.ans?'ok':'bad');
+      opts.querySelectorAll('button').forEach((bb,k)=>{if(order[k]===q.ans)bb.classList.add('ok');bb.disabled=true;});
+      box.querySelector('.why').innerHTML=(i===q.ans?'<b style="color:var(--green)">Tak!</b> ':'<b style="color:var(--red)">Nie.</b> ')+inl(q.why);
+      if(i===q.ans){const solved=store.get('pa-solved',[]);if(!solved.includes(ins.id)){solved.push(ins.id);store.set('pa-solved',solved);}}
+    });
+    opts.appendChild(b);
+  });
+}
+$('#step-next').addEventListener('click',()=>{const n=INSCRIPTIONS[curIns].groups.length;curStep=curStep>=n-1?-1:curStep+1;renderWall();});
+$('#step-prev').addEventListener('click',()=>{if(curStep>=0){curStep--;renderWall();}});
+$('#dir-ltr').addEventListener('click',()=>{dir='ltr';$('#dir-ltr').setAttribute('aria-pressed','true');$('#dir-rtl').setAttribute('aria-pressed','false');renderWall();});
+$('#dir-rtl').addEventListener('click',()=>{dir='rtl';$('#dir-rtl').setAttribute('aria-pressed','true');$('#dir-ltr').setAttribute('aria-pressed','false');renderWall();});
+// klik w pojedynczy znak na ścianie otwiera szczegóły (bez zmiany kroku, gdy Alt/długie – tu: zawsze też ustawia krok)
+$('#relief').addEventListener('click',e=>{const s=e.target.closest('.sg');if(s&&s.dataset.code){e.stopPropagation();const grp=s.closest('.grp');curStep=+grp.dataset.idx;renderWall();openDetail(s.dataset.code);}},true);
+
+/* ===================== SALA II: BAZA ZNAKÓW ===================== */
+let fTyp='';
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ꜣ/g,'a').replace(/ꜥ/g,'a').replace(/ỉ/g,'i');
+function matches(s,q){
+  if(fTyp&&s.typ!==fTyp)return false;
+  if(!q)return true;
+  const hay=norm([s.c,s.t,s.pl,s.snd,s.mean,s.kw,TYPN[s.typ]].join(' '));
+  return q.split(/\s+/).every(w=>hay.includes(norm(w)));
+}
+function renderGrid(){
+  const q=$('#q').value.trim();const g=$('#grid');g.innerHTML='';
+  const list=SIGNS.filter(s=>matches(s,q));
+  $('#count').textContent=list.length?`${list.length} ${list.length===1?'znak':list.length<5?'znaki':'znaków'}`:'Brak znaków dla tego zapytania. Spróbuj: „ptak”, „naczynie”, „ramię”, „n”.';
+  list.forEach(s=>{
+    const c=el('div','card');c.tabIndex=0;c.setAttribute('role','button');
+    c.innerHTML=`<span class="sg">${s.g}</span><div class="code"><span>${s.c}</span><span class="pill ${s.typ}">${TYPN[s.typ]}</span></div><div class="name">${esc(s.pl)}</div><div class="tr">${esc(s.t||'—')}</div>${s.mean?`<div class="mean">${esc(s.mean)}</div>`:''}`;
+    const open=()=>openDetail(s.c);
+    c.addEventListener('click',open);c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
+    g.appendChild(c);
+  });
+}
+$('#q').addEventListener('input',renderGrid);
+document.querySelectorAll('#chips button').forEach(b=>b.addEventListener('click',()=>{fTyp=b.dataset.typ;document.querySelectorAll('#chips button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));renderGrid();}));
+
+function openDetail(code){
+  const s=BY[code];const box=$('#detail-inner');
+  const uses=INSCRIPTIONS.filter(ins=>ins.groups.some(g=>g.s.includes(code)));
+  box.innerHTML=s?`<div class="eyebrow">Znak Gardinera ${s.c} · <span class="pill ${s.typ}">${TYPN[s.typ]}</span></div>
+    <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap"><span class="sg">${s.g}</span><span class="sg flip muted" title="Odbicie lustrzane – wersja dla tekstu czytanego od prawej">${s.g}</span>
+    <div><div class="tr" style="font-size:1.8rem">${esc(s.t||'—')}</div><div style="font-size:1.15rem;font-weight:600">${esc(s.pl)}</div>${s.snd?`<div class="muted">wymowa: ${esc(s.snd)}</div>`:''}</div></div>
+    ${s.mean?`<div class="note"><b>Znaczenie / użycie:</b> ${esc(s.mean)}</div>`:''}
+    <dl class="kv"><dt>Unicode</dt><dd style="font-variant-numeric:tabular-nums">U+${s.g.codePointAt(0).toString(16).toUpperCase()}</dd><dt>Rodzaj</dt><dd>${TYPN[s.typ]}</dd><dt>Na ścianach</dt><dd>${uses.length?uses.map(u=>`<button class="btn ghost" data-ins="${u.id}" style="padding:2px 8px;font-size:.85rem">${u.num}. ${esc(u.title)}</button>`).join(' '):'—'}</dd></dl>
+    <p class="muted" style="font-size:.9rem">Po lewej znak w orientacji dla tekstu czytanego od lewej (patrzy w lewo, ku początkowi); po prawej jego odbicie dla tekstu od prawej.</p>`
+  :`<div class="eyebrow">Znak ${esc(code)}</div><p>Tego znaku nie ma jeszcze w katalogu.</p>`;
+  box.querySelectorAll('[data-ins]').forEach(b=>b.addEventListener('click',()=>{closeDetail();curIns=INSCRIPTIONS.findIndex(i=>i.id===b.dataset.ins);curStep=-1;renderPicker();renderWall();showHall('sciana');window.scrollTo({top:0,behavior:'smooth'});}));
+  $('#detail').classList.add('open');$('#scrim').classList.add('open');$('#detail-close').focus();
+}
+function closeDetail(){$('#detail').classList.remove('open');$('#scrim').classList.remove('open');}
+$('#detail-close').addEventListener('click',closeDetail);$('#scrim').addEventListener('click',closeDetail);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
+
+/* ===================== DZIEDZINIEC: GRY ===================== */
+document.querySelectorAll('.games button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.games button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
+  document.querySelectorAll('.game').forEach(g=>g.classList.toggle('active',g.id==='game-'+b.dataset.game));
+  if(b.dataset.game==='quiz'&&!quizState)quizIntro();
+}));
+
+/* --- 1. Układanka bloków --- */
+let pz={ins:null,order:[],placed:[]};
+function pzStart(idx){
+  const ins=INSCRIPTIONS[idx==null?Math.floor(Math.random()*INSCRIPTIONS.length):idx];
+  pz={ins,order:shuffle(ins.groups.map((g,i)=>i)),placed:[]};
+  $('#pz-title').textContent=ins.num+'. '+ins.title;
+  $('#pz-goal').innerHTML=`Cel: <b>${esc(ins.pl)}</b>`;
+  $('#pz-status').textContent='';$('#pz-status').className='status';
+  $('#pz-hintbox').hidden=true;
+  pzRender();
+}
+function pzBlock(i,inTarget){
+  const g=pz.ins.groups[i];
+  const b=el('div','block',`<span class="sg">${glyphs(g.s)}</span><span class="lab">${esc(g.pl)}</span>`);
+  b.tabIndex=0;b.setAttribute('role','button');
+  const act=()=>{
+    if(inTarget){pz.placed=pz.placed.filter(x=>x!==i);}else{pz.placed.push(i);}
+    $('#pz-status').textContent='';$('#pz-status').className='status';pzRender();
+  };
+  b.addEventListener('click',act);b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
+  return b;
+}
+function pzRender(){
+  const t=$('#pz-target'),p=$('#pz-pool');t.innerHTML='';p.innerHTML='';
+  pz.placed.forEach(i=>t.appendChild(pzBlock(i,true)));
+  pz.order.filter(i=>!pz.placed.includes(i)).forEach(i=>p.appendChild(pzBlock(i,false)));
+  if(!pz.placed.length)t.appendChild(el('div','muted','Kliknij bloki poniżej, aby wmurować je tutaj. Kliknij wmurowany blok, aby go wyjąć.'));
+}
+$('#pz-check').addEventListener('click',()=>{
+  const n=pz.ins.groups.length;const st=$('#pz-status');
+  if(pz.placed.length<n){st.textContent=`Brakuje ${n-pz.placed.length} bloków.`;st.className='status bad';return;}
+  let ok=0;
+  Array.from($('#pz-target').children).forEach((b,k)=>{const good=pz.placed[k]===k;b.classList.add(good?'ok':'bad');if(good)ok++;});
+  if(ok===n){st.textContent='Ściana odbudowana! Skrybowie Domu Życia są pod wrażeniem.';st.className='status ok';const w=store.get('pa-walls',[]);if(!w.includes(pz.ins.id)){w.push(pz.ins.id);store.set('pa-walls',w);}}
+  else{st.textContent=`${ok} z ${n} bloków na właściwym miejscu. Czerwone wyjmij i spróbuj ponownie.`;st.className='status bad';}
+});
+$('#pz-reset').addEventListener('click',()=>{pz.placed=[];$('#pz-status').textContent='';pzRender();});
+$('#pz-new').addEventListener('click',()=>pzStart());
+$('#pz-hint').addEventListener('click',()=>{const h=$('#pz-hintbox');h.hidden=false;h.innerHTML=`<b>Transliteracja:</b> <span class="tr">${esc(pz.ins.tr)}</span><br><span class="muted">Pierwszy blok to <span class="hiero">${glyphs(pz.ins.groups[0].s)}</span> (${esc(pz.ins.groups[0].tr)}).</span>`;});
+
+/* --- 2. Quiz z rangami --- */
+const RANKS=[[0,'Uczeń Domu Życia','sbꜣty'],[4,'Skryba','sš'],[7,'Skryba królewski','sš nswt'],[9,'Nadzorca skrybów','ỉmy-r sšw'],[10,'Kapłan-lektor','ḫry-ḥbt']];
+let quizState=null,quizTimer=null;
+function rankFor(score){let r=RANKS[0];RANKS.forEach(x=>{if(score>=x[0])r=x;});return r;}
+function quizIntro(){
+  const best=store.get('pa-best',null);
+  $('#quiz-board').innerHTML=`<div class="row" style="justify-content:space-between"><div><div class="eyebrow">Szybki quiz rozpoznawania znaków</div><h3>10 pytań, 12 sekund na każde</h3></div><button class="btn primary" id="qz-start">Zacznij quiz</button></div>
+  <p class="muted">Pytania losują się z całej bazy: co przedstawia znak, jaką głoskę zapisuje, albo który z czterech znaków to np. „sowa”. Punkt za poprawną odpowiedź, bez punktu za czas, który minął.</p>
+  <div class="eyebrow">Rangi skryby</div><div class="ranks">${RANKS.map(r=>`<div class="${best&&rankFor(best.score)===r?'me':''}"><span class="hiero" style="font-size:1.4rem">${r[0]>=10?'𓀻':r[0]>=9?'𓀼':r[0]>=7?'𓏞𓀀':r[0]>=4?'𓏞':'𓀔'}</span><span><b>${r[1]}</b> <span class="tr">${r[2]}</span></span><span class="pts">${r[0]===10?'10 pkt':r[0]+'+ pkt'}</span></div>`).join('')}</div>
+  ${best?`<div class="note">Twój najlepszy wynik: <b>${best.score}/10</b> – ranga <b>${rankFor(best.score)[1]}</b>.</div>`:''}`;
+  $('#qz-start').addEventListener('click',quizStart);
+}
+function quizStart(){
+  quizState={i:0,score:0,qs:[],hist:[]};
+  const pool=shuffle(SIGNS.filter(s=>s.pl));
+  for(let k=0;k<10;k++){
+    const s=pool[k];const kind=['pl','snd','glyph'][k%3];
+    let opts;
+    if(kind==='pl'){opts=shuffle([s,...shuffle(SIGNS.filter(x=>x!==s&&x.pl!==s.pl)).slice(0,3)]).map(x=>({label:esc(x.pl),ok:x===s}));}
+    else if(kind==='snd'){const cand=SIGNS.filter(x=>x!==s&&x.t&&x.t!==s.t);const me=s.t?s:pool[k]=SIGNS.find(x=>x.t&&x.c==='G17');opts=shuffle([me,...shuffle(cand).slice(0,3)]).map(x=>({label:`<span class="tr">${esc(x.t)}</span>`,ok:x===me}));}
+    else {opts=shuffle([s,...shuffle(SIGNS.filter(x=>x!==s&&x.pl!==s.pl)).slice(0,3)]).map(x=>({label:`<span class="sg">${x.g}</span>`,ok:x===s}));}
+    quizState.qs.push({s:pool[k],kind,opts});
+  }
+  quizQ();
+}
+function quizQ(){
+  clearInterval(quizTimer);
+  const q=quizState.qs[quizState.i];const s=q.s;let left=12;
+  const title=q.kind==='pl'?'Co przedstawia ten znak?':q.kind==='snd'?'Jaką wartość fonetyczną ma ten znak?':`Który znak przedstawia: <b>${esc(s.pl)}</b>?`;
+  $('#quiz-board').innerHTML=`<div class="row" style="justify-content:space-between"><div class="eyebrow">Pytanie ${quizState.i+1} / 10 · wynik ${quizState.score}</div><div class="meter">${quizState.hist.map(h=>`<i class="${h?'ok':'bad'}"></i>`).join('')}${'<i></i>'.repeat(10-quizState.hist.length)}</div></div>
+  <div class="quizq"><h3>${title}</h3>${q.kind==='glyph'?'':`<span class="sg">${s.g}</span>`}<div class="progress" style="max-width:420px"><i id="qz-time" style="width:100%"></i></div><div class="opts" id="qz-opts"></div></div>`;
+  const opts=$('#qz-opts');
+  const finish=(ok,btn)=>{
+    clearInterval(quizTimer);
+    opts.querySelectorAll('button').forEach(b=>{b.disabled=true;if(b.dataset.ok==='1')b.classList.add('ok');});
+    if(btn&&!ok)btn.classList.add('bad');
+    if(ok)quizState.score++;quizState.hist.push(ok);
+    const expl=el('div','note',`<b>${s.c}</b> · ${esc(s.pl)}${s.t?` · <span class="tr">${esc(s.t)}</span>`:''}${s.mean?` · ${esc(s.mean)}`:''}`);
+    $('.quizq').appendChild(expl);
+    const next=el('button','btn primary',quizState.i<9?'Następne pytanie ▸':'Zobacz rangę');
+    next.addEventListener('click',()=>{quizState.i++;if(quizState.i<10)quizQ();else quizEnd();});
+    $('.quizq').appendChild(next);next.focus();
+  };
+  q.opts.forEach(o=>{const b=el('button','',o.label);b.dataset.ok=o.ok?'1':'0';b.addEventListener('click',()=>finish(o.ok,b));opts.appendChild(b);});
+  quizTimer=setInterval(()=>{left-=0.1;$('#qz-time').style.width=Math.max(0,left/12*100)+'%';if(left<=0){finish(false,null);}},100);
+}
+function quizEnd(){
+  const sc=quizState.score;const r=rankFor(sc);
+  const best=store.get('pa-best',null);if(!best||sc>best.score)store.set('pa-best',{score:sc});
+  $('#quiz-board').innerHTML=`<div class="quizq"><div class="eyebrow">Koniec quizu</div><span class="sg" style="font-size:5rem">${sc>=10?'𓀻':sc>=9?'𓀼':sc>=7?'𓏞':sc>=4?'𓏞':'𓀔'}</span><h2>${sc} / 10 · ${r[1]}</h2><div class="tr" style="font-size:1.3rem">${r[2]}</div>
+  <p class="muted" style="max-width:52ch">${sc>=10?'Bezbłędnie. Kapłan-lektor recytował teksty rytualne ze zwoju – znasz znaki jak on.':sc>=9?'Niemal doskonale. Nadzorca skrybów odpowiadał za całą kancelarię.':sc>=7?'Bardzo dobrze. Skryba królewski pisał dla samego faraona.':sc>=4?'Dobry początek. Skryba zarabiał na życie trzciną i tuszem.':'Każdy skryba zaczynał od przepisywania znaków. Wróć do Bazy Znaków i spróbuj ponownie.'}</p>
+  <div class="row"><button class="btn primary" id="qz-again">Jeszcze raz</button><button class="btn" id="qz-back">Wróć do rang</button></div></div>`;
+  $('#qz-again').addEventListener('click',quizStart);$('#qz-back').addEventListener('click',()=>{quizState=null;quizIntro();});
+  quizState={done:true};
+}
+
+/* --- 3. Generator kartusza --- */
+// Tablica konwencjonalnego „alfabetu turystycznego” rozszerzona o polskie głoski; dwuznaki sprawdzane najpierw.
+const ALPHA=[
+ ['sz',['N37'],'sz → sadzawka š'],['cz',['V13'],'cz → pętla ṯ'],['ch',['Aa1'],'ch → sito ḫ'],['rz',['I10'],'rz → kobra ḏ (najbliższa „ż”)'],['dż',['I10'],'dż → kobra ḏ'],['dz',['I10'],'dz → kobra ḏ'],
+ ['a',['G1'],'a → sęp ꜣ'],['ą',['G1','N35'],'ą → sęp + woda (an)'],['b',['D58'],'b → noga'],['c',['X1','O34'],'c [ts] → chleb t + rygiel s'],['ć',['V13'],'ć → pętla ṯ (cz)'],['d',['D46'],'d → dłoń'],
+ ['e',['M17'],'e → trzcina i (egipski nie zapisywał „e”)'],['ę',['M17','N35'],'ę → trzcina + woda (en)'],['f',['I9'],'f → żmija'],['g',['W11'],'g → stojak na dzban'],['h',['O4'],'h → zagroda'],
+ ['i',['M17'],'i → trzcina'],['j',['M17A'],'j → dwie trzciny y'],['k',['V31'],'k → kosz'],['l',['E23'],'l → lew (znak z epoki grecko-rzymskiej)'],['ł',['G43'],'ł → pisklę w'],['m',['G17'],'m → sowa'],
+ ['n',['N35'],'n → woda'],['ń',['N35'],'ń → woda n'],['o',['G43'],'o → pisklę w (egipski nie zapisywał „o”)'],['ó',['G43'],'ó → pisklę w'],['p',['Q3'],'p → stołek'],['q',['N29'],'q → zbocze ḳ'],
+ ['r',['D21'],'r → usta'],['s',['S29'],'s → złożone płótno'],['ś',['N37'],'ś → sadzawka š'],['t',['X1'],'t → chleb'],['u',['G43'],'u → pisklę w'],['v',['I9'],'v → żmija f'],['w',['I9'],'w [v] → żmija f (brak „w” w egipskim)'],
+ ['x',['V31','S29'],'x → kosz k + płótno s'],['y',['M17A'],'y → dwie trzciny'],['z',['O34'],'z → rygiel'],['ź',['I10'],'ź → kobra ḏ'],['ż',['I10'],'ż → kobra ḏ'],
+];
+if(!BY['E23'])SIGNS.push(BY['E23']={c:'E23',g:'𓃭',t:'rw / l',typ:'bi',pl:'leżący lew',snd:'„ru”; w epoce grecko-rzymskiej „l”',mean:'lew; w imionach obcych (Kleopatra, Ptolemeusz) litera l',kw:'lew zwierzę l ru'});
+let cg={det:'B1',ori:'h',tail:'di'};
+function cgRender(){
+  const raw=$('#cg-name').value.trim();
+  const name=raw.toLowerCase().replace(/[^a-ząćęłńóśźż]/g,'');
+  const parts=[];let i=0;
+  while(i<name.length){
+    let hit=null;
+    for(const a of ALPHA){if(name.startsWith(a[0],i)&&(!hit||a[0].length>hit[0].length))hit=a;}
+    if(hit){parts.push(hit);i+=hit[0].length;}else i++;
+  }
+  const signs=parts.flatMap(p=>p[1]);
+  const out=$('#cg-out');out.innerHTML='';
+  const c=el('div','cart'+(cg.ori==='v'?' v':''));
+  if(signs.length){signs.forEach(code=>c.appendChild(el('span','sg',glyph(code))));}
+  else c.appendChild(el('span','muted','wpisz imię'));
+  if(cg.det)c.appendChild(el('span','sg',glyph(cg.det)));
+  out.appendChild(c);
+  if(cg.tail&&signs.length){const t=el('div','tail');(cg.tail==='di'?['X8','S34']:['S34','R11','S40']).forEach(k=>t.appendChild(el('span','sg',glyph(k))));out.appendChild(t);}
+  const tr=signs.map(k=>(BY[k]&&BY[k].t?BY[k].t.split(' ')[0]:'?')).join('-');
+  $('#cg-tr').innerHTML=signs.length?`${esc(tr)}${cg.det?` + determinatyw ${cg.det==='A1'?'mężczyzny':'kobiety'}`:''}${cg.tail?` · po kartuszu: <i>${cg.tail==='di'?'dỉ ꜥnḫ „obdarzony życiem”':'ꜥnḫ ḏd wꜣs „życie, trwałość, władza”'}</i>`:''}`:'—';
+  const map=$('#cg-map');map.innerHTML='';
+  parts.forEach(p=>{map.appendChild(el('div','',`<span class="sg">${glyphs(p[1])}</span><b>${esc(p[0])}</b><span class="muted">${esc(p[2])}</span>`));});
+  $('#cg-note').innerHTML=`Egipskie pismo zapisywało głównie spółgłoski. Imiona obce (jak <b>Kleopatra</b> czy <b>Ptolemeusz</b>) Egipcjanie oddawali fonetycznie znakami jednoliterowymi – dokładnie tak działa ten generator. Samogłoski „e” i „o” nie miały własnych znaków, dlatego umownie używamy trzciny i pisklęcia. Kartusz (<span class="hiero">𓍷</span>, <span class="tr">šnw</span>) to pętla liny, która chroni imię i oznacza „wszystko, co okrąża słońce”. ${raw&&!signs.length?'<br><b>Użyj liter łacińskich lub polskich.</b>':''}`;
+}
+$('#cg-name').addEventListener('input',cgRender);
+document.querySelectorAll('#game-cart .seg button').forEach(b=>b.addEventListener('click',()=>{
+  const key=Object.keys(b.dataset)[0];cg[key]=b.dataset[key];
+  b.parentElement.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));cgRender();
+}));
+
+/* ===================== START ===================== */
+renderPicker();renderWall();renderGrid();pzStart(0);cgRender();
+showHall((location.hash||'').replace('#',''));
+</script>
+</body>
+</html>
