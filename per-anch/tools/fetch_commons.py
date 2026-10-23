@@ -5,23 +5,36 @@ do Analizatora Ściany aplikacji Per-Anch. Uruchamiany w GitHub Actions (środow
   search  <queries.json> <out_dir> [width]   – podglądy kandydatów + manifest.json
   fetch   <chosen.json>  <out_dir> [width]   – wybrane pliki w pełnej jakości + credits.json
 """
-import json, os, re, sys, time, html, urllib.request, urllib.parse
+import json, os, re, sys, time, html, urllib.request, urllib.parse, urllib.error
 
 API = 'https://commons.wikimedia.org/w/api.php'
 UA = 'PerAnchAkademia/1.0 (https://github.com/adscisel-alt/workt; educational, contact via GitHub)'
 LIC_OK = re.compile(r'(public domain|^pd\b|pd-|cc0|cc[- ]by(?![- ]nc)(?![- ]nd))', re.I)
 LIC_BAD = re.compile(r'(\bnc\b|non-?commercial|\bnd\b|no derivatives|fair use|copyright)', re.I)
 
+def _open(url, timeout):
+    # Wikimedia zwraca 429 przy zbyt szybkich zapytaniach: odczekaj i ponów (do 6 razy).
+    for attempt in range(6):
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': UA})
+            return urllib.request.urlopen(req, timeout=timeout).read()
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 503) and attempt < 5:
+                wait = 20 * (attempt + 1); print(f'  HTTP {e.code}, czekam {wait}s', flush=True); time.sleep(wait); continue
+            raise
+        except (urllib.error.URLError, TimeoutError) as e:
+            if attempt < 5:
+                print('  błąd sieci, ponawiam:', e, flush=True); time.sleep(10); continue
+            raise
+
 def api(params):
     params = dict(params, format='json', formatversion='2')
-    req = urllib.request.Request(API + '?' + urllib.parse.urlencode(params), headers={'User-Agent': UA})
-    with urllib.request.urlopen(req, timeout=90) as r:
-        return json.load(r)
+    return json.loads(_open(API + '?' + urllib.parse.urlencode(params), 90))
 
 def download(url, path):
-    req = urllib.request.Request(url, headers={'User-Agent': UA})
-    with urllib.request.urlopen(req, timeout=120) as r, open(path, 'wb') as f:
-        f.write(r.read())
+    data = _open(url, 120)
+    with open(path, 'wb') as f:
+        f.write(data)
 
 def strip(s):
     return html.unescape(re.sub(r'<[^>]+>', '', s or '')).strip()
@@ -70,7 +83,7 @@ def search(qfile, out, width):
             except Exception as e:
                 print('  download failed', it['title'], e); n -= 1; continue
             it.update(key=key, file=f'{key}/{fn}'); manifest.append(it)
-            print('  ok', fn, it['title'], '|', it['license'], '|', it['author'][:40]); time.sleep(0.4)
+            print('  ok', fn, it['title'], '|', it['license'], '|', it['author'][:40]); time.sleep(1.5)
     json.dump(manifest, open(os.path.join(out, 'manifest.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 
 def fetch(cfile, out, width):
@@ -78,14 +91,17 @@ def fetch(cfile, out, width):
     os.makedirs(out, exist_ok=True); credits = []
     for c in chosen:
         print('==', c['name'], c['title'], flush=True)
-        items = pages_for({'action': 'query', 'titles': c['title']}, c.get('width', width))
-        if not items:
-            print('  not found'); continue
-        it = items[0]
-        if not license_ok(it['license']):
-            print('  license not free:', it['license']); continue
-        download(it['thumburl'] or it['url'], os.path.join(out, c['name'] + '.jpg'))
-        it.update(name=c['name'], file=c['name'] + '.jpg'); credits.append(it); print('  ok', it['license']); time.sleep(0.4)
+        try:
+            items = pages_for({'action': 'query', 'titles': c['title']}, c.get('width', width))
+            if not items:
+                print('  not found'); continue
+            it = items[0]
+            if not license_ok(it['license']):
+                print('  license not free:', it['license']); continue
+            download(it['thumburl'] or it['url'], os.path.join(out, c['name'] + '.jpg'))
+        except Exception as e:
+            print('  FAILED', e, flush=True); continue
+        it.update(name=c['name'], file=c['name'] + '.jpg'); credits.append(it); print('  ok', it['license']); time.sleep(2)
     json.dump(credits, open(os.path.join(out, 'credits.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 
 if __name__ == '__main__':

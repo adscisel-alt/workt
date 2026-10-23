@@ -36,6 +36,7 @@ jobs:
         if: steps.mode.outputs.mode == 'fetch' || steps.mode.outputs.mode == 'both'
         run: python per-anch/tools/fetch_commons.py fetch per-anch/tools/commons-chosen.json per-anch/img 1600
       - name: Zapisz w gałęzi
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
