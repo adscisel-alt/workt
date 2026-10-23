@@ -1,0 +1,42 @@
+name: Per-Anch – zdjęcia z Wikimedia Commons
+
+# Pobiera na wolnych licencjach zdjęcia ścian świątyń i papirusów do Analizatora Ściany
+# (środowisko sesji Claude nie ma dostępu do Wikimedia; runner GitHub ma).
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "search (podglądy kandydatów) lub fetch (wybrane pliki w pełnej jakości)"
+        required: true
+        default: search
+        type: choice
+        options: [search, fetch]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: per-anch-commons-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pobierz podglądy kandydatów
+        if: inputs.mode == 'search'
+        run: python per-anch/tools/fetch_commons.py search per-anch/tools/commons-queries.json per-anch/img/candidates 480
+      - name: Pobierz wybrane zdjęcia
+        if: inputs.mode == 'fetch'
+        run: python per-anch/tools/fetch_commons.py fetch per-anch/tools/commons-chosen.json per-anch/img 1600
+      - name: Zapisz w gałęzi
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A per-anch/img
+          git commit -m "Per-Anch: zdjęcia z Wikimedia Commons (${{ inputs.mode }}, automat)" || { echo "brak zmian"; exit 0; }
+          git push
