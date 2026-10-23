@@ -10,7 +10,9 @@ wyświetlić, jeśli system nie ma własnego fontu z blokiem Unicode 13000–134
 
 ## Sale
 
-- **Analizator Ściany Świątyni** – 12 inskrypcji krok po kroku w dwu grupach. Księgi zaświatów
+- **Analizator Ściany Świątyni** – 12 sfotografowanych ścian, reliefów i papirusów z klikalnymi
+  ramkami na fragmentach tekstu (zdjęcia z Wikimedia Commons na wolnych licencjach, podpisy
+  autorów i licencji w `img/credits.json`), plus 6 inskrypcji w samej transkrypcji. Księgi zaświatów
   i malowidła grobowe: tytuł Księgi Umarłych (grobowiec Sennedżema), hymn do Ra (Papirus Ani),
   zaklęcie serca 30B, Negatywne Wyznanie z rozdziału 125, Teksty Piramid Unisa, Wielki Hymn do
   Atona. Tytulatury i formuły świątynne: formuła „obdarzony życiem,
@@ -23,3 +25,12 @@ wyświetlić, jeśli system nie ma własnego fontu z blokiem Unicode 13000–134
   królewskiego kartusza (imię zapisane fonetycznie, determinatyw osoby, formuła po kartuszu).
 
 Znaki są renderowane jako Unicode Egyptian Hieroglyphs; kody wg listy Gardinera.
+
+## Zdjęcia
+
+Pliki w `per-anch/img/` pobrano z Wikimedia Commons (domena publiczna, CC0, CC BY, CC BY-SA);
+autor, licencja i link do strony pliku są w `img/credits.json` i pod każdym zdjęciem w aplikacji.
+Pobieranie wykonuje workflow `.github/workflows/per-anch-commons.yml` na runnerze GitHub
+(skrypt `tools/fetch_commons.py`); tryb ustawia się w `tools/commons-mode.txt`
+(`search` – podglądy kandydatów wg `commons-queries.json`, `fetch` – wybrane pliki z
+`commons-chosen.json`, `off` – nic).
