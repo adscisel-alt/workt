@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C64 Soccer – prototyp</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; background: #101418; color: #cfd6dd; font-family: system-ui, sans-serif;
+           display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; }
+    h1 { font-size: 1.1rem; margin: 0; font-weight: 600; }
+    #c64-screen { width: min(96vw, 768px); aspect-ratio: 384 / 272; image-rendering: pixelated;
+                  background: #000; border: 3px solid #2a3139; border-radius: 4px; outline: none; }
+    #status { font-size: .85rem; color: #8b96a3; min-height: 1.2em; }
+    .keys { display: grid; grid-template-columns: auto auto; gap: 4px 16px; font-size: .9rem; max-width: 560px; }
+    .keys b { color: #e8edf2; font-weight: 600; }
+    button { background: #1f6feb; color: #fff; border: 0; border-radius: 6px; padding: 8px 14px; font-size: .95rem; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: default; }
+    .pad { display: none; gap: 8px; }
+    @media (pointer: coarse) { .pad { display: flex; } }
+    .pad button { min-width: 56px; min-height: 48px; background: #2a3139; }
+    footer { font-size: .75rem; color: #6b7682; text-align: center; max-width: 640px; }
+  </style>
+</head>
+<body>
+  <h1>C64 Soccer – prototyp meczu (Commodore 64)</h1>
+  <canvas id="c64-screen" width="384" height="272" tabindex="0"></canvas>
+  <div id="status">Ładowanie emulatora…</div>
+  <div>
+    <button id="btn-start">▶ Uruchom grę</button>
+    <button id="btn-reset" disabled>⟲ Od nowa</button>
+    <button id="btn-sound" disabled>🔊 Dźwięk</button>
+  </div>
+  <div class="pad" id="pad">
+    <button data-dir="1">▲</button><button data-dir="2">▼</button><button data-dir="4">◀</button><button data-dir="8">▶</button><button data-dir="16">●</button>
+  </div>
+  <div class="keys">
+    <b>Strzałki / W A S D</b><span>bieg (8 kierunków); sterujesz zawodnikiem najbliżej piłki (czerwoni)</span>
+    <b>Spacja / Z / Ctrl</b><span>z piłką: przytrzymaj i puść = strzał (dłużej = mocniej i wyżej); bez piłki: wślizg</span>
+    <b>Po strzale</b><span>trzymaj kierunek w bok od lotu piłki = podkręcenie („banan”), do przodu = wyżej</span>
+    <b>Po meczu</b><span>strzał = nowy mecz</span>
+  </div>
+  <footer>Emulacja: <a href="https://github.com/hayesmaker/c64-ready" style="color:#8ab4f8">c64-ready</a> (MIT), rdzeń WASM z lvllvl.com. Program gry: <code>soccer.prg</code> (działa też na prawdziwym C64 / VICE: joystick w porcie 2).</footer>
+
+  <script type="module">
+    import { C64Player, CanvasRenderer } from './emu/player/index.js';
+
+    const base = new URL('./', location.href).href;
+    const status = document.getElementById('status');
+    const canvas = document.getElementById('c64-screen');
+    const btnStart = document.getElementById('btn-start');
+    const btnReset = document.getElementById('btn-reset');
+    const btnSound = document.getElementById('btn-sound');
+    let player = null;
+
+    async function start() {
+      btnStart.disabled = true;
+      status.textContent = 'Uruchamianie C64…';
+      try {
+        player = new C64Player({
+          wasmUrl: base + 'emu/c64.wasm',
+          gameUrl: base + 'soccer.prg?v=' + Date.now(),
+          gameType: 'prg',
+          renderer: new CanvasRenderer(canvas),
+          audio: { workletUrl: base + 'emu/audio-worklet-processor.js' },
+          onProgress: (p, label) => { status.textContent = `${label} ${Math.round(p)}%`; },
+        });
+        await player.start();
+        player.setInputMode('mixed');   // strzałki + Z/Ctrl = joystick (port 2), reszta = klawiatura C64
+        player.setKeyboardJoystickPort(2);
+        status.textContent = 'Gra działa. Kliknij w ekran, aby klawisze trafiały do gry.';
+        btnReset.disabled = false;
+        btnSound.disabled = false;
+        canvas.focus();
+      } catch (e) {
+        status.textContent = 'Błąd: ' + (e && e.message ? e.message : e);
+        btnStart.disabled = false;
+        console.error(e);
+      }
+    }
+    btnStart.addEventListener('click', start);
+    btnReset.addEventListener('click', async () => { if (player) { await player.loadGame(base + 'soccer.prg?v=' + Date.now(), 'prg'); canvas.focus(); } });
+    btnSound.addEventListener('click', async () => { if (player) { const ok = await player.audio.resume?.(); status.textContent = ok === false ? 'Dźwięk zablokowany przez przeglądarkę' : 'Dźwięk włączony'; } });
+    canvas.addEventListener('click', () => canvas.focus());
+
+    // Przyciski dotykowe -> joystick port 2 (wirtualny gamepad gracza)
+    const held = new Set();
+    const DIRS = { 1: 'up', 2: 'down', 4: 'left', 8: 'right' };
+    function pushPad() {
+      if (!player) return;
+      const state = { directions: [...held].filter(d => d < 16).map(d => DIRS[d]), buttons: held.has(16) ? ['A'] : [] };
+      try { player.setVirtualGamepadState(state); } catch (_) {}
+    }
+    for (const b of document.querySelectorAll('#pad button')) {
+      const d = +b.dataset.dir;
+      const down = (ev) => { ev.preventDefault(); held.add(d); pushPad(); };
+      const up = (ev) => { ev.preventDefault(); held.delete(d); pushPad(); };
+      b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up);
+      b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
+    }
+    // Nie przewijaj strony strzałkami / spacją, gdy ekran ma fokus
+    window.addEventListener('keydown', (e) => { if (document.activeElement === canvas && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault(); });
+  </script>
+</body>
+</html>

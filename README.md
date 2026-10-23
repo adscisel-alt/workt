@@ -204,3 +204,12 @@ Grywalne osie czasu i Forum Romanum zostały przeniesione do repozytorium
 i są publikowane niezależnie pod adresem
 https://adscisel-alt.github.io/gry-historyczne/ — ten adres (workt) serwuje
 wyłącznie aplikację protokołów.
+
+---
+
+## Prototyp gry C64 Soccer
+
+W katalogu [`c64-soccer/`](c64-soccer/) znajduje się niezależny prototyp gry
+piłkarskiej na **Commodore 64** w stylu Microprose Soccer (mecz 6 na 6, przewijane
+boisko, podkręcony strzał). Po wdrożeniu działa w przeglądarce pod
+`https://adscisel-alt.github.io/workt/c64-soccer/`. Szczegóły: [`c64-soccer/README.md`](c64-soccer/README.md).

@@ -45,6 +45,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Prototyp gry C64 (c64-soccer/web) jest serwowany pod /workt/c64-soccer/
+      - name: Dodaj C64 Soccer do wdrożenia
+        run: mkdir -p dist/c64-soccer && cp -r c64-soccer/web/. dist/c64-soccer/
+
       - name: Setup Pages (auto-enable)
         uses: actions/configure-pages@v5
         with:
