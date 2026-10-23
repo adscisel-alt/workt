@@ -3,7 +3,7 @@ name: Per-Anch – zdjęcia z Wikimedia Commons
 # Pobiera na wolnych licencjach zdjęcia ścian świątyń i papirusów do Analizatora Ściany
 # (środowisko sesji Claude nie ma dostępu do Wikimedia; runner GitHub ma).
 # Uruchamiany pushem na gałąź roboczą po zmianie plików w per-anch/tools/.
-# Tryb (search = podglądy kandydatów, fetch = wybrane pliki w pełnej jakości) odczytuje
+# Tryb (search = podglądy kandydatów, fetch = wybrane pliki w pełnej jakości, both = oba) odczytuje
 # z per-anch/tools/commons-mode.txt. Commit bota nie uruchamia kolejnego biegu.
 on:
   push:
@@ -30,10 +30,10 @@ jobs:
         id: mode
         run: echo "mode=$(tr -d '[:space:]' < per-anch/tools/commons-mode.txt)" >> "$GITHUB_OUTPUT"
       - name: Pobierz podglądy kandydatów
-        if: steps.mode.outputs.mode == 'search'
+        if: steps.mode.outputs.mode == 'search' || steps.mode.outputs.mode == 'both'
         run: python per-anch/tools/fetch_commons.py search per-anch/tools/commons-queries.json per-anch/img/candidates 480
       - name: Pobierz wybrane zdjęcia
-        if: steps.mode.outputs.mode == 'fetch'
+        if: steps.mode.outputs.mode == 'fetch' || steps.mode.outputs.mode == 'both'
         run: python per-anch/tools/fetch_commons.py fetch per-anch/tools/commons-chosen.json per-anch/img 1600
       - name: Zapisz w gałęzi
         run: |

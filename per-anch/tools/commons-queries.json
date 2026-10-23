@@ -1,18 +1,87 @@
 [
- {"key":"abusimbel","search":"Abu Simbel Ramesses cartouche hieroglyphs","limit":12},
- {"key":"luxor","search":"Luxor temple Ramesses II relief cartouche hieroglyphs","limit":12},
- {"key":"medinet","search":"Medinet Habu relief hieroglyphs cartouche","limit":10},
- {"key":"tut","search":"Tutankhamun cartouche hieroglyphs","limit":12},
- {"key":"sennedjem","search":"Sennedjem tomb TT1 Deir el-Medina painting","limit":12},
- {"key":"ani_weighing","search":"Papyrus of Ani weighing of the heart","limit":10},
- {"key":"ani_plates","search":"Papyrus of Ani Budge plate","limit":14},
- {"key":"bd125","search":"Book of the Dead negative confession judges papyrus","limit":10},
- {"key":"heart_scarab","search":"heart scarab inscription hieroglyphs","limit":10},
- {"key":"unas","search":"Pyramid of Unas texts burial chamber hieroglyphs","limit":12},
- {"key":"aten","search":"Great Hymn to the Aten tomb of Ay Amarna","limit":10},
- {"key":"karnak","search":"Karnak hypostyle hall hieroglyphs inscription Amun","limit":12},
- {"key":"abydos","search":"Abydos Seti I temple relief hieroglyphs","limit":12},
- {"key":"stela","search":"stela offering formula Middle Kingdom hieroglyphs","limit":12},
- {"key":"kingslist","search":"Abydos King List cartouches","limit":8},
- {"key":"hatshepsut","search":"Deir el-Bahari Hatshepsut temple relief hieroglyphs","limit":8}
+ {
+  "key": "ani2",
+  "search": "Papyrus of Ani",
+  "limit": 30
+ },
+ {
+  "key": "ani3",
+  "search": "Ani papyrus Book of the Dead British Museum",
+  "limit": 20
+ },
+ {
+  "key": "bd125b",
+  "search": "Book of the Dead 125 judges Hunefer papyrus",
+  "limit": 15
+ },
+ {
+  "key": "nefertari",
+  "search": "Nefertari tomb QV66 hieroglyphs",
+  "limit": 15
+ },
+ {
+  "key": "inherkhau",
+  "search": "Deir el-Medina tomb painting Book of the Dead hieroglyphs",
+  "limit": 15
+ },
+ {
+  "key": "karnak2",
+  "search": "Karnak hieroglyphs relief",
+  "limit": 20
+ },
+ {
+  "key": "karnak3",
+  "search": "Karnak obelisk inscription",
+  "limit": 10
+ },
+ {
+  "key": "luxor2",
+  "search": "Luxor temple hieroglyphs",
+  "limit": 15
+ },
+ {
+  "key": "abusimbel2",
+  "search": "Abu Simbel cartouche",
+  "limit": 15
+ },
+ {
+  "key": "ramesseum2",
+  "search": "Ramesseum cartouche Ramesses II",
+  "limit": 10
+ },
+ {
+  "key": "stela2",
+  "search": "stela hieroglyphs offering Middle Kingdom",
+  "limit": 20
+ },
+ {
+  "key": "stela3",
+  "search": "Stele Mittleres Reich Opferformel",
+  "limit": 10
+ },
+ {
+  "key": "unas2",
+  "search": "Unas pyramid texts",
+  "limit": 15
+ },
+ {
+  "key": "unas3",
+  "search": "Pyramid of Unas interior",
+  "limit": 10
+ },
+ {
+  "key": "edfu",
+  "search": "Edfu temple hieroglyphs relief",
+  "limit": 12
+ },
+ {
+  "key": "aten2",
+  "search": "tomb of Ay Amarna hymn",
+  "limit": 10
+ },
+ {
+  "key": "seti_abydos2",
+  "search": "Abydos Seti cartouche",
+  "limit": 12
+ }
 ]
