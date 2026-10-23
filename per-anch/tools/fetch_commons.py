@@ -88,7 +88,9 @@ def search(qfile, out, width):
 
 def fetch(cfile, out, width):
     chosen = json.load(open(cfile, encoding='utf-8'))
-    os.makedirs(out, exist_ok=True); credits = []
+    os.makedirs(out, exist_ok=True); cpath = os.path.join(out, 'credits.json')
+    credits = json.load(open(cpath, encoding='utf-8')) if os.path.exists(cpath) else []
+    credits = [c for c in credits if c.get('name') not in {x['name'] for x in chosen}]
     for c in chosen:
         print('==', c['name'], c['title'], flush=True)
         try:
@@ -102,7 +104,7 @@ def fetch(cfile, out, width):
         except Exception as e:
             print('  FAILED', e, flush=True); continue
         it.update(name=c['name'], file=c['name'] + '.jpg'); credits.append(it); print('  ok', it['license']); time.sleep(2)
-    json.dump(credits, open(os.path.join(out, 'credits.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    json.dump(credits, open(cpath, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 
 if __name__ == '__main__':
     mode, a, out = sys.argv[1], sys.argv[2], sys.argv[3]
