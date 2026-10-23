@@ -10,11 +10,14 @@ wyświetlić, jeśli system nie ma własnego fontu z blokiem Unicode 13000–134
 
 ## Sale
 
-- **Analizator Ściany Świątyni** – 6 inskrypcji krok po kroku: formuła „obdarzony życiem,
+- **Analizator Ściany Świątyni** – 12 inskrypcji krok po kroku w dwu grupach. Księgi zaświatów
+  i malowidła grobowe: tytuł Księgi Umarłych (grobowiec Sennedżema), hymn do Ra (Papirus Ani),
+  zaklęcie serca 30B, Negatywne Wyznanie z rozdziału 125, Teksty Piramid Unisa, Wielki Hymn do
+  Atona. Tytulatury i formuły świątynne: formuła „obdarzony życiem,
   trwałością i władzą jak Ra na wieki”, kartusze Tutanchamona i Ramzesa II, Wielka Formuła
   Ofiarna (ḥtp-dỉ-nswt), dedykacja z Karnaku, imię horusowe Setiego I z Abydos. Klikalne
   znaki, przełącznik kierunku czytania L→P / P→L z odbiciem znaków, zagadka pod każdym reliefem.
-- **Baza Znaków Gardinera** – ponad 100 znaków (alfabet jednoliterowy, dwu- i trzyliterowe,
+- **Baza Znaków Gardinera** – 130 znaków (alfabet jednoliterowy, dwu- i trzyliterowe,
   ideogramy, determinatywy) z wyszukiwarką po rysunku, kodzie i wymowie.
 - **Trening i Zabawa** – układanka bloków kamiennych, quiz z rangami skryby, generator
   królewskiego kartusza (imię zapisane fonetycznie, determinatyw osoby, formuła po kartuszu).

@@ -84,7 +84,9 @@ main section.hall.active{display:block}
 /* Ściana świątyni */
 .wall-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:20px;align-items:start}
 @media (max-width:900px){.wall-layout{grid-template-columns:1fr}}
-.picker{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.picker{display:grid;gap:10px;margin-bottom:14px}
+.picker .cat{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.picker .cat .eyebrow{flex:none;margin-right:4px}
 .picker button{border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:6px 12px;font-size:.9rem;display:flex;gap:8px;align-items:center}
 .picker button .num{font-family:var(--f-display);color:var(--gold)}
 .picker button[aria-selected="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--accent)}
@@ -260,8 +262,8 @@ footer{margin-top:40px;color:var(--muted);font-size:.85rem;border-top:1px solid 
   <div class="intro">
     <div>
       <div class="eyebrow">Analizator Ściany Świątyni</div>
-      <h2>Sześć autentycznych inskrypcji, krok po kroku</h2>
-      <p>Kliknij dowolny wykuty znak, aby poznać jego kod Gardinera i rolę w zapisie. Przełącz kierunek czytania: Egipcjanie pisali w obie strony, a znaki zawsze „patrzą” w stronę początku tekstu. Na końcu każdej ściany czeka zagadka.</p>
+      <h2>Dwanaście autentycznych inskrypcji, krok po kroku</h2>
+      <p>Dwie grupy ścian: teksty religijne z malowideł grobowych i papirusów (Księga Umarłych, Teksty Piramid, hymny) oraz tytulatury i formuły ze ścian świątyń. Kliknij dowolny wykuty znak, aby poznać jego kod Gardinera i rolę w zapisie. Przełącz kierunek czytania: Egipcjanie pisali w obie strony, a znaki zawsze „patrzą” w stronę początku tekstu. Na końcu każdej ściany czeka zagadka.</p>
     </div>
   </div>
   <div class="picker" id="picker" role="tablist" aria-label="Inskrypcje"></div>
@@ -377,6 +379,7 @@ footer{margin-top:40px;color:var(--muted);font-size:.85rem;border-top:1px solid 
 </section>
 
 <footer>
+  <div>Teksty religijne za: Papirus Ani (BM EA 10470), grobowiec Sennedżema (TT1), grobowiec Aja w Amarnie (Wielki Hymn do Atona), piramida Unisa w Sakkarze (Teksty Piramid), skarabeusze serca i papirusy z rozdziałami 30B i 125 Księgi Umarłych.</div>
   <div>Kody znaków według listy Alana Gardinera (<i>Egyptian Grammar</i>, 1927). Transliteracja w konwencji egiptologicznej: <span class="tr">ꜣ ꜥ ḥ ḫ ẖ š ḳ ṯ ḏ</span>. Znaki renderowane fontem Noto Sans Egyptian Hieroglyphs (Unicode 13000–1342F).</div>
   <div>Formuły i tytulatury pochodzą z autentycznych tekstów: Karnak, Abu Simbel, Ramesseum, Abydos (świątynia Setiego I), grobowiec Tutanchamona (KV62) oraz stele ofiarne Średniego Państwa.</div>
 </footer>
@@ -497,9 +500,32 @@ const SIGNS = [
  {c:'T14',g:'𓌙',t:'',typ:'det',pl:'kij do rzucania',snd:'',mean:'cudzoziemcy, obce ludy',kw:'kij rzucać obcy cudzoziemiec'},
  {c:'M2',g:'𓆰',t:'ḥn',typ:'det',pl:'roślina (kwitnąca trzcina?)',snd:'',mean:'rośliny, kwiaty',kw:'roślina kwiat trawa'},
  {c:'Q7',g:'𓊮',t:'',typ:'det',pl:'palenisko z płomieniem',snd:'',mean:'ogień, gotować, gorąco',kw:'ogień płomień palenisko gorąco'},
- {c:'N8',g:'𓇶',t:'',typ:'det',pl:'słońce z promieniami',snd:'',mean:'blask, świecić, światło',kw:'słońce promienie blask świecić'},
  {c:'A24',g:'𓀜',t:'',typ:'det',pl:'człowiek uderzający kijem',snd:'',mean:'siła, uderzać, nauczać',kw:'człowiek kij uderzać bić nauczać'},
  {c:'G7',g:'𓅆',t:'',typ:'det',pl:'sokół na drążku (sztandarze)',snd:'',mean:'bóg; król (po imionach i zaimkach)',kw:'sokół drążek sztandar bóg król'},
+ // --- znaki z Ksiąg zaświatów ---
+ {c:'F34',g:'𓄣',t:'ỉb',typ:'bi',pl:'serce zwierzęce (z naczyniami)',snd:'„ib”',mean:'serce (siedziba myśli i uczuć)',kw:'serce ib organ'},
+ {c:'F4',g:'𓄂',t:'ḥꜣt',typ:'tri',pl:'przednia część lwa',snd:'„hat”',mean:'przód, początek; ḥꜣty – serce (fizyczne)',kw:'lew przód początek hat serce'},
+ {c:'G14',g:'𓅐',t:'mwt',typ:'tri',pl:'sęp płowy',snd:'„mut”',mean:'matka; bogini Mut',kw:'sęp ptak matka mut'},
+ {c:'P6',g:'𓊢',t:'ꜥḥꜥ',typ:'tri',pl:'maszt statku',snd:'„aha”',mean:'stać, powstawać',kw:'maszt statek stać aha'},
+ {c:'S43',g:'𓌃',t:'mdw',typ:'tri',pl:'laska do chodzenia',snd:'„medu”',mean:'mówić, słowa; ḏd mdw „słowa do wypowiedzenia”',kw:'laska kij mówić słowa medu'},
+ {c:'U28',g:'𓍑',t:'ḏꜣ',typ:'bi',pl:'świder ogniowy',snd:'„dża”',mean:'w słowie ḏꜣḏꜣt „trybunał, sąd”',kw:'świder ogień dża sąd trybunał'},
+ {c:'D35',g:'𓂜',t:'n',typ:'ideo',pl:'ramiona rozłożone w geście przeczenia',snd:'„n” / „nie”',mean:'przeczenie: nie, nie ma',kw:'ramiona przeczenie nie negacja'},
+ {c:'T34',g:'𓌰',t:'nm',typ:'bi',pl:'nóż rzeźnicki',snd:'„nem”',mean:'w nmtt „krok”',kw:'nóż rzeźnik nem krok'},
+ {c:'G37',g:'𓅪',t:'',typ:'det',pl:'wróbel',snd:'',mean:'determinatyw: mały, słaby, zły (isft – zło)',kw:'wróbel ptak mały zły'},
+ {c:'V4',g:'𓍯',t:'wꜣ',typ:'bi',pl:'lasso',snd:'„ua”',mean:'w ꜥwꜣ „rabować”',kw:'lasso lina ua'},
+ {c:'U1',g:'𓌳',t:'mꜣ',typ:'bi',pl:'sierp',snd:'„ma”',mean:'w smꜣ „zabijać”, mꜣꜣ „widzieć”',kw:'sierp narzędzie ma widzieć'},
+ {c:'A30',g:'𓀢',t:'',typ:'det',pl:'człowiek z ramionami wzniesionymi w adoracji',snd:'',mean:'czcić, modlić się, prosić (dwꜣ – adorować)',kw:'człowiek adoracja modlitwa czcić dua'},
+ {c:'N27',g:'𓈌',t:'ꜣḫt',typ:'ideo',pl:'słońce wschodzące między dwoma wzgórzami',snd:'„achet”',mean:'horyzont (miejsce wschodu i zachodu)',kw:'horyzont słońce wzgórza achet'},
+ {c:'R15',g:'𓋁',t:'ỉꜣb',typ:'tri',pl:'włócznia ozdobiona wstęgą (sztandar wschodu)',snd:'„iab”',mean:'wschód; lewa strona',kw:'włócznia sztandar wschód lewo iab'},
+ {c:'O31',g:'𓉿',t:'ꜥꜣ',typ:'ideo',pl:'skrzydło drzwi',snd:'„aa”',mean:'drzwi, wrota; podwojone: ꜥꜣwy „dwuskrzydłowe wrota”',kw:'drzwi wrota skrzydło brama'},
+ {c:'N35A',g:'𓈗',t:'mw',typ:'ideo',pl:'trzy fale wody',snd:'„mu”',mean:'woda; determinatyw płynów',kw:'woda fale trzy mu płyn'},
+ {c:'M8',g:'𓆷',t:'šꜣ',typ:'bi',pl:'sadzawka z kwiatami lotosu',snd:'„sza”',mean:'w šꜣꜥ „zaczynać”; pora wylewu (ꜣḫt)',kw:'sadzawka lotos sza początek'},
+ {c:'G40',g:'𓅮',t:'pꜣ',typ:'bi',pl:'kaczka rożeniec w locie',snd:'„pa”',mean:'rodzajnik określony „ten, ta” (pꜣ); latać',kw:'kaczka rożeniec lot pa ten'},
+ {c:'M29',g:'𓇛',t:'nḏm',typ:'tri',pl:'strąk drzewa (słodki owoc)',snd:'„nedżem”',mean:'słodki, przyjemny; w imieniu Sennedżem',kw:'strąk owoc słodki nedżem'},
+ {c:'A26',g:'𓀞',t:'',typ:'det',pl:'człowiek z jedną ręką wzniesioną (wołający)',snd:'',mean:'wołać, wzywać; wykrzyknik „o!” (ỉ)',kw:'człowiek wołać wzywać o'},
+ {c:'Z7',g:'𓏲',t:'w',typ:'uni',pl:'spirala (hieratyczne pisklę)',snd:'„u” / „w”',mean:'skrócony zapis pisklęcia przepiórki G43',kw:'spirala zwój u w pisklę'},
+ {c:'O50',g:'𓊗',t:'sp',typ:'bi',pl:'okrągłe klepisko ze zbożem',snd:'„sep”',mean:'raz; sp-sn „dwa razy” (powtórz)',kw:'klepisko koło raz powtórz sep'},
+ {c:'N8',g:'𓇶',t:'wbn',typ:'det',pl:'słońce z promieniami',snd:'„uben”',mean:'blask, wschodzić (wbn), świecić',kw:'słońce promienie blask świecić wschodzić'},
 ];
 const BY = Object.fromEntries(SIGNS.map(s=>[s.c,s]));
 const TYPN = {uni:'jednoliterowy',bi:'dwuliterowy',tri:'trzyliterowy',ideo:'ideogram',det:'determinatyw'};
@@ -508,7 +534,149 @@ const ROLE = {fon:'fonogram',ideo:'ideogram',det:'determinatyw',komp:'dopełnien
 /* ===================== INSKRYPCJE ===================== */
 // grupa: s = kody znaków, col = układ pionowy, tr = transliteracja, pl = znaczenie, fn = funkcja, note = objaśnienie kroku, cart = id kartusza
 const INSCRIPTIONS = [
- {id:'formula', num:'I', title:'Formuła „Obdarzony życiem, trwałością i władzą”',
+ {id:'bd1', num:'I', cat:'ksiegi', title:'Tytuł Księgi Umarłych i formuła recytacji',
+  site:'Grobowiec Sennedżema (TT1) w Deir el-Medina; papirusy Księgi Umarłych Nowego Państwa',
+  scene:'Na malowidle: zmarły Sennedżem z żoną Ijneferti siedzą przed stołem ofiarnym, nad nimi kolumny tekstu zaczynające się tą formułą. Egipcjanie nazywali swoją „Księgę Umarłych” Księgą Wychodzenia za Dnia.',
+  tr:'ḥꜣt-ꜥ m rꜣw nw prt m hrw · ḏd mdw ỉn Wsỉr Sn-nḏm mꜣꜥ-ḫrw',
+  pl:'Początek formuł o wychodzeniu za dnia. Słowa do wypowiedzenia przez Ozyrysa Sennedżema, usprawiedliwionego.',
+  about:'To autentyczny tytuł zbioru, który dziś nazywamy Księgą Umarłych. „Wychodzenie za dnia” oznacza swobodne opuszczanie grobu przez duszę ba i powrót do świata żywych o świcie, razem ze słońcem.',
+  groups:[
+   {s:['F4','X1','D36'],tr:'ḥꜣt-ꜥ',pl:'początek',fn:'fon',note:'Przednia część lwa ḥꜣt „przód” + chleb t + ramię ꜥ: ḥꜣt-ꜥ, dosłownie „przód ramienia” – stały egipski nagłówek „początek (tekstu)”.'},
+   {s:['G17'],tr:'m',pl:'(spośród)',fn:'fon',note:'Sowa m – przyimek wprowadzający, czego tekst jest początkiem.'},
+   {s:['D21','Z1','Z2'],tr:'rꜣw',pl:'formuły, rozdziały',fn:'ideo',note:'Usta rꜣ „wypowiedź, formuła” z kreską ideograficzną i trzema kreskami liczby mnogiej. Egiptolodzy numerują te rꜣw jako „rozdziały” Księgi Umarłych.'},
+   {s:['W24','Z7'],tr:'nw',pl:'(należące) do',fn:'fon',note:'Naczynie nw + spirala w: zaimek dopełniaczowy liczby mnogiej „te od, należące do”.'},
+   {s:['O1','D21','X1','D54'],tr:'prt',pl:'wychodzenie',fn:'fon',note:'Dom pr + usta r (dopełnienie) + chleb t + idące nogi (determinatyw ruchu): prt „wychodzenie”. Chodzi o wychodzenie duszy z grobu.'},
+   {s:['G17'],tr:'m',pl:'za, w',fn:'fon',note:'Sowa m – „w (porze)”.'},
+   {s:['O4','D21','G43','N5','Z1'],tr:'hrw',pl:'dzień',fn:'fon',note:'Zagroda h + usta r + pisklę w, ze słońcem i kreską jako determinatywem: hrw „dzień”. Całość: „Formuły o wychodzeniu za dnia”.'},
+   {s:['I10','S43'],tr:'ḏd mdw',pl:'słowa do wypowiedzenia',fn:'ideo',note:'Kobra ḏd „mówić” i laska mdw „słowa”. Rubryka otwierająca każdą recytację, w papirusach często pisana czerwonym tuszem.'},
+   {s:['M17','N35'],tr:'ỉn',pl:'przez',fn:'fon',note:'Trzcina i + woda n: przyimek „przez” wskazujący, kto wypowiada tekst.'},
+   {s:['Q1','D4','A40'],tr:'Wsỉr',pl:'Ozyrys',fn:'fon',note:'Tron + oko + bóg: Ozyrys. Każdy zmarły stawał się „Ozyrysem NN” – utożsamiano go z bogiem, który zmartwychwstał.'},
+   {s:['S29','N35','M29','G17','A1'],tr:'Sn-nḏm',pl:'Sennedżem („Słodki brat”)',fn:'fon',note:'Płótno s + woda n = sn „brat”; strąk nḏm „słodki” z dopełnieniem m (sowa); siedzący mężczyzna to determinatyw imienia męskiego. Sennedżem był rzemieślnikiem z osady budowniczych grobów królewskich.'},
+   {s:['Aa11','P8'],tr:'mꜣꜥ-ḫrw',pl:'usprawiedliwiony',fn:'ideo',note:'Cokół mꜣꜥ „prawdziwy” + wiosło ḫrw „głos”: zmarły, którego głos uznano za prawdziwy przed sądem Ozyrysa. Epitet dodawany po imieniu każdego zmarłego.'},
+  ],
+  quiz:{q:'Jak Egipcjanie nazywali zbiór, który dziś zwiemy „Księgą Umarłych”?',
+        opts:['Formuły o wychodzeniu za dnia (rꜣw nw prt m hrw)','Księga Bram','Słowa Ozyrysa','Księga Dwóch Dróg'],ans:0,
+        why:'Nazwę „Księga Umarłych” wymyślił w 1842 r. Karl Richard Lepsius. Egipski tytuł mówi o wychodzeniu duszy z grobu za dnia, czyli o życiu po śmierci, a nie o śmierci.'}},
+
+ {id:'hymnra', num:'II', cat:'ksiegi', title:'Hymn do Ra o wschodzie słońca',
+  site:'Papirus Ani (Muzeum Brytyjskie, EA 10470), karta 1; sceny adoracji przy wejściach do grobowców tebańskich',
+  scene:'Na winiecie: skryba Ani i jego żona Tutu stoją z rękami wzniesionymi w geście adoracji przed stołem ofiarnym. Tekst nad nimi otwiera cały papirus. Podobne sceny malowano po obu stronach wejścia do grobowców ramessydzkich, by zmarły codziennie witał słońce.',
+  tr:'dwꜣ Rꜥ ḫft wbn=f m ꜣḫt ỉꜣbtt nt pt',
+  pl:'Adoracja Ra, gdy wschodzi on na wschodnim horyzoncie nieba.',
+  about:'Hymny solarne otwierają większość papirusów Księgi Umarłych. Zmarły chciał towarzyszyć słońcu w jego codziennej podróży: wschodzić z nim rano i bezpiecznie przechodzić przez noc.',
+  groups:[
+   {s:['N14','G1','A30'],tr:'dwꜣ',pl:'adorować, czcić',fn:'fon',note:'Gwiazda dwꜣ (też „poranek”) + sęp ꜣ (dopełnienie) + człowiek w geście adoracji jako determinatyw. Słowo „adorować” wywodzi się od porannej gwiazdy.'},
+   {s:['N5','Z1'],tr:'Rꜥ',pl:'Ra',fn:'ideo',note:'Słońce z kreską ideograficzną – bóg Ra.'},
+   {s:['Aa1','I9','X1'],tr:'ḫft',pl:'gdy, kiedy',fn:'fon',note:'Sito ḫ + żmija f + chleb t: ḫft „gdy; naprzeciw”.'},
+   {s:['G43','D58','N35','N8','I9'],tr:'wbn=f',pl:'wschodzi on',fn:'fon',note:'Pisklę w + noga b + woda n: wbn „wschodzić, jaśnieć”; słońce z promieniami jest determinatywem blasku, żmija f to „on”.'},
+   {s:['G17'],tr:'m',pl:'na, w',fn:'fon',note:'Sowa m – przyimek miejsca.'},
+   {s:['N27','X1'],tr:'ꜣḫt',pl:'horyzont',fn:'ideo',note:'Słońce między dwoma wzgórzami to ꜣḫt „horyzont” – miejsce, gdzie świat żywych styka się z zaświatami. Stąd nazwa Achetaton („Horyzont Atona”).'},
+   {s:['R15','D58','X1','X1'],tr:'ỉꜣbtt',pl:'wschodni',fn:'fon',note:'Sztandar wschodu iꜣb + noga b (dopełnienie) + dwa chleby t: iꜣbtt „wschodnia” (przymiotnik rodzaju żeńskiego, bo ꜣḫt jest żeńskie).'},
+   {s:['N35','X1'],tr:'nt',pl:'(należący) do',fn:'fon',note:'Woda n + chleb t: żeński zaimek dopełniaczowy „ta od”.'},
+   {s:['N1'],tr:'pt',pl:'niebo',fn:'ideo',note:'Sklepienie nieba pt. Cały tytuł: „Adoracja Ra, gdy wschodzi na wschodnim horyzoncie nieba”.'},
+  ],
+  quiz:{q:'Znak 𓈌 w słowie ꜣḫt przedstawia…',
+        opts:['słońce wschodzące między dwoma wzgórzami (horyzont)','oko Horusa','łódź słoneczną','gwiazdę poranną'],ans:0,
+        why:'ꜣḫt „horyzont” to słońce w siodle między dwiema górami. Od tego słowa Echnaton nazwał swoją stolicę Achetaton.'}},
+
+ {id:'bd30', num:'III', cat:'ksiegi', title:'Zaklęcie serca (Księga Umarłych, rozdział 30B)',
+  site:'Skarabeusze serca kładzione na piersi mumii; winieta ważenia serca w papirusach Ani i Hunefera; ściany sal sarkofagowych',
+  scene:'Na malowidle: w Sali Dwu Prawd Anubis waży serce zmarłego na wadze naprzeciw pióra Maat. Thot zapisuje wynik, pożeraczka Ammit czeka. Zmarły wypowiada ten tekst, prosząc własne serce, by nie zeznawało przeciw niemu.',
+  tr:'ỉb=ỉ n mwt=ỉ sp-sn ḥꜣty=ỉ n ḫprw=ỉ m ꜥḥꜥ r=ỉ m mtrw m ḫsf r=ỉ m ḏꜣḏꜣt',
+  pl:'Serce moje od matki mojej! (powtórz dwa razy) Serce moje z moich przemian! Nie powstawaj przeciw mnie jako świadek, nie sprzeciwiaj mi się w trybunale.',
+  about:'Najczęściej kopiowany tekst Księgi Umarłych: ryto go na skarabeuszach z zielonego kamienia, bo serce uważano za siedzibę sumienia i pamięci, a na sądzie Ozyrysa mogło zdradzić winy właściciela.',
+  groups:[
+   {s:['F34','Z1','A1'],tr:'ỉb=ỉ',pl:'serce moje',fn:'ideo',note:'Serce ib z kreską ideograficzną; siedzący mężczyzna A1 to zaimek „ja, mój” (zmarły mówi o sobie).'},
+   {s:['N35'],tr:'n',pl:'od',fn:'fon',note:'Woda n – „należące do, od”.'},
+   {s:['G14','X1','B1','A1'],tr:'mwt=ỉ',pl:'matki mojej',fn:'fon',note:'Sęp mwt + chleb t + siedząca kobieta (determinatyw): „matka”; A1 „moja”. Serce dziedziczono po matce – stąd wezwanie.'},
+   {s:['O50','Z4'],tr:'sp-sn',pl:'dwa razy',fn:'ideo',note:'Klepisko sp „raz” z dwiema kreskami: sp-sn „dwa razy” – skrybowska notatka „powtórz poprzednie słowa”. Skryba oszczędzał miejsce, a recytujący wiedział, że ma powtórzyć wezwanie.'},
+   {s:['F4','X1','Z4','F34','A1'],tr:'ḥꜣty=ỉ',pl:'serce moje (fizyczne)',fn:'fon',note:'Przód lwa ḥꜣt + t + y, z sercem jako determinatywem: ḥꜣty – serce jako organ, w odróżnieniu od ib, serca-umysłu.'},
+   {s:['N35'],tr:'n',pl:'z, od',fn:'fon',note:'Woda n.'},
+   {s:['L1','D21','Z7','Z2','A1'],tr:'ḫprw=ỉ',pl:'przemian moich',fn:'fon',note:'Skarabeusz ḫpr + r (dopełnienie) + w + kreski mnogie: ḫprw „przemiany, postacie” – kolejne formy istnienia zmarłego. Dlatego amulet serca ma kształt skarabeusza.'},
+   {s:['G17'],tr:'m',pl:'nie (zakaz)',fn:'fon',note:'Sowa m użyta jako przeczący rozkaźnik: „nie [czyń]!”.'},
+   {s:['P6','D36','D54'],tr:'ꜥḥꜥ',pl:'powstawaj',fn:'fon',note:'Maszt ꜥḥꜥ „stać” + ramię ꜥ (dopełnienie) + nogi (determinatyw ruchu). „Nie powstawaj” – nie występuj.'},
+   {s:['D21','A1'],tr:'r=ỉ',pl:'przeciw mnie',fn:'fon',note:'Usta r – przyimek „do, przeciw”; A1 „mnie”.'},
+   {s:['G17'],tr:'m',pl:'jako',fn:'fon',note:'Sowa m – „w roli”.'},
+   {s:['S43','X1','D21','G43','A2'],tr:'mtrw',pl:'świadek',fn:'fon',note:'Laska md(w) + t + r + w: mtr „świadczyć”; człowiek z ręką przy ustach to determinatyw mówienia. Serce jako świadek oskarżenia.'},
+   {s:['G17'],tr:'m',pl:'nie (zakaz)',fn:'fon',note:'Drugi przeczący rozkaźnik.'},
+   {s:['Aa1','S29','I9','D54'],tr:'ḫsf',pl:'sprzeciwiaj się',fn:'fon',note:'Sito ḫ + płótno s + żmija f: ḫsf „odpychać, sprzeciwiać się”, z nogami jako determinatywem.'},
+   {s:['D21','A1'],tr:'r=ỉ',pl:'mi (przeciw mnie)',fn:'fon',note:'Usta r + „ja”.'},
+   {s:['G17'],tr:'m',pl:'w',fn:'fon',note:'Sowa m – przyimek miejsca.'},
+   {s:['U28','G1','U28','G1','X1','Z2'],tr:'ḏꜣḏꜣt',pl:'trybunał',fn:'fon',note:'Podwojony świder ogniowy ḏꜣ z sępami ꜣ + t + kreski mnogie: ḏꜣḏꜣt „kolegium sędziów, trybunał” – 42 sędziów zaświatów pod przewodnictwem Ozyrysa.'},
+  ],
+  quiz:{q:'Co oznacza notatka 𓊗𓏭 (sp-sn) po słowach „serce moje od matki mojej”?',
+        opts:['„Dwa razy”: recytujący ma powtórzyć wezwanie','Imię skryby','„Dwa serca” zmarłego','Numer rozdziału'],ans:0,
+        why:'sp-sn, dosłownie „raz drugi”, to egipski znak powtórzenia. Skryba pisał tekst raz i dodawał sp-sn, a czytający wygłaszał go dwukrotnie.'}},
+
+ {id:'bd125', num:'IV', cat:'ksiegi', title:'Negatywne Wyznanie (Księga Umarłych, rozdział 125)',
+  site:'Papirusy Ani i Nebseniego; ściany sal sarkofagowych grobowców Nowego Państwa; świątynie epoki ptolemejskiej (jako przysięga kapłanów)',
+  scene:'Na malowidle: zmarły stoi przed rzędem 42 siedzących sędziów, każdy z nożem lub piórem. Do każdego zwraca się po imieniu, podaje jego miasto i zaprzecza jednemu grzechowi. Tu trzy pierwsze zaprzeczenia.',
+  tr:'ỉ wsḫ-nmtt pr m Ỉwnw n ỉr=ỉ ỉsft · n ꜥwꜣ=ỉ · n smꜣ=ỉ rmṯ',
+  pl:'O Szerokokroczący, który wychodzisz z Heliopolis: nie czyniłem zła. Nie rabowałem. Nie zabijałem ludzi.',
+  about:'Rozdział 125 to jedyny egipski tekst, który wylicza, czego porządny człowiek nie wolno było robić. Zmarły nie wyznaje win, lecz zaprzecza każdej z osobna, dlatego egiptolodzy nazwali go Negatywnym Wyznaniem.',
+  groups:[
+   {s:['M17','A26'],tr:'ỉ',pl:'o! (wołacz)',fn:'fon',note:'Trzcina i z człowiekiem wołającym jako determinatywem: wykrzyknik „o!”, którym zmarły wzywa każdego z 42 sędziów.'},
+   {s:['F12','S29','Aa1'],tr:'wsḫ',pl:'szeroki',fn:'fon',note:'Głowa szakala wsr → tu czytana ws + płótno s + sito ḫ: wsḫ „szeroki”.'},
+   {s:['T34','X1','X1','D54'],tr:'nmtt',pl:'krok',fn:'fon',note:'Nóż rzeźnicki nm + dwa chleby t + idące nogi: nmtt „krok”. Wsḫ-nmtt „Szerokokroczący” to imię pierwszego sędziego.'},
+   {s:['O1','D21','D54'],tr:'pr',pl:'wychodzący',fn:'fon',note:'Dom pr + usta r (dopełnienie) + nogi: pr „wychodzić”. Każdy sędzia „wychodzi” z jakiegoś miasta – jest jego lokalnym demonem.'},
+   {s:['G17'],tr:'m',pl:'z',fn:'fon',note:'Sowa m – „z (miejsca)”.'},
+   {s:['O28','W24','O49'],tr:'Ỉwnw',pl:'Heliopolis',fn:'fon',note:'Kolumna iwn + naczynie nw + determinatyw miasta: Iwnw, Heliopolis – miasto słońca, dziś dzielnica Kairu.'},
+   {s:['D35'],tr:'n',pl:'nie',fn:'ideo',note:'Ramiona rozłożone w geście przeczenia – negacja czasownika w czasie przeszłym: „nie [zrobiłem]”.'},
+   {s:['D4','A1'],tr:'ỉr=ỉ',pl:'czyniłem',fn:'fon',note:'Oko ir „czynić” + „ja”. Z poprzednią negacją: „nie czyniłem”.'},
+   {s:['M17','O34','I9','X1','G37'],tr:'ỉsft',pl:'zła, nieprawości',fn:'fon',note:'i + rygiel s + żmija f + chleb t, z wróblem jako determinatywem zła i małości: isft – przeciwieństwo Maat, chaos i niesprawiedliwość.'},
+   {s:['D35'],tr:'n',pl:'nie',fn:'ideo',note:'Drugie zaprzeczenie.'},
+   {s:['D36','V4','G1','D40','A1'],tr:'ꜥwꜣ=ỉ',pl:'rabowałem',fn:'fon',note:'Ramię ꜥ + lasso wꜣ + sęp ꜣ (dopełnienie) + ramię z kijem (determinatyw siły): ꜥwꜣ „rabować, grabić”. A1: „ja”.'},
+   {s:['D35'],tr:'n',pl:'nie',fn:'ideo',note:'Trzecie zaprzeczenie.'},
+   {s:['S29','U1','G1','A24','A1'],tr:'smꜣ=ỉ',pl:'zabijałem',fn:'fon',note:'Płótno s + sierp mꜣ + sęp ꜣ + człowiek uderzający kijem: smꜣ „zabijać”. Sierp czyta się mꜣ, stąd też mꜣꜣ „widzieć”.'},
+   {s:['D21','V13','A1','B1','Z2'],tr:'rmṯ',pl:'ludzi',fn:'fon',note:'Usta r + pętla ṯ (m niezapisane, znane z wymowy) z determinatywami mężczyzny i kobiety oraz kreskami mnogimi: rmṯ „ludzie”. Para A1 B1 oznacza „ludzkość” obu płci.'},
+  ],
+  quiz:{q:'Znak 𓂜 przed czasownikami ỉr, ꜥwꜣ i smꜣ oznacza…',
+        opts:['przeczenie „nie”','„ja” (zaimek)','gest adoracji','„dwa razy”'],ans:0,
+        why:'Rozłożone ramiona D35 to egipskie „nie”. Zmarły trzykrotnie zaprzecza: nie czyniłem zła, nie rabowałem, nie zabijałem.'}},
+
+ {id:'pyr', num:'V', cat:'ksiegi', title:'Teksty Piramid: otwarcie wrót nieba',
+  site:'Piramida Unisa w Sakkarze (ok. 2350 p.n.e.), przedsionek i komora grobowa; powtarzane w piramidach Tetiego, Pepiego I i II',
+  scene:'Ściany komory grobowej Unisa pokrywają kolumny znaków wykutych w białym wapieniu i wypełnionych niebieskozieloną pastą, kolorem wody i nieba. To najstarszy zbiór tekstów religijnych na świecie, niemal 800 lat starszy od Księgi Umarłych.',
+  tr:'ḏd mdw wn ꜥꜣwy pt sn ꜥꜣwy ḳbḥw',
+  pl:'Słowa do wypowiedzenia: Otwarte są wrota nieba, rozwarte są wrota firmamentu.',
+  about:'Formuła otwierania wrót nieba powraca w wielu zaklęciach Tekstów Piramid: król ma wstąpić do nieba i dołączyć do Ra oraz gwiazd niezniszczalnych. Zbudowano ją na egipskim paralelizmie – dwa niemal identyczne zdania o nieco innych słowach.',
+  groups:[
+   {s:['I10','S43'],tr:'ḏd mdw',pl:'słowa do wypowiedzenia',fn:'ideo',note:'Rubryka recytacji, już w Tekstach Piramid otwiera prawie każde zaklęcie.'},
+   {s:['E34','N35'],tr:'wn',pl:'otwarte są',fn:'fon',note:'Zając wn + woda n (dopełnienie): wn „otwierać”. Forma bierna: „otwarte są”.'},
+   {s:['O31','O31'],tr:'ꜥꜣwy',pl:'wrota (dwuskrzydłowe)',fn:'ideo',note:'Dwa skrzydła drzwi: liczba podwójna ꜥꜣwy „para drzwi, wrota”. Podwojenie znaku zapisuje dualis.'},
+   {s:['N1'],tr:'pt',pl:'nieba',fn:'ideo',note:'Sklepienie niebieskie pt. „Wrota nieba”, przez które król wstępuje do bogów.'},
+   {s:['O34','N35','O31'],tr:'sn',pl:'rozwarte są',fn:'fon',note:'Rygiel s + woda n: sn „odsuwać (rygiel), rozwierać”, ze skrzydłem drzwi jako determinatywem. Synonim poprzedniego wn – typowy egipski paralelizm.'},
+   {s:['O31','O31'],tr:'ꜥꜣwy',pl:'wrota',fn:'ideo',note:'Ponownie para drzwi.'},
+   {s:['N29','D58','V28','Z7','N35A'],tr:'ḳbḥw',pl:'firmamentu (chłodnych wód)',fn:'fon',note:'Zbocze ḳ + noga b + knot ḥ + w, z trzema falami wody jako determinatywem: ḳbḥw „chłodne wody” – niebiański ocean, po którym płynie łódź słoneczna.'},
+  ],
+  quiz:{q:'Dlaczego w ścianach komory Unisa znaki wypełniono niebieskozieloną pastą?',
+        opts:['To kolor wody i nieba, do którego król miał wstąpić','Bo zieleń była najtańszym barwnikiem','Aby znaki były niewidoczne dla złodziei','Tak oznaczano teksty do czytania od prawej'],ans:0,
+        why:'Zieleń i błękit to kolory odrodzenia, wody pierwotnej i nieba. Teksty mówią o wrotach nieba i chłodnych wodach firmamentu, a barwa znaków wzmacnia ich treść.'}},
+
+ {id:'aten', num:'VI', cat:'ksiegi', title:'Wielki Hymn do Atona',
+  site:'Grobowiec Aja w Amarnie (grobowiec południowy nr 25), ściana zachodnia wejścia, ok. 1340 p.n.e.',
+  scene:'Na reliefie: Aj i jego żona Teje stoją z uniesionymi dłońmi, a nad nimi 13 kolumn tekstu hymnu, który tradycja przypisuje samemu Echnatonowi. Kolumny czyta się od prawej do lewej – przełącz kierunek, aby zobaczyć znaki tak, jak stoją na ścianie.',
+  tr:'ḫꜥ=k nfr m ꜣḫt nt pt pꜣ Ỉtn ꜥnḫ šꜣꜥ ꜥnḫ',
+  pl:'Pięknie jaśniejesz na horyzoncie nieba, o żywy Atonie, początku życia!',
+  about:'Pierwsze słowa najsłynniejszego tekstu religijnego Amarny. Hymn opiewa słońce jako jedynego stwórcę; jego obrazy porównywano z Psalmem 104. Po śmierci Echnatona kult Atona zarzucono, a grobowiec Aja pozostał niedokończony.',
+  groups:[
+   {s:['N28','D36','V31'],tr:'ḫꜥ=k',pl:'jaśniejesz',fn:'fon',note:'Słońce nad wzgórzem ḫꜥ „ukazywać się w blasku” + ramię ꜥ (dopełnienie) + kosz k „ty”. Czasownik używany o wschodzie słońca i o koronacji króla.'},
+   {s:['F35'],tr:'nfr',pl:'pięknie',fn:'ideo',note:'Serce z tchawicą nfr „piękny, doskonały”, tu jako przysłówek.'},
+   {s:['G17'],tr:'m',pl:'na',fn:'fon',note:'Sowa m – przyimek miejsca.'},
+   {s:['N27','X1'],tr:'ꜣḫt',pl:'horyzoncie',fn:'ideo',note:'Horyzont – ten sam znak, co w hymnie do Ra ze ściany II i w nazwie stolicy Achetaton.'},
+   {s:['N35','X1'],tr:'nt',pl:'(należący) do',fn:'fon',note:'Żeński zaimek dopełniaczowy.'},
+   {s:['N1'],tr:'pt',pl:'nieba',fn:'ideo',note:'Niebo.'},
+   {s:['G40','G1'],tr:'pꜣ',pl:'o (ten)',fn:'fon',note:'Kaczka w locie pꜣ + sęp ꜣ: rodzajnik określony „ten”, nowość języka Nowego Państwa; tu w wołaczu „o…!”.'},
+   {s:['M17','X1','N35','N5'],tr:'Ỉtn',pl:'Atonie',fn:'fon',note:'Trzcina i + chleb t + woda n + słońce: Itn „tarcza słoneczna, Aton” – bóg Echnatona, przedstawiany jako dysk z promieniami zakończonymi dłońmi.'},
+   {s:['S34'],tr:'ꜥnḫ',pl:'żywy',fn:'ideo',note:'Anch „żywy”. „Żywy Aton” to stały tytuł boga w Amarnie.'},
+   {s:['M8','G1','D36'],tr:'šꜣꜥ',pl:'początek',fn:'fon',note:'Sadzawka z lotosami šꜣ + sęp ꜣ + ramię ꜥ: šꜣꜥ „zaczynać; początek, ten który rozpoczął”.'},
+   {s:['S34'],tr:'ꜥnḫ',pl:'życia',fn:'ideo',note:'Anch „życie”. šꜣꜥ ꜥnḫ: „początek życia, stwórca życia”.'},
+  ],
+  quiz:{q:'Które słowo w pierwszym wersie hymnu jest rodzajnikiem określonym, nowością języka Nowego Państwa?',
+        opts:['pꜣ 𓅮𓄿','nfr 𓄤','nt 𓈖𓏏','ꜥnḫ 𓋹'],ans:0,
+        why:'Klasyczny egipski nie miał rodzajników. W Nowym Państwie język mówiony (nowoegipski) wprowadził pꜣ / tꜣ / nꜣ „ten, ta, ci”, a Hymn do Atona pisano właśnie językiem bliskim mowie.'}},
+
+ {id:'formula', num:'VII', cat:'tyt', title:'Formuła „Obdarzony życiem, trwałością i władzą”',
   site:'Zakończenie tytulatury królewskiej na ścianach świątyń (m.in. Karnak, Luksor, Medinet Habu)',
   tr:'dỉ ꜥnḫ ḏd wꜣs mỉ Rꜥ ḏt', pl:'Obdarzony życiem, trwałością i władzą jak Ra, na wieki.',
   about:'To najczęstsza formuła dobrodziejstw po imieniu króla. Znajdziesz ją na niemal każdym murze świątynnym Nowego Państwa, zwykle tuż za kartuszem.',
@@ -516,7 +684,7 @@ const INSCRIPTIONS = [
    {s:['X8'],tr:'dỉ',pl:'dany, obdarzony',fn:'ideo',note:'Stożkowy bochenek X8 to logogram czasownika „dawać”. Tu w formie imiesłowu: „dany, obdarzony”. Często zamiast niego rzeźbiono ramię podające chleb (D37).'},
    {s:['S34'],tr:'ꜥnḫ',pl:'życie',fn:'ideo',note:'Anch – pętla sandała, czytany ꜥnḫ „życie”. Jeden znak zapisuje całe trzyliterowe słowo (trzyliterowy znak użyty jako ideogram).'},
    {s:['R11'],tr:'ḏd',pl:'trwałość',fn:'ideo',note:'Filar dżed – stylizowana wiązka trzcin, później utożsamiona z kręgosłupem Ozyrysa. Oznacza stałość i trwałość.'},
-   {s:['S40'],tr:'wꜣs',pl:'władza, panowanie',fn:'ideo',note:'Berło uas z głową zwierzęcia Seta – atrybut bogów. Zapisuje słowo wꜣs „władza”. Ten sam znak pojawia się w nazwie Teb (Wꜣst), zob. ścianę VI.'},
+   {s:['S40'],tr:'wꜣs',pl:'władza, panowanie',fn:'ideo',note:'Berło uas z głową zwierzęcia Seta – atrybut bogów. Zapisuje słowo wꜣs „władza”. Ten sam znak pojawia się w nazwie Teb (Wꜣst), zob. ścianę XII.'},
    {s:['W19'],tr:'mỉ',pl:'jak, tak jak',fn:'fon',note:'Dzban na mleko w siatce to dwuliterowy fonogram mi. Tu zapisuje przyimek „jak”.'},
    {s:['N5','Z1'],col:true,tr:'Rꜥ',pl:'Ra (bóg słońca)',fn:'ideo',note:'Tarcza słoneczna z kreską ideograficzną Z1: kreska mówi „czytaj znak dosłownie” – słońce, czyli bóg Ra.'},
    {s:['I10','X1','N17'],tr:'ḏt',pl:'wieczność',fn:'fon',note:'Kobra ḏ + chleb t dają ḏt, a płaska ziemia N17 jest determinatywem. ḏt to wieczność liniowa, „na zawsze” (inna niż cykliczna nḥḥ).'},
@@ -525,7 +693,7 @@ const INSCRIPTIONS = [
         opts:['Berło z głową zwierzęcia Seta','Laskę pasterską z zakrzywioną rączką','Filar z wiązki trzcin','Rzemień sandała'],ans:0,
         why:'Berło uas zwieńczone głową zwierzęcia Seta trzymali bogowie i królowie. Laska pasterska to ḥḳꜣ (S38), filar to ḏd (R11), a rzemień sandała to ꜥnḫ (S34).'}},
 
- {id:'tut', num:'II', title:'Kartusze Tutanchamona',
+ {id:'tut', num:'VIII', cat:'tyt', title:'Kartusze Tutanchamona',
   site:'Grobowiec KV62 w Dolinie Królów; sprzęty grobowe i kaplice (ok. 1330 p.n.e.)',
   tr:'nswt-bỉty Nb-ḫprw-Rꜥ sꜣ-Rꜥ Twt-ꜥnḫ-Ỉmn ḥḳꜣ-Ỉwnw-šmꜥ', pl:'Król Górnego i Dolnego Egiptu Nebcheperure („Pan przemian jest Ra”), Syn Ra Tutanchamon („Żywy obraz Amona”), władca Heliopolis Górnoegipskiego (Teb).',
   about:'Król miał pięć imion, ale w kartuszach zamykano tylko dwa: imię tronowe (po tytule „Król Górnego i Dolnego Egiptu”) i imię własne (po tytule „Syn Ra”).',
@@ -546,7 +714,7 @@ const INSCRIPTIONS = [
         opts:['Imię boga ma pierwszeństwo w zapisie (transpozycja honoryfikacyjna)','Rzeźbiarz pomylił kolejność','Kartusz czyta się zawsze od końca','Amon był pierwszym tytułem króla'],ans:0,
         why:'Egipcjanie wysuwali imiona bogów i słowo „król” na początek grupy niezależnie od wymowy. Dlatego Ra i Amon otwierają oba kartusze.'}},
 
- {id:'ram', num:'III', title:'Kartusze Ramzesa II',
+ {id:'ram', num:'IX', cat:'tyt', title:'Kartusze Ramzesa II',
   site:'Abu Simbel, Ramesseum, Karnak (sala hypostylowa), ok. 1279–1213 p.n.e.',
   tr:'nswt-bỉty Wsr-mꜣꜥt-Rꜥ stp-n-Rꜥ sꜣ-Rꜥ Rꜥ-ms-sw mry-Ỉmn', pl:'Król Górnego i Dolnego Egiptu Usermaatre Setepenre („Potężna jest Maat Ra, wybrany przez Ra”), Syn Ra Ramzes („Ra go zrodził”), ukochany Amona.',
   about:'Najczęściej powtarzane kartusze w Egipcie. Ramzes II kazał je rzeźbić głęboko, by następcy nie mogli ich łatwo usunąć.',
@@ -567,7 +735,7 @@ const INSCRIPTIONS = [
         opts:['Trzy skóry lisów związane razem','Wiązkę zboża','Trzy strusie pióra','Sieć rybacką'],ans:0,
         why:'F31 to trzy skóry lisów (lub lisie ogony) związane u góry – znak czytany ms „rodzić”. Stąd imiona Ra-mes-su, Thot-mes, Ah-mes.'}},
 
- {id:'htp', num:'IV', title:'Wielka Formuła Ofiarna (ḥtp-dỉ-nswt)',
+ {id:'htp', num:'X', cat:'tyt', title:'Wielka Formuła Ofiarna (ḥtp-dỉ-nswt)',
   site:'Stele i ściany grobowców (Abydos, Teby, Sakkara), od Starego Państwa po epokę grecko-rzymską',
   tr:'ḥtp-dỉ-nswt Wsỉr nb Ḏdw nṯr ꜥꜣ nb Ꜣbḏw dỉ=f prt-ḫrw t ḥnḳt kꜣw ꜣpdw n kꜣ n ỉmꜣḫy Ỉntf mꜣꜥ-ḫrw',
   pl:'Ofiara, którą daje król [oraz] Ozyrys, pan Dżedu, wielki bóg, pan Abydos: aby dał on ofiarę inwokacyjną – chleb, piwo, woły i ptactwo – dla ka czczonego Antefa, usprawiedliwionego.',
@@ -593,7 +761,7 @@ const INSCRIPTIONS = [
         opts:['Determinatyw „miasto, osada”','Fonogram „w”','Słońce nad horyzontem','Znak liczby mnogiej'],ans:0,
         why:'O49 to plan osady ze skrzyżowaniem ulic. Nie czyta się go, tylko sygnalizuje, że poprzedzające znaki tworzą nazwę miejscowości.'}},
 
- {id:'karnak', num:'V', title:'Inskrypcja dedykacyjna z Karnaku',
+ {id:'karnak', num:'XI', cat:'tyt', title:'Inskrypcja dedykacyjna z Karnaku',
   site:'Świątynia Amona-Ra w Karnaku – architrawy, pylony i bazy posągów (Nowe Państwo)',
   tr:'ỉr.n=f m mnw=f n ỉt=f Ỉmn-Rꜥ nb nswt tꜣwy', pl:'Uczynił on [to] jako swój pomnik dla ojca swego Amona-Ra, pana tronów Obu Krajów.',
   about:'Standardowa formuła dedykacyjna: król „czyni pomnik” dla boga-ojca. Jej fragmenty powtarzają się na architrawach wszystkich wielkich świątyń.',
@@ -613,7 +781,7 @@ const INSCRIPTIONS = [
         opts:['Podwajając znak ziemi: 𓇾𓇾','Trzema kreskami 𓏥','Jedną kreską 𓏤','Dodając pisklę 𓅱'],ans:0,
         why:'Liczbę podwójną zapisywano podwajając znak (lub dwiema kreskami), liczbę mnogą potrajając go lub dodając trzy kreski Z2.'}},
 
- {id:'abydos', num:'VI', title:'Imię horusowe Setiego I z Abydos',
+ {id:'abydos', num:'XII', cat:'tyt', title:'Imię horusowe Setiego I z Abydos',
   site:'Świątynia Setiego I w Abydos – ściany, Galeria Królów (ok. 1290–1279 p.n.e.)',
   tr:'ꜥnḫ Ḥr Kꜣ-nḫt ḫꜥ-m-Wꜣst nswt-bỉty Mn-mꜣꜥt-Rꜥ', pl:'Niech żyje Horus: Byk Potężny, Jaśniejący w Tebach; Król Górnego i Dolnego Egiptu Menmaatre („Trwała jest Maat Ra”, Seti I).',
   about:'Imię horusowe to najstarsze z pięciu imion króla, pisane w serechu (prostokącie z fasadą pałacu) z sokołem na szczycie. Tu w wersji linearnej z ściany.',
@@ -624,13 +792,13 @@ const INSCRIPTIONS = [
    {s:['N35','M3','X1','D40'],tr:'nḫt',pl:'potężny, zwycięski',fn:'fon',note:'n + gałąź ḫt + chleb t: nḫt „silny”. Ramię z kijem D40 to determinatyw siły.'},
    {s:['N28','D36'],tr:'ḫꜥ',pl:'jaśniejący, ukazujący się',fn:'fon',note:'Słońce wschodzące nad wzgórzem ḫꜥ „ukazywać się w blasku” z dopełnieniem fonetycznym ꜥ (ramię). Tak opisywano koronację króla.'},
    {s:['G17'],tr:'m',pl:'w',fn:'fon',note:'Sowa m – przyimek „w”.'},
-   {s:['S40','X1','O49'],tr:'Wꜣst',pl:'Teby (Waset)',fn:'fon',note:'Berło uas + chleb t + determinatyw miasta: Wꜣst, egipska nazwa Teb – „Miasto berła”. Ten sam znak wꜣs, który w ścianie I znaczył „władza”.'},
+   {s:['S40','X1','O49'],tr:'Wꜣst',pl:'Teby (Waset)',fn:'fon',note:'Berło uas + chleb t + determinatyw miasta: Wꜣst, egipska nazwa Teb – „Miasto berła”. Ten sam znak wꜣs, który w ścianie VII znaczył „władza”.'},
    {s:['M23','X1','L2','X1'],tr:'nswt-bỉty',pl:'Król Górnego i Dolnego Egiptu',fn:'ideo',note:'Sitowie i pszczoła – tytuł przed imieniem tronowym.'},
    {s:['N5'],cart:'A',tr:'Rꜥ',pl:'Ra',fn:'ideo',note:'Ra na początku kartusza, czytany na końcu (transpozycja honoryfikacyjna).'},
    {s:['Y5'],cart:'A',tr:'mn',pl:'trwały',fn:'fon',note:'Plansza senet mn „trwać”. Mn-mꜣꜥt-Rꜥ: „Trwała jest Maat Ra”.'},
    {s:['C10'],cart:'A',tr:'mꜣꜥt',pl:'Maat',fn:'ideo',note:'Bogini Maat z piórem – prawda i ład. Imię tronowe Setiego I, ojca Ramzesa II.'},
   ],
-  quiz:{q:'Nazwa Teb (Wꜣst) zawiera znak 𓌀 – ten sam, który w formule ze ściany I oznaczał…',
+  quiz:{q:'Nazwa Teb (Wꜣst) zawiera znak 𓌀 – ten sam, który w formule ze ściany VII oznaczał…',
         opts:['władzę (wꜣs)','życie (ꜥnḫ)','trwałość (ḏd)','prawdę (mꜣꜥt)'],ans:0,
         why:'Berło uas czyta się wꜣs „władza”. Teby to Wꜣst – „[Miasto] berła”, a Egipcjanie często nazywali je po prostu „Miastem” (Nỉwt).'}},
 ];
@@ -658,13 +826,19 @@ document.querySelectorAll('nav.halls button').forEach(b=>b.addEventListener('cli
 
 /* ===================== SALA I: ANALIZATOR ===================== */
 let curIns=0, curStep=-1, dir='ltr';
+const CATS=[['ksiegi','Księgi zaświatów i malowidła grobowe'],['tyt','Tytulatury i formuły świątynne']];
 function renderPicker(){
   const p=$('#picker');p.innerHTML='';
-  INSCRIPTIONS.forEach((ins,i)=>{
-    const b=el('button','',`<span class="num">${ins.num}</span><span>${esc(ins.title)}</span>`);
-    b.setAttribute('role','tab');b.setAttribute('aria-selected',String(i===curIns));
-    b.addEventListener('click',()=>{curIns=i;curStep=-1;renderPicker();renderWall();});
-    p.appendChild(b);
+  CATS.forEach(([cat,label])=>{
+    const row=el('div','cat');row.appendChild(el('span','eyebrow',label));
+    INSCRIPTIONS.forEach((ins,i)=>{
+      if(ins.cat!==cat)return;
+      const b=el('button','',`<span class="num">${ins.num}</span><span>${esc(ins.title)}</span>`);
+      b.setAttribute('role','tab');b.setAttribute('aria-selected',String(i===curIns));
+      b.addEventListener('click',()=>{curIns=i;curStep=-1;renderPicker();renderWall();});
+      row.appendChild(b);
+    });
+    p.appendChild(row);
   });
 }
 function groupNode(g,idx){
@@ -707,7 +881,7 @@ function renderWall(keepScroll){
 function renderScribe(){
   const ins=INSCRIPTIONS[curIns];const box=$('#scribe');
   if(curStep<0){
-    box.innerHTML=`<div class="eyebrow">Notatki skryby</div><h3>${esc(ins.title)}</h3><p>${esc(ins.about)}</p>
+    box.innerHTML=`<div class="eyebrow">Notatki skryby</div><h3>${esc(ins.title)}</h3><p>${esc(ins.about)}</p>${ins.scene?`<div class="note"><b>Scena na ścianie:</b> ${esc(ins.scene)}</div>`:''}
     <div class="note">Kliknij znak na ścianie lub naciśnij „Zacznij czytać”, aby przejść przez inskrypcję krok po kroku. W trybie P → L znaki są odbite lustrzanie, bo zawsze patrzą w stronę początku tekstu.</div>
     <div class="kv"><dt>Znaków</dt><dd>${ins.groups.reduce((a,g)=>a+g.s.length,0)}</dd><dt>Grup</dt><dd>${ins.groups.length}</dd><dt>Kartusze</dt><dd>${new Set(ins.groups.filter(g=>g.cart).map(g=>g.cart)).size||'brak'}</dd></div>`;
     return;
