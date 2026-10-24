@@ -141,7 +141,7 @@ export function desertMaterial(): MeshStandardMaterial {
       }
     }
     ctx.putImageData(img, 0, 0);
-  }, 2.2);
+  }, 1.0); // przy niskim słońcu fale wydm i tak rysują się wyraźnie
   return worldUv(new MeshStandardMaterial({ map, normalMap, roughness: 0.95, metalness: 0 }), 0.22);
 }
 
@@ -181,6 +181,11 @@ export function sandstoneMaterial(): MeshStandardMaterial {
     blotches(ctx, s, rnd, 300, ['#d8c194', '#f0e2c2', '#cdb486'], 0.6, 3, 0.6);
   }, true);
   return new MeshStandardMaterial({ map, roughness: 0.78, metalness: 0 });
+}
+
+/** Złoto (zwieńczenia monumentów): metal z ostrym odbłyskiem — przy niskim słońcu łapie bloom. */
+export function goldMaterial(): MeshStandardMaterial {
+  return new MeshStandardMaterial({ color: '#f2c15a', metalness: 1, roughness: 0.24, envMapIntensity: 1.4 });
 }
 
 /** Animowana woda: PBR (odbicia HDRI, światło) + fale w normalnych liczone w shaderze. */

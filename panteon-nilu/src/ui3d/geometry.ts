@@ -59,13 +59,16 @@ const at = (g: BufferGeometry, x: number, y: number, z: number) => g.translate(x
 
 export function obeliskGeometry(): BufferGeometry {
   const shaft = new CylinderGeometry(0.085, 0.13, 0.95, 4, 1).rotateY(Math.PI / 4);
-  const cap = new ConeGeometry(0.085, 0.14, 4).rotateY(Math.PI / 4);
   return merge([
     at(new BoxGeometry(0.36, 0.06, 0.36), 0, 0.03, 0),
     at(new BoxGeometry(0.28, 0.06, 0.28), 0, 0.09, 0),
     at(shaft, 0, 0.12 + 0.475, 0),
-    at(cap, 0, 0.12 + 0.95 + 0.07, 0),
   ]);
+}
+
+/** Złocony piramidion na szczycie obelisku. */
+export function obeliskCapGeometry(): BufferGeometry {
+  return at(new ConeGeometry(0.085, 0.14, 4).rotateY(Math.PI / 4), 0, 0.12 + 0.95 + 0.07, 0);
 }
 
 export function templeGeometry(): BufferGeometry {
@@ -93,6 +96,13 @@ export function pyramidGeometry(): BufferGeometry {
     at(new BoxGeometry(0.9, 0.05, 0.9), 0, 0.025, 0),
     at(new ConeGeometry(0.6, 0.66, 4).rotateY(Math.PI / 4), 0, 0.05 + 0.33, 0),
   ]);
+}
+
+/** Złocony szczyt piramidy: górne 22% bryły, minimalnie większe (bez migotania na styku). */
+export function pyramidCapGeometry(): BufferGeometry {
+  const k = 0.22;
+  const h = 0.66 * k;
+  return at(new ConeGeometry(0.6 * k * 1.04, h * 1.04, 4).rotateY(Math.PI / 4), 0, 0.05 + 0.66 - h / 2 + 0.004, 0);
 }
 
 // ---------- figurki-zastępniki (pionki) ----------

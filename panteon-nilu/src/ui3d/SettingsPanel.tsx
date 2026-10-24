@@ -8,6 +8,10 @@ const TOGGLES: { key: keyof Settings3D; label: string }[] = [
   { key: 'tiltShift', label: 'Tilt-shift' },
   { key: 'vignette', label: 'Winieta' },
   { key: 'particles', label: 'Cząsteczki piasku' },
+  { key: 'dof', label: 'Głębia ostrości' },
+  { key: 'cinematicCamera', label: 'Kamera filmowa (podążanie, kołysanie)' },
+  { key: 'summonFx', label: 'Przywołanie: kolumna światła, iskry' },
+  { key: 'battleDim', label: 'Bitwa: przyciemnienie planszy' },
   { key: 'adaptiveDpr', label: 'Adaptacyjna rozdzielczość' },
   { key: 'showFps', label: 'Licznik FPS' },
 ];
@@ -24,9 +28,9 @@ export function SettingsPanel({ settings, onChange }: { settings: Settings3D; on
           Niska jakość
         </button>
       </div>
-      {low && <p className="small muted">Niska jakość: bez postprocessingu, cieni i cząsteczek, DPR 1.</p>}
+      {low && <p className="small muted">Niska jakość: bez postprocessingu, cieni, cząsteczek i efektów filmowych, DPR 1.</p>}
       {TOGGLES.map(({ key, label }) => {
-        const forcedOff = low && !['adaptiveDpr', 'showFps'].includes(key);
+        const forcedOff = low && !['adaptiveDpr', 'showFps', 'battleDim'].includes(key);
         return (
           <label key={key} className={`toggle${forcedOff ? ' muted' : ''}`}>
             <input

@@ -142,8 +142,12 @@ function GameScreen({ game, setState, onNew }: { game: Game; setState(s: GameSta
     else setMessage(storeSave({ id: savedAt, name, savedAt, data }) ? 'Zapisano w przeglądarce.' : 'Nie udało się zapisać w przeglądarce — pobierz plik.');
   };
 
-  // Tylko w trybie deweloperskim: bieżący stan dla testów w przeglądarce.
-  if (import.meta.env.DEV) (window as unknown as { __panteonState: GameState }).__panteonState = state;
+  // Tylko w trybie deweloperskim: bieżący stan i jego podmiana w działającej partii (zrzuty animacji w testach).
+  if (import.meta.env.DEV) {
+    const w = window as unknown as { __panteonState: GameState; __panteonSet(s: GameState): void };
+    w.__panteonState = state;
+    w.__panteonSet = setState;
+  }
 
   const activeIds = [...(pending ? ('waiting' in pending ? pending.waiting : [pending.player]) : []), state.turn.player];
 

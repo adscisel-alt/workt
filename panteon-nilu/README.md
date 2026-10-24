@@ -14,6 +14,7 @@ npm run build     # typecheck + build produkcyjny
 npm run smoke     # test dymny widoku 2D w Chromium (Playwright); CHROMIUM_PATH=... dla własnej przeglądarki
 npm run smoke3d -- <katalog>          # test dymny widoku 3D (WebGL przez SwiftShader) + zrzuty ekranu
 npm run shot3d -- <plik.png> [midgame|summon] [high|low]   # pojedynczy zrzut sceny 3D
+npm run shot:motion -- <katalog> [high|low]   # zrzuty stylu ruchu: lot, lądowanie, przywołanie, bitwa
 npm run models    # przebudowa modeli figurek (public/models/*.glb) i manifestu
 npm run pack:artifact -- <katalog>   # build dla hosta z własnym szkieletem HTML i bez .glb (np. strona-artefakt)
 ```
@@ -63,10 +64,25 @@ bez WebGL2 gra startuje w 2D. Kod 3D (`src/ui3d`) jest w osobnym, leniwie ładow
 - **Animacje** (czasowe, niezależne od liczby klatek): ruch po łuku z easingiem, pojawienie się przy
   przywołaniu, zapadanie się zabitych figurek, cząsteczki piasku przy lądowaniu i pył nad pustynią,
   pulsujące legalne pola.
+- **Styl ruchu („zwiastun filmowy”)**, przebiegi jako czyste funkcje czasu w `src/ui3d/motion.ts`:
+  - ruch figurki: uniesienie (0,14 s), lot łukiem 0,6–0,9 s zależnie od odległości (easing, pochylenie w locie),
+    lądowanie z przysiadem i lekkim odbiciem, pierścień pyłu spod podstawki;
+  - przywołanie: kolumna światła i złote iskry po spirali, figurka wyrasta z piasku (spod pola);
+    przy wczytaniu stanu albo rozstawieniu figurki tylko się pojawiają, bez kolumn;
+  - kamera filmowa: płynne podążanie za lecącą figurką (powrót po lądowaniu), delikatne kołysanie;
+    chwycenie kamery przez gracza przerywa podążanie, systemowe „ogranicz ruch” wyłącza ten tryb;
+  - głębia ostrości ustawiana na lecącą figurkę, poza ruchem na środek kadru;
+  - bitwa: najazd kamery i przyciemnienie reszty planszy; maska pól regionu w teksturze, a każdy oświetlony
+    materiał sprawdza w shaderze, na którym polu leży piksel, więc ciemnieją też figurki i monumenty poza regionem;
+  - światło: ciepłe słońce 22° nad horyzontem, długie miękkie cienie (PCF z promieniem, kamera cienia obejmuje
+    też cienie spadające na stół), złote zwieńczenia obelisków i piramid, złota laska i naszyjnik boga,
+    złoty grot włóczni; bloom z progiem ponad jasnością piasku, więc świeci złoto, kolumny i iskry.
 - **Interakcja**: raycasting po heksach (niewidoczna warstwa instancji), obrys pola pod kursorem
   (złoty, gdy pole jest legalnym celem), HUD to zwykły HTML nad kanwą.
 - **Wydajność**: adaptacyjna rozdzielczość (`PerformanceMonitor`, DPR 0,6–2). Tryb **Niska jakość**
-  wyłącza postprocessing, cienie i cząsteczki oraz ogranicza DPR do 1. Licznik FPS (opcja w panelu)
+  wyłącza postprocessing (z głębią ostrości), cienie, cząsteczki, kolumny i iskry przywołania oraz kamerę
+  filmową, a DPR ogranicza do 1. Zostają animacje figurek i przyciemnienie w bitwie: są tanie i niosą
+  informację (przyciemnienie ma własny przełącznik). Licznik FPS (opcja w panelu)
   pokazuje też wywołania rysowania i trójkąty: ok. 35–45 wywołań i 14–15 tys. trójkątów w niskiej jakości
   (2 graczy), ok. 110 wywołań i 32 tys. trójkątów w wysokiej (3 graczy, z cieniami i efektami).
   Celem jest 60 FPS na laptopie z GPU zintegrowanym, ale **nie zmierzyłem tego na prawdziwym GPU**.
@@ -121,7 +137,14 @@ miejsca (instrukcja: przy sporze rozstrzyga gracz wyższego boga).
 4. ✅ Karawana, 12 mocy ankh, 6 strażników, zdolności 5 bogów.
 5. ✅ Łączenie bogów (po 3. konflikcie), zapomniani bogowie (po 4.), rozstawienia dla 3–5 graczy.
 6. ✅ Boty (losowy, heurystyczny) i zapis/wczytanie (przeglądarka + plik .json).
-7. Warstwa 3D (React Three Fiber) — opis wyżej.
+7. ✅ Warstwa 3D (React Three Fiber) — opis wyżej.
+8. ⏳ Warstwa 3D: styl ruchu (wzorzec: zwiastun filmowy)
+   - ruch figurki: uniesienie, lot łukiem 0,6–0,9 s z easingiem, lądowanie z lekkim odbiciem i pyłem spod podstawki;
+   - kamera: płynne podążanie za ruszaną figurką, głębia ostrości ustawiona na nią, delikatne kołysanie;
+   - przywołanie: kolumna światła i złote iskry, figurka wyrasta z piasku;
+   - bitwa: najazd kamery na region, przyciemnienie reszty planszy;
+   - światło: ciepłe niskie słońce, długie miękkie cienie, bloom na złocie;
+   - wszystkie efekty z przełącznikiem jakości.
 
 ## Boty
 

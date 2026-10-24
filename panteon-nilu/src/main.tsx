@@ -5,10 +5,12 @@ import { App } from './ui/App';
 import './ui/styles.css';
 
 const root = createRoot(document.getElementById('root')!);
+let loads = 0;
+// każde wczytanie stanu to nowa partia (świeży klucz — stan z innej gry nie może trafić do starej)
 const render = (initial?: GameState) =>
   root.render(
     <StrictMode>
-      <App key={initial ? initial.log.length + initial.rng : 'new'} initial={initial} />
+      <App key={initial ? `load-${++loads}` : 'new'} initial={initial} />
     </StrictMode>,
   );
 render();

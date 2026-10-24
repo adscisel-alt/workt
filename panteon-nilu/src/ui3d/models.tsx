@@ -33,7 +33,9 @@ function GltfFigure({ url, height, color }: { url: string; height: number; color
         o.material = m.clone();
         const mat = o.material as MeshStandardMaterial;
         // „team*” w pełnym kolorze gracza; reszta (kamień) lekko w jego odcieniu — czytelna przynależność z daleka
-        if (m.name.toLowerCase().startsWith('team')) mat.color = new Color(color);
+        const name = m.name.toLowerCase();
+        if (name.startsWith('team')) mat.color = new Color(color);
+        else if (name.startsWith('gold')) mat.envMapIntensity = 1.4; // złoto zostaje złotem
         else mat.color = mat.color.clone().lerp(new Color(color), 0.35);
       }
     });

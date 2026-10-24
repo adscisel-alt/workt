@@ -5,14 +5,18 @@ import { Suspense, useEffect, useLayoutEffect, useMemo, useState, type RefObject
 import { PCFShadowMap } from 'three';
 import type { EdgeKey, GameState, HexKey } from '../engine/types';
 import type { Interaction } from '../ui/interaction';
+import { BattleDim } from './BattleDim';
 import { Board3D } from './Board3D';
 import { CameraRig } from './CameraRig';
 import { boardExtent, hexAnchor } from './coords';
 import { Effects } from './Effects';
 import { frameMaterial, woodMaterial } from './materials';
+import { FxProvider } from './Fx';
+import { MotionProvider } from './MotionContext';
 import { SandProvider } from './Particles';
 import { Pieces3D } from './Pieces3D';
 import { SafeBoundary } from './SafeBoundary';
+import { SUN, sunRig } from './lighting';
 import { effectiveSettings, type Settings3D } from './settings';
 
 export interface Scene3DProps {
@@ -41,7 +45,7 @@ const GL_AA = { antialias: true, powerPreference: 'high-performance', preserveDr
 const GL_NO_AA = { ...GL_AA, antialias: false } as const;
 
 export default function Scene3D(props: Scene3DProps) {
-  const s = effectiveSettings(props.settings);
+  const s = effectiveSettings(props.settings, { reducedMotion: usePrefersReducedMotion() });
   const [dpr, setDpr] = useState(Math.min(window.devicePixelRatio || 1, s.maxDpr));
   useEffect(() => setDpr(Math.min(window.devicePixelRatio || 1, s.maxDpr)), [s.maxDpr]);
   const [hdri, setHdri] = useState<string | null>(null);
@@ -88,62 +92,70 @@ export default function Scene3D(props: Scene3DProps) {
       {env && (
         <SafeBoundary fallback={null} onError={() => setEnvFailed(true)}>
           <Suspense fallback={null}>
-            <Environment files={hdri} environmentIntensity={0.42} />
+            <Environment files={hdri} environmentIntensity={0.32} />
           </Suspense>
         </SafeBoundary>
       )}
-      <hemisphereLight args={['#fff1d6', '#3a2a1c', env ? 0.25 : 0.8]} />
+      {/* chłodne niebo i ciepła ziemia — kontrast z ciepłym słońcem */}
+      <hemisphereLight args={['#a9c1ec', '#4a3322', env ? 0.2 : 0.7]} />
       <SunLight state={props.state} shadows={s.shadows} />
       <Table state={props.state} />
-      <SandProvider enabled={s.particles} dustAreas={useDustAreas(props.state)}>
-        <Board3D
-          state={props.state}
-          interaction={props.interaction}
-          regionTint={props.regionTint}
-          animatedWater
-          onHex={props.onHex}
-          onEdge={props.onEdge}
-          onHover={() => {}}
-        />
-        <Pieces3D
-          state={props.state}
-          interaction={props.interaction}
-          selectedFigure={props.selectedFigure}
-          onFigure={props.onFigure}
-          onMonument={props.onMonument}
-          onHoverActionable={setCursor}
-        />
-      </SandProvider>
-      <CameraRig state={props.state} />
-      <ViewOffset inset={props.hudInset ?? 0} />
-      {s.postprocessing && <Effects s={s} />}
+      <MotionProvider>
+        <SandProvider enabled={s.particles} dustAreas={useDustAreas(props.state)}>
+          <FxProvider enabled={s.summonFx}>
+            <Board3D
+              state={props.state}
+              interaction={props.interaction}
+              regionTint={props.regionTint}
+              animatedWater
+              onHex={props.onHex}
+              onEdge={props.onEdge}
+              onHover={() => {}}
+            />
+            <Pieces3D
+              state={props.state}
+              interaction={props.interaction}
+              selectedFigure={props.selectedFigure}
+              onFigure={props.onFigure}
+              onMonument={props.onMonument}
+              onHoverActionable={setCursor}
+            />
+          </FxProvider>
+        </SandProvider>
+        <CameraRig state={props.state} cinematic={s.cinematicCamera} />
+        <BattleDim state={props.state} enabled={s.battleDim} />
+        <ViewOffset inset={props.hudInset ?? 0} />
+        {s.postprocessing && <Effects s={s} />}
+      </MotionProvider>
       {props.fpsRef && <FpsProbe target={props.fpsRef} />}
       {import.meta.env.DEV && <DevHandle />}
     </Canvas>
   );
 }
 
-/** Jedno światło kierunkowe („słońce” z okna) z miękkimi cieniami obejmującymi planszę. */
+/** Ciepłe, niskie słońce („złota godzina”): długie, miękkie cienie obejmujące planszę i stół wokół niej. */
 function SunLight({ state, shadows }: { state: GameState; shadows: boolean }) {
   const { center, radius } = boardExtent(state.map);
+  const rig = useMemo(() => sunRig(center, radius), [center[0], center[1], radius]); // eslint-disable-line react-hooks/exhaustive-deps
+  const b = rig.shadow;
   return (
     <directionalLight
-      position={[center[0] - radius * 0.6, radius * 1.4, center[1] - radius * 0.5]}
-      intensity={3.1}
-      color="#fff0d8"
+      position={rig.position}
+      intensity={SUN.intensity}
+      color={SUN.color}
       castShadow={shadows}
       shadow-mapSize={[2048, 2048]}
-      shadow-bias={-0.0004}
-      shadow-normalBias={0.02}
-      shadow-radius={4}
-      shadow-camera-left={-radius}
-      shadow-camera-right={radius}
-      shadow-camera-top={radius}
-      shadow-camera-bottom={-radius}
-      shadow-camera-near={1}
-      shadow-camera-far={radius * 4}
+      shadow-bias={-0.0005}
+      shadow-normalBias={0.035}
+      shadow-radius={6}
+      shadow-camera-left={b.left}
+      shadow-camera-right={b.right}
+      shadow-camera-top={b.top}
+      shadow-camera-bottom={b.bottom}
+      shadow-camera-near={b.near}
+      shadow-camera-far={b.far}
     >
-      <object3D attach="target" position={[center[0], 0, center[1]]} />
+      <object3D attach="target" position={rig.target} />
     </directionalLight>
   );
 }
@@ -164,6 +176,19 @@ function Table({ state }: { state: GameState }) {
       </mesh>
     </group>
   );
+}
+
+/** Systemowe „ogranicz ruch” (kamera filmowa wyłącza się sama). */
+function usePrefersReducedMotion(): boolean {
+  const query = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  const [reduced, setReduced] = useState(() => !!query?.matches);
+  useEffect(() => {
+    if (!query) return;
+    const on = () => setReduced(query.matches);
+    query.addEventListener('change', on);
+    return () => query.removeEventListener('change', on);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return reduced;
 }
 
 function useDustAreas(state: GameState) {
