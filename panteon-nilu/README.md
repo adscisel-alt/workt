@@ -84,7 +84,8 @@ bez WebGL2 gra startuje w 2D. Kod 3D (`src/ui3d`) jest w osobnym, leniwie ładow
   filmową, a DPR ogranicza do 1. Zostają animacje figurek i przyciemnienie w bitwie: są tanie i niosą
   informację (przyciemnienie ma własny przełącznik). Licznik FPS (opcja w panelu)
   pokazuje też wywołania rysowania i trójkąty: ok. 35–45 wywołań i 14–15 tys. trójkątów w niskiej jakości
-  (2 graczy), ok. 110 wywołań i 32 tys. trójkątów w wysokiej (3 graczy, z cieniami i efektami).
+  (2 graczy), ok. 120–150 wywołań i 30–35 tys. trójkątów w wysokiej (3 graczy, z cieniami, głębią ostrości
+  i efektami).
   Celem jest 60 FPS na laptopie z GPU zintegrowanym, ale **nie zmierzyłem tego na prawdziwym GPU**.
   Testy dymne działają na programowym WebGL (SwiftShader, CPU), który daje 1–2 FPS i nie mówi nic
   o wydajności na sprzęcie.
@@ -138,7 +139,7 @@ miejsca (instrukcja: przy sporze rozstrzyga gracz wyższego boga).
 5. ✅ Łączenie bogów (po 3. konflikcie), zapomniani bogowie (po 4.), rozstawienia dla 3–5 graczy.
 6. ✅ Boty (losowy, heurystyczny) i zapis/wczytanie (przeglądarka + plik .json).
 7. ✅ Warstwa 3D (React Three Fiber) — opis wyżej.
-8. ⏳ Warstwa 3D: styl ruchu (wzorzec: zwiastun filmowy)
+8. ✅ Warstwa 3D: styl ruchu (wzorzec: zwiastun filmowy) — opis wyżej
    - ruch figurki: uniesienie, lot łukiem 0,6–0,9 s z easingiem, lądowanie z lekkim odbiciem i pyłem spod podstawki;
    - kamera: płynne podążanie za ruszaną figurką, głębia ostrości ustawiona na nią, delikatne kołysanie;
    - przywołanie: kolumna światła i złote iskry, figurka wyrasta z piasku;

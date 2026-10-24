@@ -214,6 +214,7 @@ export function FxProvider({ enabled, children }: { enabled: boolean; children: 
     (sparkGeo.getAttribute('color') as BufferAttribute).needsUpdate = true;
   });
 
+  if (!enabled) return <FxContext.Provider value={api}>{children}</FxContext.Provider>;
   return (
     <FxContext.Provider value={api}>
       {children}

@@ -69,7 +69,7 @@ export const DIM = {
   /** 0 — brak przyciemnienia, 1 — pełne (animowane płynnie). */
   uDim: { value: 0 },
   /** Jasność pól poza regionem przy pełnym przyciemnieniu. */
-  uDimLevel: { value: 0.3 },
+  uDimLevel: { value: 0.34 },
 };
 
 export function setDimMask(mask: DimMask) {

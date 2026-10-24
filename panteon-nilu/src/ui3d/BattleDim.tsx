@@ -2,7 +2,7 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import type { Material, Mesh } from 'three';
-import { computeRegions } from '../engine/map';
+import { isHexInRegion } from '../engine/map';
 import type { GameState } from '../engine/types';
 import { buildDimMask, DIM, patchDim, setDimMask } from './dim';
 
@@ -13,7 +13,8 @@ export function BattleDim({ state, enabled }: { state: GameState; enabled: boole
 
   useEffect(() => {
     if (region === null) return;
-    setDimMask(buildDimMask(state.map, computeRegions(state.map).regions[region] ?? []));
+    // jasne zostają pola regionu i woda, która z nim graniczy (wg zasad należy do regionu)
+    setDimMask(buildDimMask(state.map, Object.keys(state.map.terrain).filter((h) => isHexInRegion(state.map, h, region))));
   }, [state.map, region]);
   useEffect(() => () => void (DIM.uDim.value = 0), []);
 

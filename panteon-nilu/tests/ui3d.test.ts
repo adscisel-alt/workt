@@ -1,5 +1,5 @@
 import { Box3, Color, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, Vector3 } from 'three';
-import { computeRegions } from '../src/engine/map';
+import { computeRegions, isHexInRegion } from '../src/engine/map';
 import { buildDimMask, maskAt, patchDim, worldToAxial } from '../src/ui3d/dim';
 import { buildMap } from '../src/engine';
 import { SCENARIOS } from '../src/config/scenarios';
@@ -304,6 +304,10 @@ describe('3D: przyciemnienie w bitwie', () => {
       expect(maskAt(mask, q, r)).toBe(region.includes(h));
     }
     expect(maskAt(mask, mask.qMin - 5, mask.rMin)).toBe(false);
+    // woda graniczna należy do regionu (zasady) — zostaje jasna razem z nim
+    const lit = Object.keys(s.map.terrain).filter((h) => isHexInRegion(s.map, h, 1));
+    expect(lit.some((h) => s.map.terrain[h] === 'water')).toBe(true);
+    expect(lit.filter((h) => s.map.terrain[h] !== 'water').sort()).toEqual([...region].sort());
   });
 
   it('łatka materiału: tylko oświetlone materiały, raz, z zachowaniem własnej łatki shadera', () => {
