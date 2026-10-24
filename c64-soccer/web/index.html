@@ -41,7 +41,7 @@
     <b>Po strzale</b><span>trzymaj kierunek w bok od lotu piłki = podkręcenie („banan”), do przodu = wyżej</span>
     <b>Po meczu</b><span>strzał = nowy mecz</span>
   </div>
-  <footer>Emulacja: <a href="https://github.com/hayesmaker/c64-ready" style="color:#8ab4f8">c64-ready</a> (MIT), rdzeń WASM z lvllvl.com. Program gry: <code>soccer.prg</code> (działa też na prawdziwym C64 / VICE: joystick w porcie 2).</footer>
+  <footer>Emulacja: <a href="https://github.com/hayesmaker/c64-ready" style="color:#8ab4f8">c64-ready</a> (MIT), rdzeń WASM z lvllvl.com. Program gry: <a href="soccer.prg" style="color:#8ab4f8">soccer.prg</a> (działa też na prawdziwym C64 / VICE: joystick w porcie 2).</footer>
 
   <script type="module">
     import { C64Player, CanvasRenderer } from './emu/player/index.js';
@@ -53,14 +53,28 @@
     const btnReset = document.getElementById('btn-reset');
     const btnSound = document.getElementById('btn-sound');
     let player = null;
+    let prgBytes = null;
+
+    // Program gry: soccer.prg.json (base64) - działa także tam, gdzie pliki .prg nie są serwowane
+    async function loadPrg() {
+      if (prgBytes) return prgBytes;
+      const r = await fetch(base + 'soccer.prg.json?v=' + Date.now());
+      if (!r.ok) throw new Error('nie można pobrać soccer.prg.json (' + r.status + ')');
+      const bin = atob((await r.json()).base64);
+      prgBytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+      return prgBytes;
+    }
 
     async function start() {
       btnStart.disabled = true;
       status.textContent = 'Uruchamianie C64…';
       try {
+        const data = await loadPrg();
         player = new C64Player({
           wasmUrl: base + 'emu/c64.wasm',
-          gameUrl: base + 'soccer.prg?v=' + Date.now(),
+          gameUrl: null,
+          gameData: data,
+          gameSource: 'soccer.prg',
           gameType: 'prg',
           renderer: new CanvasRenderer(canvas),
           audio: { workletUrl: base + 'emu/audio-worklet-processor.js' },
@@ -80,7 +94,7 @@
       }
     }
     btnStart.addEventListener('click', start);
-    btnReset.addEventListener('click', async () => { if (player) { await player.loadGame(base + 'soccer.prg?v=' + Date.now(), 'prg'); canvas.focus(); } });
+    btnReset.addEventListener('click', async () => { if (player) { await player.loadGameData(await loadPrg(), 'prg', 'soccer.prg'); canvas.focus(); } });
     btnSound.addEventListener('click', async () => { if (player) { const ok = await player.audio.resume?.(); status.textContent = ok === false ? 'Dźwięk zablokowany przez przeglądarkę' : 'Dźwięk włączony'; } });
     canvas.addEventListener('click', () => canvas.focus());
 

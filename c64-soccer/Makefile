@@ -17,8 +17,9 @@ $(OUT): $(SRC) src/gfx.h c64.cfg
 	mkdir -p build
 	$(CL65) $(CFLAGS) -C c64.cfg -m build/soccer.map -Ln build/soccer.lbl -o $(OUT) $(SRC)
 	cp $(OUT) web/soccer.prg
+	python3 -c "import base64,json;json.dump({'name':'soccer.prg','base64':base64.b64encode(open('web/soccer.prg','rb').read()).decode()},open('web/soccer.prg.json','w'))"
 
 clean:
-	rm -rf build src/gfx.s src/gfx.h web/soccer.prg
+	rm -rf build src/gfx.s src/gfx.h web/soccer.prg web/soccer.prg.json
 
 .PHONY: all clean
