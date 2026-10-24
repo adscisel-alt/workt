@@ -16,7 +16,8 @@
     "models": "node scripts/build-models.mjs",
     "models:manifest": "node scripts/build-models.mjs --manifest",
     "pack:artifact": "npm run build && node scripts/pack-artifact.mjs",
-    "shot:motion": "node scripts/shot-motion.mjs"
+    "shot:motion": "node scripts/shot-motion.mjs",
+    "shot:models": "node scripts/shot-models.mjs"
   },
   "dependencies": {
     "@pmndrs/assets": "^1.7.0",

@@ -1,6 +1,17 @@
 {
   "models": [
+    "god-amun.glb",
+    "god-anubis.glb",
+    "god-isis.glb",
+    "god-osiris.glb",
+    "god-ra.glb",
     "god.glb",
+    "guardian-androsphinx.glb",
+    "guardian-apep.glb",
+    "guardian-catMummy.glb",
+    "guardian-giantScorpion.glb",
+    "guardian-mummy.glb",
+    "guardian-satet.glb",
     "warrior.glb"
   ]
 }

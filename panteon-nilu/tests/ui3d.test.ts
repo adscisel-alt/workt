@@ -19,8 +19,11 @@ import {
   cameraSway, flightTime, followPoint, landingTime, MOVE, moveDuration, movePose, SUMMON, summonPose,
 } from '../src/ui3d/motion';
 import {
-  loadManifest, modelCandidates, MODELS_URL, parseManifest, pickModel, resetManifestCache,
+  FIGURE_FOOTPRINT, fitScale, loadManifest, modelCandidates, MODELS_URL, parseManifest, pickModel, resetManifestCache, tintMaterial,
 } from '../src/ui3d/modelFiles';
+import { GODS } from '../src/content/gods';
+import { GUARDIANS } from '../src/content/guardians';
+import type { GodId } from '../src/engine/types';
 import { existsSync, readFileSync } from 'node:fs';
 import { newGame } from './helpers';
 
@@ -195,21 +198,63 @@ describe('3D: modele figurek', () => {
     expect(pickModel(['guardian.glb'], files)).toBe(`${MODELS_URL}guardian.glb`);
   });
 
-  it('dołączone modele: każdy wpis manifestu istnieje, kompresja meshopt (bóg) i Draco (wojownik)', () => {
+  it('dołączone modele: każdy wpis manifestu istnieje, kompresja meshopt (figurki) i Draco (wojownik)', () => {
     const list = parseManifest(JSON.parse(readFileSync('public/models/manifest.json', 'utf8')));
-    expect([...list.keys()].sort()).toEqual(['god.glb', 'warrior.glb']);
     for (const f of list.values()) expect(existsSync(`public/models/${f}`)).toBe(true);
-    const god = glbJson('public/models/god.glb');
-    const warrior = glbJson('public/models/warrior.glb');
-    expect(god.extensionsRequired).toContain('EXT_meshopt_compression');
-    expect(warrior.extensionsRequired).toContain('KHR_draco_mesh_compression');
-    // materiał „team” dostaje kolor gracza
-    for (const g of [god, warrior]) {
-      expect(g.materials?.some((m) => m.name?.startsWith('team'))).toBe(true);
-      expect(g.materials?.some((m) => m.name?.startsWith('gold'))).toBe(true); // złote akcenty pod bloom
-    }
+    expect(glbJson('public/models/god.glb').extensionsRequired).toContain('EXT_meshopt_compression');
+    expect(glbJson('public/models/warrior.glb').extensionsRequired).toContain('KHR_draco_mesh_compression');
     // dekoder Draco jest w paczce (bez CDN)
     expect(existsSync('public/draco/draco_decoder.wasm')).toBe(true);
+  });
+
+  it('każdy bóg i każdy strażnik ma własny model (zoomorfizm), wybierany przed ogólnym', () => {
+    const list = parseManifest(JSON.parse(readFileSync('public/models/manifest.json', 'utf8')));
+    for (const god of Object.keys(GODS) as GodId[]) {
+      expect(list.has(`god-${god}.glb`)).toBe(true);
+      expect(pickModel(modelCandidates({ kind: 'god', guardian: undefined }, god), list)).toBe(`${MODELS_URL}god-${god}.glb`);
+    }
+    for (const g of Object.keys(GUARDIANS)) {
+      expect(list.has(`guardian-${g}.glb`)).toBe(true);
+      expect(pickModel(modelCandidates({ kind: 'guardian', guardian: g as never }, 'ra'), list)).toBe(`${MODELS_URL}guardian-${g}.glb`);
+    }
+  });
+
+  it('modele: kolor gracza w każdym, najwyżej 4 materiały (wywołania rysowania), malowanie w kolorach wierzchołków', () => {
+    const list = parseManifest(JSON.parse(readFileSync('public/models/manifest.json', 'utf8')));
+    for (const f of list.values()) {
+      const j = glbJson(`public/models/${f}`) as {
+        materials: { name: string }[];
+        meshes: { primitives: { material: number; attributes: Record<string, number> }[] }[];
+      };
+      const names = j.materials.map((m) => m.name);
+      expect(names).toContain('team');
+      expect(names.length).toBeLessThanOrEqual(4);
+      for (const prim of j.meshes[0].primitives) {
+        if (names[prim.material] === 'paint') expect(prim.attributes.COLOR_0).toBeDefined();
+      }
+    }
+    // złote akcenty pod bloom u bogów
+    for (const god of Object.keys(GODS)) expect(glbJson(`public/models/god-${god}.glb`).materials?.some((m) => m.name === 'gold')).toBe(true);
+  });
+
+  it('skala modelu: wysokość figurki, ale długie stwory nie wychodzą poza pole', () => {
+    expect(fitScale({ height: 1, radius: 0.3 }, 1.25)).toBeCloseTo(1.25, 6); // smukły bóg — decyduje wysokość
+    const k = fitScale({ height: 0.5, radius: 0.5 }, 0.95); // sfinks na cokole — decyduje pole
+    expect(k * 0.5).toBeCloseTo(FIGURE_FOOTPRINT, 6);
+    expect(k * 0.5).toBeLessThan(0.97);
+  });
+
+  it('barwienie: kolor gracza na „team”, złoto i malowanie bez zmian, kamień lekko w odcieniu gracza', () => {
+    const mk = (name: string, color = '#ffffff') => Object.assign(new MeshStandardMaterial({ color }), { name });
+    const team = mk('team');
+    const gold = mk('gold', '#f5c35a');
+    const paint = mk('paint');
+    const stone = mk('stone', '#e9dfc9');
+    for (const m of [team, gold, paint, stone]) tintMaterial(m, '#3b6fd8');
+    expect(team.color.getHexString()).toBe('3b6fd8');
+    expect(gold.color.getHexString()).toBe('f5c35a');
+    expect(paint.color.getHexString()).toBe('ffffff');
+    expect(stone.color.getHexString()).not.toBe('e9dfc9');
   });
 });
 

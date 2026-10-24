@@ -47,12 +47,22 @@ bez WebGL2 gra startuje w 2D. Kod 3D (`src/ui3d`) jest w osobnym, leniwie ładow
 - **Monumenty** (obelisk, świątynia, piramida) są złożone z prostych brył; znacznik właściciela ma kolor gracza.
 - **Figurki**: modele `*.glb` z `public/models` według `manifest.json` (bez sondowania plików).
   Kolejność: `god-<bóg>.glb` → `god.glb`, `warrior-<bóg>.glb` → `warrior.glb`,
-  `guardian-<strażnik>.glb` → `guardian.glb`. Materiał o nazwie zaczynającej się od `team` dostaje
-  kolor gracza. Model skaluje się do wysokości figurki. Brak pliku albo błąd wczytania → pionek-zastępnik.
-  W repozytorium są własne, proceduralne statuetki (`npm run models`): bóg z kompresją **meshopt**,
-  wojownik z **Draco**. Dekoder Draco (kopia z `three/examples/jsm/libs/draco/gltf`, Apache 2.0) leży w `public/draco`, bez CDN. Strażnicy celowo nie mają
-  modelu, więc pokazują pionek-zastępnik. Manifest może wskazać inny plik dla modelu (pole `files`),
+  `guardian-<strażnik>.glb` → `guardian.glb`. Model skaluje się do wysokości figurki, ale nie szerzej niż pole
+  (sfinks i skorpion mieszczą się na heksie), i stoi w widoku 3/4, żeby profil zwierzęcych głów był czytelny.
+  Brak pliku albo błąd wczytania → pionek-zastępnik. Manifest może wskazać inny plik dla modelu (pole `files`),
   np. glTF w JSON tam, gdzie host nie serwuje `.glb`; robi to `npm run pack:artifact`.
+  - **Bogowie w ikonografii egipskiej** (własne, proceduralne statuetki, `npm run models`):
+    Anubis z głową szakala, Ra z głową sokoła i dyskiem słońca z ureuszem, Amun z głową barana i dwoma piórami,
+    Izyda ze skrzydłami kani i koroną z rogów krowy i dysku, Ozyrys jako mumia z koroną atef, berłem i cepem.
+    Bogowie bez tradycyjnej zwierzęcej głowy (Izyda, Ozyrys) mają swoje atrybuty zamiast wymyślonej głowy.
+  - **Strażnicy**: kocia mumia, Satet (biała korona, rogi antylopy), mumia, Apep (zwoje węża), olbrzymi
+    skorpion, androsfinks na cokole (chusta nemes). Wojownicy zostają ogólni.
+  - Materiały wg nazw: `team` — kolor gracza, `gold` — złoto (łapie bloom), `paint` — malowane detale w kolorach
+    wierzchołków (czarna głowa szakala, czerwony dysk), `stone` — kamień lekko w odcieniu gracza. Najwyżej
+    4 materiały na figurkę (4 wywołania rysowania), 3–9 tys. trójkątów.
+  - Kompresja: figurki **meshopt**, wojownik **Draco**. Dekoder Draco (kopia z `three/examples/jsm/libs/draco/gltf`,
+    Apache 2.0) leży w `public/draco`, bez CDN.
+  - Galeria z bliska: `npm run shot:models -- <katalog> [gods|guardians|all]` (strona `scripts/gallery`).
 - **Odporność**: gdy HDRI albo model się nie wczyta, scena działa dalej (proste światło, pionek-zastępnik);
   gdy scena 3D w ogóle nie ruszy, gra przełącza się na widok 2D z komunikatem.
 - **Światło**: HDRI `apartment.exr` z pakietu `@pmndrs/assets` (CC0, Poly Haven), jedno światło
@@ -84,8 +94,8 @@ bez WebGL2 gra startuje w 2D. Kod 3D (`src/ui3d`) jest w osobnym, leniwie ładow
   filmową, a DPR ogranicza do 1. Zostają animacje figurek i przyciemnienie w bitwie: są tanie i niosą
   informację (przyciemnienie ma własny przełącznik). Licznik FPS (opcja w panelu)
   pokazuje też wywołania rysowania i trójkąty: ok. 35–45 wywołań i 14–15 tys. trójkątów w niskiej jakości
-  (2 graczy), ok. 120–150 wywołań i 30–35 tys. trójkątów w wysokiej (3 graczy, z cieniami, głębią ostrości
-  i efektami).
+  (2 graczy), ok. 180 wywołań i 70 tys. trójkątów w wysokiej (3 graczy, z cieniami, głębią ostrości
+  i efektami; trójkąty liczone razem z przebiegiem cieni).
   Celem jest 60 FPS na laptopie z GPU zintegrowanym, ale **nie zmierzyłem tego na prawdziwym GPU**.
   Testy dymne działają na programowym WebGL (SwiftShader, CPU), który daje 1–2 FPS i nie mówi nic
   o wydajności na sprzęcie.
@@ -140,6 +150,7 @@ miejsca (instrukcja: przy sporze rozstrzyga gracz wyższego boga).
 6. ✅ Boty (losowy, heurystyczny) i zapis/wczytanie (przeglądarka + plik .json).
 7. ✅ Warstwa 3D (React Three Fiber) — opis wyżej.
 8. ✅ Warstwa 3D: styl ruchu (wzorzec: zwiastun filmowy) — opis wyżej
+9. ✅ Figurki: bogowie w ikonografii egipskiej (zoomorfizm) i własne modele strażników — opis wyżej
    - ruch figurki: uniesienie, lot łukiem 0,6–0,9 s z easingiem, lądowanie z lekkim odbiciem i pyłem spod podstawki;
    - kamera: płynne podążanie za ruszaną figurką, głębia ostrości ustawiona na nią, delikatne kołysanie;
    - przywołanie: kolumna światła i złote iskry, figurka wyrasta z piasku;

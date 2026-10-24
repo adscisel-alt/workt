@@ -25,6 +25,18 @@ try {
   await page.reload();
   await page.evaluate(async (scene) => {
     const engine = await import('/src/engine/index.ts');
+    if (scene === 'pantheon') {
+      // wszyscy bogowie i wszyscy strażnicy na planszy (przegląd figurek)
+      const s = engine.createGame({ scenario: 'trzy-krainy', gods: ['amun', 'anubis', 'isis', 'osiris', 'ra'], seed: 4, firstPlayer: 0 });
+      s.abilities.amunTokenUp = false;
+      const map = await import('/src/engine/map.ts');
+      const free = Object.keys(s.map.terrain).filter((h) => map.isEmptyLand(s, h)).sort();
+      const add = (id, owner, guardian) => (s.figures[id] = { id, owner, kind: 'guardian', guardian, pos: free.shift() });
+      ['catMummy', 'satet', 'mummy', 'apep', 'giantScorpion', 'androsphinx'].forEach((g, i) => add(`${g}-1`, i % 5, g));
+      window.__s = s;
+      window.__panteonLoad(s);
+      return;
+    }
     const s = engine.createGame({ scenario: 'trzy-krainy', gods: ['amun', 'ra', 'isis'], seed: 5, firstPlayer: 0 });
     s.abilities.amunTokenUp = false;
     const add = (id, owner, guardian, pos) => (s.figures[id] = { id, owner, kind: 'guardian', guardian, pos });
