@@ -432,10 +432,10 @@ footer{margin-top:40px;color:var(--muted);font-size:.85rem;border-top:1px solid 
     <div class="papyrus-box">
       <div class="row" style="justify-content:space-between">
         <div><div class="eyebrow">Papirus na pamiątkę</div><h3>Twoje imię na papirusie, do zapisania lub wydruku</h3></div>
-        <div class="row"><a class="btn primary" id="cg-dl" href="#" download="kartusz.jpg">Pobierz obraz</a><span class="status" id="cg-status"></span></div>
+        <div class="row"><button class="btn primary" id="cg-dl">Zapisz obraz</button><span class="status" id="cg-status"></span></div>
       </div>
       <div class="preview"><img id="cg-papyrus" alt="Papirus z kartuszem"></div>
-      <p class="muted" style="font-size:.9rem">Obraz ma rozmiar nadający się do druku (ok. 1800 px). Jeśli przycisk pobierania nie zadziała w tym podglądzie, przytrzymaj obrazek palcem (telefon) lub kliknij go prawym przyciskiem (komputer) i wybierz „Zapisz obraz”.</p>
+      <p class="muted" style="font-size:.9rem">Obraz ma rozmiar nadający się do druku (ok. 1800 px). Przycisk „Zapisz obraz” prosi o potwierdzenie i zapisuje plik JPG. Możesz też przytrzymać obrazek palcem (telefon) lub kliknąć go prawym przyciskiem (komputer) i wybrać „Zapisz obraz”.</p>
     </div>
   </div></div>
 </section>
@@ -1122,7 +1122,7 @@ const ALPHA=[
 if(!BY['E23'])SIGNS.push(BY['E23']={c:'E23',g:'𓃭',t:'rw / l',typ:'bi',pl:'leżący lew',snd:'„ru”; w epoce grecko-rzymskiej „l”',mean:'lew; w imionach obcych (Kleopatra, Ptolemeusz) litera l',kw:'lew zwierzę l ru'});
 let cg={det:'B1',ori:'h',tail:'di',sty:'pap'};
 /* --- papirus na pamiątkę (canvas) --- */
-let cgState={signs:[],name:''},papTimer=null;
+let cgState={signs:[],name:''},papTimer=null,cgCanvas=null,cgFile='kartusz.jpg';
 function rng(seed){let s=seed%2147483647;if(s<=0)s+=2147483646;return()=>(s=s*16807%2147483647)/2147483647;}
 const PAL={
   pap:{bg:'#dcbd7e',fib1:'rgba(120,80,30,.16)',fib2:'rgba(255,240,200,.25)',ink:'#3a2a16',ink2:'#6e4a22',red:'#a33b24',blue:'#1f4f8f',gold:'#b8862b',green:'#2f7a5b',vig:'rgba(90,60,20,.45)',frame:'#3a2a16'},
@@ -1224,10 +1224,23 @@ async function cgPapyrus(){
   // stopka
   x.font=`26px "Source Sans 3", "Segoe UI", sans-serif`;x.fillStyle=P.ink2;x.textAlign='center';
   x.fillText('Per-Anch · Akademia Hieroglifów · imię zapisane fonetycznie znakami jednoliterowymi',cx,H-72);
-  const url=c.toDataURL('image/jpeg',.9);img.src=url;
-  const a=$('#cg-dl');a.href=url;a.download=`kartusz-${name.toLowerCase().replace(/[^a-ząćęłńóśźż]+/gi,'-')||'imie'}.jpg`;
+  const url=c.toDataURL('image/jpeg',.9);img.src=url;cgCanvas=c;
+  cgFile=`kartusz-${name.toLowerCase().replace(/[^a-ząćęłńóśźż]+/gi,'-')||'imie'}.jpg`;
   st.textContent='Gotowe.';
 }
+$('#cg-dl').addEventListener('click',async()=>{
+  const st=$('#cg-status');if(!cgCanvas){st.textContent='Najpierw wpisz imię.';return;}
+  const blob=await new Promise(res=>cgCanvas.toBlob(res,'image/jpeg',.92));
+  let dl=null;try{if(window.claude&&window.claude.use)dl=await window.claude.use('downloads');}catch(e){dl=null;}
+  if(dl){
+    st.textContent='Potwierdź zapis…';
+    try{await dl.save({filename:cgFile,data:blob});st.textContent='Zapisano.';}
+    catch(e){st.textContent=e&&e.code==='declined'?'Zapis anulowany.':'Zapis niedostępny tutaj. Przytrzymaj obrazek lub kliknij prawym przyciskiem, aby go zapisać.';}
+    return;
+  }
+  // poza podglądem artefaktu: zwykłe pobranie
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=cgFile;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);st.textContent='Pobrano.';
+});
 function schedulePapyrus(){clearTimeout(papTimer);papTimer=setTimeout(()=>{cgPapyrus().catch(e=>{$('#cg-status').textContent='Nie udało się narysować: '+e.message;});},350);}
 
 function cgRender(){
