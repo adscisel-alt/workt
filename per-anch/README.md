@@ -22,7 +22,10 @@ wyświetlić, jeśli system nie ma własnego fontu z blokiem Unicode 13000–134
 - **Baza Znaków Gardinera** – 130 znaków (alfabet jednoliterowy, dwu- i trzyliterowe,
   ideogramy, determinatywy) z wyszukiwarką po rysunku, kodzie i wymowie.
 - **Trening i Zabawa** – układanka bloków kamiennych, quiz z rangami skryby, generator
-  królewskiego kartusza (imię zapisane fonetycznie, determinatyw osoby, formuła po kartuszu).
+  królewskiego kartusza (imię zapisane fonetycznie, determinatyw osoby, formuła po kartuszu)
+  z ozdobnym papirusem do zapisania jako obraz (canvas, trzy style: papirus, nocne niebo, kamień).
+- **Opowieści ze ścian** – do każdej z 12 sfotografowanych ścian narracyjne omówienie sceny
+  (kto, co i dlaczego), rozwijane pod zagadką.
 
 Znaki są renderowane jako Unicode Egyptian Hieroglyphs; kody wg listy Gardinera.
 
