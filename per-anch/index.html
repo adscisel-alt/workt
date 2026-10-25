@@ -102,6 +102,7 @@ main section.hall.active{display:block}
 }
 .stone .cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .stone .cap .site{font-size:.9rem;color:var(--muted)}
+.tog-row{display:flex;gap:8px;flex-wrap:wrap}
 .dirtog{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
 .dirtog button{border:0;background:transparent;color:var(--fg);padding:6px 12px;font-size:.88rem;font-weight:600}
 .dirtog button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
@@ -297,17 +298,24 @@ footer{margin-top:40px;color:var(--muted);font-size:.85rem;border-top:1px solid 
       <div class="stone">
         <div class="cap">
           <div><h3 id="ins-title"></h3><div class="site" id="ins-site"></div></div>
-          <div class="dirtog" role="group" aria-label="Kierunek czytania">
-            <button id="dir-ltr" aria-pressed="true">L → P</button>
-            <button id="dir-rtl" aria-pressed="false">P → L</button>
+          <div class="tog-row">
+            <div class="dirtog" role="group" aria-label="Kierunek czytania">
+              <button id="dir-ltr" aria-pressed="true">L → P</button>
+              <button id="dir-rtl" aria-pressed="false">P → L</button>
+            </div>
+            <div class="dirtog" role="group" aria-label="Sposób zapisu odczytu">
+              <button id="rm-pl" aria-pressed="true">Odczyt po polsku</button>
+              <button id="rm-sci" aria-pressed="false">Zapis naukowy</button>
+            </div>
           </div>
         </div>
         <div id="photo-wrap"></div>
         <div class="relief-head"><div class="eyebrow">Transkrypcja znakami (kliknij grupę)</div></div>
         <div class="relief" id="relief" data-dir="ltr"></div>
         <div class="readout">
-          <div class="eyebrow">Transliteracja</div>
+          <div class="eyebrow" id="ins-tr-label">Odczyt (uproszczony, po polsku)</div>
           <div class="tr" id="ins-tr"></div>
+          <div class="muted" id="ins-tr-alt" style="font-size:.9rem"></div>
           <div class="eyebrow" style="margin-top:4px">Tłumaczenie</div>
           <div class="pl" id="ins-pl"></div>
         </div>
@@ -723,6 +731,43 @@ const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.
 // zamienia 𓅓 w tekstach zagadek na glif w <span class="hiero">
 const inl=s=>esc(s).replace(/\{([A-Z][a-z]?\d+[A-Z]?)\}/g,(m,c)=>`<span class="hiero">${glyph(c)}</span>`);
 
+
+/* ---- uproszczony odczyt po polsku ---- */
+let readMode=store.get('pa-read','pl');
+const WYM_OVR={'ꜥnḫ':'anch','ỉmn':'Amon','rꜥ':'Ra','wsỉr':'Usir','ḥr':'Hor','ḏḥwty':'Dżehuti','mꜣꜥt':'Maat','ỉtn':'Aton','ptḥ':'Ptah','ỉnỉ':'Ani','ꜣst':'Aset','nbt-ḥwt':'Nebet-hut','ỉnpw':'Inpu','sty':'Seti','wnỉs':'Unis','nḫt':'nacht','ḏd':'dżed','nswt':'nesut','nswt-bỉty':'nesut-biti','ḥtp-dỉ-nswt':'hetep-di-nesut','mꜣꜥ-ḫrw':'maa-cheru','sš':'sesz','kꜣ':'ka','bꜣ':'ba','ỉb':'ib','pꜣ':'pa','ḫꜥ':'cha','ꜥꜣ':'aa','ꜥm-mwt':'Am-mut','twtw':'Tutu','sn-nḏm':'Sen-nedżem','pꜣ-n-ptḥ':'Pa-en-Ptah','ỉntf':'Intef','wꜣst':'Uaset','ỉwnw':'Iunu','ꜣbḏw':'Abdżu','ḏdw':'Dżedu','sḫt-ỉꜣrw':'Sechet-Iaru','t':'te'};
+// objaśnienia dodawane tylko do samodzielnych wyrazów (nie wewnątrz imion złożonych)
+const WYM_GLOSS={'wsỉr':'Ozyrys','ḥr':'Horus','ḏḥwty':'Thot','ꜣst':'Izyda','nbt-ḥwt':'Neftyda','ỉnpw':'Anubis','ꜥm-mwt':'Ammit','wꜣst':'Teby','ỉwnw':'Heliopolis','ꜣbḏw':'Abydos','ḏdw':'Busiris'};
+function caseLike(src,val){return (src[0]===src[0].toLowerCase()&&src[0]!==src[0].toUpperCase())?val[0].toLowerCase()+val.slice(1):val;}
+function wymWord(w){
+  const key=w.toLowerCase();
+  if(WYM_OVR[key])return caseLike(w,WYM_OVR[key]);
+  // dwuznaki najpierw
+  let s=w.replace(/ḫ/g,'X').replace(/ẖ/g,'X').replace(/š/g,'S').replace(/ṯ/g,'C').replace(/ḏ/g,'D')
+          .replace(/ꜣ/g,'a').replace(/Ꜣ/g,'A').replace(/ꜥ/g,'a').replace(/ỉ/g,'i').replace(/Ỉ/g,'I').replace(/ḥ/g,'h').replace(/Ḥ/g,'H').replace(/ḳ/g,'k').replace(/Ḳ/g,'K').replace(/y/g,'i').replace(/w/g,'u').replace(/W/g,'U');
+  const vow=/[aeiouAEIOU]/;
+  if(s.length===1&&!vow.test(s))s=s+'e'; // =f → ef? zob. niżej
+  let out='';
+  for(let i=0;i<s.length;i++){
+    const c=s[i],n=s[i+1];
+    out+=c;
+    if(n&&!vow.test(c)&&!vow.test(n))out+='e';
+  }
+  if(w.length===1&&!vow.test(s[0]))out={f:'ef',n:'en',k:'ek',s:'es',m:'em',t:'et',r:'er'}[w.toLowerCase()]||out;
+  return out.replace(/X/g,'ch').replace(/S/g,'sz').replace(/C/g,'cz').replace(/D/g,'dż');
+}
+function wym(tr){
+  return String(tr).split(/(\s+|[·,:;()\[\]]|…)/).map(tok=>{
+    if(!tok||/^(\s+|[·,:;()\[\]]|…)$/.test(tok))return tok;
+    const low=tok.toLowerCase();
+    if(WYM_OVR[low])return caseLike(tok,WYM_OVR[low])+(WYM_GLOSS[low]?' ('+WYM_GLOSS[low]+')':'');
+    return tok.split(/([-=.])/).map(p=>/^[-=.]$/.test(p)?'-':(p?wymWord(p):p)).join('');
+  }).join('');
+}
+const TR=s=>readMode==='pl'?wym(s):s;
+function setReadMode(m){readMode=m;store.set('pa-read',m);$('#rm-pl').setAttribute('aria-pressed',String(m==='pl'));$('#rm-sci').setAttribute('aria-pressed',String(m==='sci'));renderWall();cgRender();}
+$('#rm-pl').addEventListener('click',()=>setReadMode('pl'));
+$('#rm-sci').addEventListener('click',()=>setReadMode('sci'));
+
 /* ===================== SALE (zakładki) ===================== */
 const HALLS=['sciana','znaki','trening'];
 function showHall(h){
@@ -754,7 +799,7 @@ function groupNode(g,idx){
   const n=el('div','grp');n.dataset.idx=idx;n.tabIndex=0;n.setAttribute('role','button');
   const gl=el('div','glyphs'+(g.col?' col':''));
   g.s.forEach(c=>{const s=el('span','sg',glyph(c));s.title=c;s.dataset.code=c;gl.appendChild(s);});
-  n.appendChild(gl);n.appendChild(el('div','lab',esc(g.tr)));
+  n.appendChild(gl);n.appendChild(el('div','lab',esc(TR(g.tr))));
   const open=()=>{curStep=idx;renderWall(true);};
   n.addEventListener('click',open);
   n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
@@ -764,7 +809,7 @@ function renderWall(keepScroll){
   const ins=INSCRIPTIONS[curIns];
   $('#ins-title').textContent=ins.num+'. '+ins.title;
   $('#ins-site').textContent=ins.site;
-  $('#ins-tr').textContent=ins.tr;
+  $('#ins-tr').textContent=TR(ins.tr);$('#ins-tr-label').textContent=readMode==='pl'?'Odczyt (uproszczony, po polsku)':'Transliteracja egiptologiczna';$('#ins-tr-alt').textContent=readMode==='pl'?'Zapis naukowy: '+ins.tr:'Po polsku: '+wym(ins.tr);
   $('#ins-pl').textContent=ins.pl;
   const r=$('#relief');r.innerHTML='';r.dataset.dir=dir;
   let i=0;
@@ -799,7 +844,7 @@ function renderScribe(){
   const g=ins.groups[curStep];
   const signsHtml=g.s.map(c=>{const s=BY[c];return `<button class="btn ghost" data-sign="${c}" style="display:flex;gap:10px;align-items:center;text-align:left;padding:6px 10px"><span class="sg" style="font-size:2rem;text-shadow:none">${glyph(c)}</span><span><span class="code">${c}</span><br>${s?esc(s.pl):'—'} <span class="pill ${s?s.typ:''}">${s?TYPN[s.typ]:''}</span></span></button>`;}).join('');
   box.innerHTML=`<div class="eyebrow">Krok ${curStep+1} z ${ins.groups.length}${g.cart?' · w kartuszu':''}</div>
-    <div class="big"><span class="sg" style="font-size:3.4rem">${glyphs(g.s)}</span><div><div class="tr" style="font-size:1.5rem">${esc(g.tr)}</div><div style="font-size:1.1rem">${esc(g.pl)}</div><span class="pill">${ROLE[g.fn]||g.fn}</span></div></div>
+    <div class="big"><span class="sg" style="font-size:3.4rem">${glyphs(g.s)}</span><div><div class="tr" style="font-size:1.5rem">${esc(TR(g.tr))}</div>${readMode==='pl'?`<div class="muted" style="font-size:.85rem">zapis naukowy: <span class="tr">${esc(g.tr)}</span></div>`:`<div class="muted" style="font-size:.85rem">po polsku: ${esc(wym(g.tr))}</div>`}<div style="font-size:1.1rem">${esc(g.pl)}</div><span class="pill">${ROLE[g.fn]||g.fn}</span></div></div>
     <p>${esc(g.note)}</p>
     <div class="eyebrow">Znaki w tej grupie (kliknij po szczegóły)</div>
     <div style="display:grid;gap:6px">${signsHtml}</div>`;
@@ -844,7 +889,7 @@ function photoNode(ins,big){
     const gs=sp.gs||[sp.g];const first=gs[0];const g=ins.groups[first];if(!g)return;
     const d=el('div','spot'+(gs.includes(curStep)?' current':''));
     d.style.left=sp.x+'%';d.style.top=sp.y+'%';d.style.width=sp.w+'%';d.style.height=sp.h+'%';
-    const label=gs.length>1?gs.map(k=>ins.groups[k].tr).join(' '):g.tr;
+    const label=TR(gs.length>1?gs.map(k=>ins.groups[k].tr).join(' '):g.tr);
     d.title=label+' – '+g.pl;d.dataset.g=first;d.tabIndex=0;d.setAttribute('role','button');
     d.appendChild(el('span','tag',esc(label.length>28?label.slice(0,26)+'…':label)));
     const act=e=>{e.stopPropagation();curStep=gs.includes(curStep)?gs[(gs.indexOf(curStep)+1)%gs.length]:first;renderWall();if(big)renderLightbox();};
@@ -874,7 +919,7 @@ function openLightbox(){if(!INSCRIPTIONS[curIns].photo)return;renderLightbox();$
 function renderLightbox(){
   const ins=INSCRIPTIONS[curIns];const inner=$('#lb-inner');inner.innerHTML='';inner.appendChild(photoNode(ins,true));
   const g=curStep>=0?ins.groups[curStep]:null;
-  $('#lb-cap').innerHTML=g?`<span class="tr">${esc(g.tr)}</span> · ${esc(g.pl)}`:esc(ins.title)+' · kliknij ramkę, aby odczytać fragment';
+  $('#lb-cap').innerHTML=g?`<span class="tr">${esc(TR(g.tr))}</span> · ${esc(g.pl)}`:esc(ins.title)+' · kliknij ramkę, aby odczytać fragment';
 }
 function closeLightbox(){$('#lightbox').classList.remove('open');}
 $('#lb-close').addEventListener('click',closeLightbox);
@@ -909,7 +954,7 @@ function openDetail(code){
   const uses=INSCRIPTIONS.filter(ins=>ins.groups.some(g=>g.s.includes(code)));
   box.innerHTML=s?`<div class="eyebrow">Znak Gardinera ${s.c} · <span class="pill ${s.typ}">${TYPN[s.typ]}</span></div>
     <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap"><span class="sg">${s.g}</span><span class="sg flip muted" title="Odbicie lustrzane – wersja dla tekstu czytanego od prawej">${s.g}</span>
-    <div><div class="tr" style="font-size:1.8rem">${esc(s.t||'—')}</div><div style="font-size:1.15rem;font-weight:600">${esc(s.pl)}</div>${s.snd?`<div class="muted">wymowa: ${esc(s.snd)}</div>`:''}</div></div>
+    <div><div class="tr" style="font-size:1.8rem">${esc(s.t||'—')}</div>${s.t?`<div class="muted">czytaj: <b>${esc(wym(s.t.split(' / ')[0]))}</b></div>`:''}<div style="font-size:1.15rem;font-weight:600">${esc(s.pl)}</div>${s.snd?`<div class="muted">wymowa: ${esc(s.snd)}</div>`:''}</div></div>
     ${s.mean?`<div class="note"><b>Znaczenie / użycie:</b> ${esc(s.mean)}</div>`:''}
     <dl class="kv"><dt>Unicode</dt><dd style="font-variant-numeric:tabular-nums">U+${s.g.codePointAt(0).toString(16).toUpperCase()}</dd><dt>Rodzaj</dt><dd>${TYPN[s.typ]}</dd><dt>Na ścianach</dt><dd>${uses.length?uses.map(u=>`<button class="btn ghost" data-ins="${u.id}" style="padding:2px 8px;font-size:.85rem">${u.num}. ${esc(u.title)}</button>`).join(' '):'—'}</dd></dl>
     <p class="muted" style="font-size:.9rem">Po lewej znak w orientacji dla tekstu czytanego od lewej (patrzy w lewo, ku początkowi); po prawej jego odbicie dla tekstu od prawej.</p>`
@@ -966,7 +1011,7 @@ $('#pz-check').addEventListener('click',()=>{
 });
 $('#pz-reset').addEventListener('click',()=>{pz.placed=[];$('#pz-status').textContent='';pzRender();});
 $('#pz-new').addEventListener('click',()=>pzStart());
-$('#pz-hint').addEventListener('click',()=>{const h=$('#pz-hintbox');h.hidden=false;h.innerHTML=`<b>Transliteracja:</b> <span class="tr">${esc(pz.ins.tr)}</span><br><span class="muted">Pierwszy blok to <span class="hiero">${glyphs(pz.ins.groups[0].s)}</span> (${esc(pz.ins.groups[0].tr)}).</span>`;});
+$('#pz-hint').addEventListener('click',()=>{const h=$('#pz-hintbox');h.hidden=false;h.innerHTML=`<b>Odczyt:</b> <span class="tr">${esc(TR(pz.ins.tr))}</span><br><span class="muted">Pierwszy blok to <span class="hiero">${glyphs(pz.ins.groups[0].s)}</span> (${esc(TR(pz.ins.groups[0].tr))}).</span>`;});
 
 /* --- 2. Quiz z rangami --- */
 const RANKS=[[0,'Uczeń Domu Życia','sbꜣty'],[4,'Skryba','sš'],[7,'Skryba królewski','sš nswt'],[9,'Nadzorca skrybów','ỉmy-r sšw'],[10,'Kapłan-lektor','ḫry-ḥbt']];
@@ -1054,7 +1099,7 @@ function cgRender(){
   if(cg.det)c.appendChild(el('span','sg',glyph(cg.det)));
   out.appendChild(c);
   if(cg.tail&&signs.length){const t=el('div','tail');(cg.tail==='di'?['X8','S34']:['S34','R11','S40']).forEach(k=>t.appendChild(el('span','sg',glyph(k))));out.appendChild(t);}
-  const tr=signs.map(k=>(BY[k]&&BY[k].t?BY[k].t.split(' ')[0]:'?')).join('-');
+  const tr=TR(signs.map(k=>(BY[k]&&BY[k].t?BY[k].t.split(' ')[0]:'?')).join('-'));
   $('#cg-tr').innerHTML=signs.length?`${esc(tr)}${cg.det?` + determinatyw ${cg.det==='A1'?'mężczyzny':'kobiety'}`:''}${cg.tail?` · po kartuszu: <i>${cg.tail==='di'?'dỉ ꜥnḫ „obdarzony życiem”':'ꜥnḫ ḏd wꜣs „życie, trwałość, władza”'}</i>`:''}`:'—';
   const map=$('#cg-map');map.innerHTML='';
   parts.forEach(p=>{map.appendChild(el('div','',`<span class="sg">${glyphs(p[1])}</span><b>${esc(p[0])}</b><span class="muted">${esc(p[2])}</span>`));});
@@ -1067,6 +1112,7 @@ document.querySelectorAll('#game-cart .seg button').forEach(b=>b.addEventListene
 }));
 
 /* ===================== START ===================== */
+$('#rm-pl').setAttribute('aria-pressed',String(readMode==='pl'));$('#rm-sci').setAttribute('aria-pressed',String(readMode==='sci'));
 renderPicker();renderWall();renderGrid();pzStart(0);cgRender();
 showHall((location.hash||'').replace('#',''));
 </script>
