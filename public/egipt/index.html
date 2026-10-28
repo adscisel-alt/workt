@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pałac w Memfis</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Widok z tarasu pałacu faraona w Memfis na starożytny Egipt: zbliżenia na Sakkarę, Gizę, Nil i świątynię Ptaha oraz warstwa magii bogów i zejście do Duat.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Noto+Sans+Egyptian+Hieroglyphs&display=swap">
+<style>
+/* Układ: pełnoekranowa scena (SVG z własnym zoomem) + wąska belka sterowania u góry,
+   żetony miejsc u dołu i karta opisu z boku. Jeden świat kolorów: lapis, ochra, złoto, wapień. */
+:root{
+  --ink:#0b1026;        /* noc / tusz */
+  --ink-2:#161c3a;      /* panele */
+  --lapis:#1f4fa3;      /* lazuryt */
+  --faience:#3fb8b0;    /* fajans — miejsca */
+  --gold:#f2c14e;       /* złoto — bóstwa */
+  --ochre:#c8782f;      /* ochra */
+  --lime:#f1e6c8;       /* wapień — tekst */
+  --lime-dim:#b8ad92;
+  --font-display:'Marcellus', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  --font-body:'Crimson Pro', Georgia, 'Times New Roman', serif;
+  --font-glyph:'Noto Sans Egyptian Hieroglyphs', 'Segoe UI Historic', sans-serif;
+  color-scheme: dark;
+}
+html,body{height:100%;margin:0}
+body{background:var(--ink);color:var(--lime);font-family:var(--font-body);font-size:17px;line-height:1.5;overflow:hidden}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+#app{height:100%;display:flex;flex-direction:column}
+
+/* belka */
+.bar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;
+  padding-block:8px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  background:linear-gradient(180deg,#141a38,#0f1430);
+  border-bottom:1px solid rgba(242,193,78,.35);
+  position:relative;z-index:5;
+}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0;margin-right:auto}
+.brand h1{font-family:var(--font-display);font-weight:400;font-size:1.15rem;margin:0;letter-spacing:.02em;white-space:nowrap}
+.brand .glyph{font-family:var(--font-glyph);color:var(--gold);font-size:1.1rem;white-space:nowrap}
+.ctl{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.seg{display:flex;border:1px solid rgba(241,230,200,.3);border-radius:999px;overflow:hidden}
+.seg button{padding:4px 12px;font-family:var(--font-display);font-size:.85rem;letter-spacing:.04em;color:var(--lime-dim)}
+.seg button[aria-pressed="true"]{background:var(--lapis);color:#fff}
+.toggle{display:flex;align-items:center;gap:8px;padding:4px 12px;border:1px solid rgba(242,193,78,.5);border-radius:999px;font-family:var(--font-display);font-size:.85rem;letter-spacing:.04em;color:var(--gold)}
+.toggle .sw{width:30px;height:16px;border-radius:999px;background:rgba(242,193,78,.25);position:relative;transition:background .25s}
+.toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .25s}
+.toggle[aria-pressed="true"] .sw{background:var(--gold)}
+.toggle[aria-pressed="true"] .sw::after{transform:translateX(14px);background:var(--ink)}
+.time{display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+.time label{font-family:var(--font-display);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--lime-dim)}
+.time input{width:120px;accent-color:var(--gold)}
+.time output{min-width:3.2em;font-family:var(--font-display);font-size:.95rem}
+.ico{width:32px;height:32px;border-radius:50%;border:1px solid rgba(241,230,200,.3);font-family:var(--font-display);font-size:1.05rem;line-height:1;display:grid;place-items:center;color:var(--lime)}
+.ico[aria-pressed="true"]{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+
+/* scena */
+.stage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;background:var(--ink);cursor:grab}
+.stage.dragging{cursor:grabbing}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hs{cursor:pointer}
+.hs .ring{fill:none;stroke-width:2;opacity:.9}
+.hs .dot{stroke:#0b1026;stroke-width:1.5}
+.hs.place .ring{stroke:var(--faience)}
+.hs.place .dot{fill:var(--faience)}
+.hs.god .ring{stroke:var(--gold)}
+.hs.god .dot{fill:var(--gold)}
+.hs text{font-family:var(--font-display);font-size:12px;fill:var(--lime);paint-order:stroke;stroke:#0b1026;stroke-width:3px;stroke-linejoin:round;letter-spacing:.03em}
+.hs.god text{fill:#ffe8a3}
+.hs.sel .ring{stroke-width:3;opacity:1}
+.hs .halo{fill:none;stroke-width:1.5;opacity:.6}
+.hs.place .halo{stroke:var(--faience)}
+.hs.god .halo{stroke:var(--gold)}
+@media (prefers-reduced-motion: no-preference){
+  .hs .halo{animation:halo 2.4s ease-out infinite;transform-box:fill-box;transform-origin:center}
+  @keyframes halo{0%{transform:scale(.6);opacity:.8}100%{transform:scale(1.9);opacity:0}}
+  .boat{animation:drift 60s linear infinite}
+  @keyframes drift{from{transform:translateX(0)}to{transform:translateX(-120px)}}
+  .god-float{animation:float 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .spark{animation:spark 4s ease-in-out infinite}
+  @keyframes spark{0%,100%{opacity:0}50%{opacity:1}}
+  .flame{animation:flame .9s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:bottom center}
+  @keyframes flame{from{transform:scaleY(.9) scaleX(1)}to{transform:scaleY(1.15) scaleX(.9)}}
+}
+#gods,#duatGods{transition:opacity .6s}
+.hint{
+  position:absolute;left:max(16px, env(safe-area-inset-left, 0px));top:12px;z-index:3;
+  font-family:var(--font-display);font-size:.78rem;letter-spacing:.05em;color:var(--lime-dim);
+  background:rgba(11,16,38,.6);padding:4px 10px;border-radius:999px;backdrop-filter:blur(4px);pointer-events:none;
+  max-width:calc(100% - 140px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.magic-badge{
+  position:absolute;right:max(16px, env(safe-area-inset-right, 0px));top:12px;z-index:3;
+  font-family:var(--font-glyph);font-size:1.2rem;color:var(--gold);opacity:0;transition:opacity .6s;pointer-events:none;
+  text-shadow:0 0 12px rgba(242,193,78,.8)
+}
+body.magic .magic-badge{opacity:1}
+
+/* żetony */
+.chips{
+  position:absolute;left:0;right:0;bottom:0;z-index:4;
+  display:flex;gap:8px;overflow-x:auto;scrollbar-width:thin;
+  padding-block:10px calc(10px + env(safe-area-inset-bottom, 0px));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  background:linear-gradient(0deg,rgba(11,16,38,.9),rgba(11,16,38,0));
+  pointer-events:none
+}
+.chips button{
+  pointer-events:auto;flex:0 0 auto;padding:5px 12px;border-radius:999px;
+  border:1px solid rgba(63,184,176,.6);background:rgba(11,16,38,.75);
+  font-family:var(--font-display);font-size:.82rem;letter-spacing:.03em;color:var(--lime);
+  display:flex;align-items:center;gap:6px;backdrop-filter:blur(4px)
+}
+.chips button .g{font-family:var(--font-glyph);font-size:.9rem;color:var(--faience)}
+.chips button.god{border-color:rgba(242,193,78,.7)}
+.chips button.god .g{color:var(--gold)}
+.chips button[aria-current="true"]{background:var(--faience);color:var(--ink);border-color:var(--faience)}
+.chips button.god[aria-current="true"]{background:var(--gold);border-color:var(--gold)}
+.chips button[aria-current="true"] .g{color:var(--ink)}
+
+/* karta */
+.card{
+  position:absolute;z-index:6;
+  top:52px;right:max(16px, env(safe-area-inset-right, 0px));width:min(380px, calc(100% - 32px));
+  max-height:calc(100% - 120px);overflow:auto;
+  background:linear-gradient(180deg,rgba(22,28,58,.96),rgba(14,18,42,.96));
+  border:1px solid rgba(242,193,78,.45);border-radius:6px;
+  box-shadow:0 20px 50px rgba(0,0,0,.5);
+  padding:18px 20px 20px;
+  transform:translateX(16px);opacity:0;pointer-events:none;transition:transform .3s,opacity .3s
+}
+.card.open{transform:none;opacity:1;pointer-events:auto}
+.card .eyebrow{font-family:var(--font-display);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faience)}
+.card.god .eyebrow{color:var(--gold)}
+.card h2{font-family:var(--font-display);font-weight:400;font-size:1.45rem;margin:4px 0 2px;line-height:1.15;text-wrap:balance}
+.card .glyph{font-family:var(--font-glyph);font-size:1.5rem;color:var(--gold);line-height:1.3;margin-bottom:8px;letter-spacing:.04em}
+.card .translit{font-style:italic;color:var(--lime-dim);font-size:.95rem;margin-bottom:10px}
+.card p{margin:0 0 10px;max-width:60ch}
+.card .facts{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:12px 0 0;padding-top:12px;border-top:1px solid rgba(241,230,200,.15);font-size:.95rem}
+.card .facts dt{font-family:var(--font-display);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--lime-dim);padding-top:3px}
+.card .facts dd{margin:0}
+.card .heka{margin-top:12px;padding:10px 12px;border-left:3px solid var(--gold);background:rgba(242,193,78,.08);font-size:.97rem}
+.card .heka b{font-family:var(--font-display);font-weight:400;color:var(--gold);letter-spacing:.06em;font-size:.78rem;text-transform:uppercase;display:block;margin-bottom:2px}
+.card .close{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;color:var(--lime-dim);font-size:1.2rem;line-height:1}
+.card .close:hover{background:rgba(255,255,255,.08);color:var(--lime)}
+.card .go{margin-top:12px;padding:6px 14px;border:1px solid var(--gold);border-radius:999px;color:var(--gold);font-family:var(--font-display);font-size:.85rem;letter-spacing:.05em}
+
+@media (max-width:640px){
+  .bar{gap:6px 10px}
+  .brand h1{font-size:1rem}
+  .time input{width:90px}
+  .card{top:auto;bottom:0;right:0;left:0;width:100%;max-height:52%;border-radius:12px 12px 0 0;transform:translateY(20px);
+    padding-left:max(20px, env(safe-area-inset-left, 0px));padding-right:max(20px, env(safe-area-inset-right, 0px));
+    padding-bottom:calc(20px + env(safe-area-inset-bottom, 0px))}
+  .card.open{transform:none}
+  .chips{bottom:0}
+  body.card-open .chips{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar">
+    <div class="brand">
+      <span class="glyph" aria-hidden="true">𓉐𓉻 𓊅𓌉𓊖</span>
+      <h1>Pałac faraona w Memfis</h1>
+    </div>
+    <div class="ctl">
+      <div class="seg" role="group" aria-label="Scena">
+        <button id="sceneMemfis" aria-pressed="true">Taras pałacu</button>
+        <button id="sceneDuat" aria-pressed="false">Duat</button>
+      </div>
+      <button id="magic" class="toggle" aria-pressed="false"><span class="sw" aria-hidden="true"></span>Świat bogów</button>
+      <div class="time">
+        <label for="time">Pora</label>
+        <input id="time" type="range" min="0" max="24" step="0.1" value="17.4" aria-label="Pora dnia">
+        <output id="timeOut" for="time">17:24</output>
+        <button id="play" class="ico" aria-pressed="false" title="Bieg słońca" aria-label="Bieg słońca">▶</button>
+      </div>
+      <div class="ctl" role="group" aria-label="Zbliżenie">
+        <button id="zoomOut" class="ico" aria-label="Oddal">−</button>
+        <button id="zoomIn" class="ico" aria-label="Zbliż">+</button>
+        <button id="zoomReset" class="ico" aria-label="Wróć na taras" title="Wróć na taras">⌂</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+    <div class="hint" id="hint">Przeciągnij, by się rozejrzeć · kółko lub szczypnięcie: zbliżenie</div>
+    <div class="magic-badge" aria-hidden="true">𓎛𓂓𓄿 𓋹 𓂀</div>
+
+    <!-- SCENA 1: widok z tarasu pałacu -->
+    <svg id="scene" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-label="Widok z tarasu pałacu w Memfis na Egipt">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop id="sky0" offset="0" stop-color="#2c5aa8"/>
+          <stop id="sky1" offset=".55" stop-color="#d78c4e"/>
+          <stop id="sky2" offset="1" stop-color="#f6c67a"/>
+        </linearGradient>
+        <radialGradient id="sunGlow"><stop offset="0" stop-color="#fff5c0" stop-opacity=".9"/><stop offset=".35" stop-color="#ffd27a" stop-opacity=".45"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
+        <radialGradient id="torchGlow"><stop offset="0" stop-color="#ffb347" stop-opacity=".7"/><stop offset="1" stop-color="#ff8c2a" stop-opacity="0"/></radialGradient>
+        <linearGradient id="nile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f86b8"/><stop offset="1" stop-color="#2b5f8e"/></linearGradient>
+        <linearGradient id="desertFar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9b47a"/><stop offset="1" stop-color="#c9a066"/></linearGradient>
+        <linearGradient id="desertNear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfa264"/><stop offset="1" stop-color="#b98a4c"/></linearGradient>
+        <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b79a6a"/><stop offset="1" stop-color="#8c7046"/></linearGradient>
+        <linearGradient id="column" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a6a3e"/><stop offset=".3" stop-color="#e3c78f"/><stop offset=".7" stop-color="#d4b57a"/><stop offset="1" stop-color="#7a5c34"/></linearGradient>
+        <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="softglow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <pattern id="floorTiles" width="80" height="40" patternUnits="userSpaceOnUse"><rect width="80" height="40" fill="none"/><path d="M0 0 H80 M0 20 H80 M40 0 V20 M0 20 V40 M80 20 V40" stroke="#6f5636" stroke-width="1.2" opacity=".6"/></pattern>
+      </defs>
+
+      <!-- niebo -->
+      <rect x="-3000" y="-3000" width="8000" height="3435" fill="url(#sky)"/>
+      <g id="stars" opacity="0"></g>
+      <g id="nutGroup" opacity="0"></g>
+      <g id="sunGroup"><circle id="sunHalo" r="260" fill="url(#sunGlow)"/><circle id="sun" r="42" fill="#fff1b8"/></g>
+      <g id="moonGroup" opacity="0"><circle r="26" fill="#f4efdc"/><circle cx="-9" cy="-4" r="22" id="moonShade" fill="#2a2f55" opacity="0"/></g>
+      <g id="birds" fill="none" stroke="#2a2a3a" stroke-width="2" opacity=".7"></g>
+
+      <!-- ląd -->
+      <g id="land">
+        <!-- mgiełka delty daleko na północy (prawo) -->
+        <rect x="900" y="380" width="2100" height="60" fill="#e8ddc0" opacity=".45"/>
+        <!-- daleki płaskowyż pustynny -->
+        <path d="M-3000 440 L-200 440 L80 412 L260 420 L400 404 L640 418 L820 426 L1000 416 L1180 420 L1400 416 L1600 424 L5000 424 L5000 520 L-3000 520Z" fill="url(#desertFar)"/>
+        <g id="farPyramids"></g>
+        <!-- bliższa skarpa z Sakkarą -->
+        <path d="M-3000 470 L-300 470 L-100 458 L200 452 L480 456 L700 466 L900 472 L1100 476 L1300 470 L1500 468 L5000 470 L5000 600 L-3000 600Z" fill="url(#desertNear)"/>
+        <g id="nearPyramids"></g>
+        <!-- Nil: wstęga od horyzontu na północy w prawo i w dół -->
+        <path id="nilePath" d="M1300 430 C1320 470 1380 500 1460 540 C1560 590 1640 640 1700 720 L1900 800 L1900 430Z" fill="url(#nile)"/>
+        <path d="M1296 432 C1318 472 1378 502 1458 542 C1558 592 1638 642 1698 722" fill="none" stroke="#9fc9e8" stroke-width="2" opacity=".5"/>
+        <g id="nileShimmer" fill="#dff1ff" opacity=".35"></g>
+        <!-- pola -->
+        <g id="fields"></g>
+        <!-- miasto -->
+        <g id="city"></g>
+        <!-- palmy -->
+        <g id="palms"></g>
+        <!-- łodzie -->
+        <g id="boats"></g>
+        <!-- noc nad lądem -->
+        <rect id="nightLand" x="-3000" y="380" width="8000" height="2600" fill="#060818" opacity="0"/>
+      </g>
+
+      <!-- bogowie (warstwa magii) -->
+      <g id="gods" opacity="0"></g>
+
+      <!-- pałac: taras na pierwszym planie -->
+      <g id="palace">
+        <rect x="-3000" y="640" width="8000" height="3000" fill="url(#floor)"/>
+        <rect x="-3000" y="640" width="8000" height="3000" fill="url(#floorTiles)"/>
+        <!-- balustrada -->
+        <rect x="-3000" y="618" width="8000" height="24" fill="#d9bf8a"/>
+        <rect x="-3000" y="640" width="8000" height="8" fill="#7a5c34" opacity=".5"/>
+        <g id="balusters"></g>
+        <!-- kolumny -->
+        <g id="columns"></g>
+        <!-- strop (widoczny po przesunięciu w górę) -->
+        <g id="ceiling"></g>
+        <!-- pochodnie -->
+        <g id="torches"></g>
+        <!-- tron i stolik -->
+        <g id="throne"></g>
+      </g>
+
+      <g id="markers"></g>
+    </svg>
+
+    <!-- SCENA 2: Duat -->
+    <svg id="duat" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-label="Duat, kraina nocy i sąd Ozyrysa" hidden>
+      <defs>
+        <linearGradient id="duatSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#03040c"/><stop offset=".6" stop-color="#0b0f2a"/><stop offset="1" stop-color="#1b1033"/></linearGradient>
+        <linearGradient id="nightRiver" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2f6b"/><stop offset="1" stop-color="#0a1232"/></linearGradient>
+        <radialGradient id="iaru"><stop offset="0" stop-color="#ffe9a8" stop-opacity=".55"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+        <radialGradient id="fire"><stop offset="0" stop-color="#ffd57a" stop-opacity=".9"/><stop offset="1" stop-color="#ff6a1a" stop-opacity="0"/></radialGradient>
+        <pattern id="judges" width="36" height="60" patternUnits="userSpaceOnUse"><path d="M18 8 a6 6 0 1 1 0 .1 M12 20 h12 l4 30 h-20z" fill="#4a3d2a"/><circle cx="18" cy="12" r="6" fill="#4a3d2a"/></pattern>
+      </defs>
+      <rect x="-3000" y="-3000" width="8000" height="8000" fill="url(#duatSky)"/>
+      <g id="duatStars"></g>
+      <!-- Pola Iaru (raj) w oddali -->
+      <g id="iaruGroup"></g>
+      <!-- sala Dwóch Prawd: posadzka -->
+      <path d="M-3000 560 L5000 560 L5000 3000 L-3000 3000Z" fill="#17122b"/>
+      <path d="M-3000 560 L5000 560 L5000 575 L-3000 575Z" fill="#3a2d55"/>
+      <!-- rzeka nocy na dole -->
+      <path d="M-3000 700 C 200 680, 600 740, 1000 710 C 1300 690, 1500 730, 5000 700 L5000 3000 L-3000 3000Z" fill="url(#nightRiver)"/>
+      <g id="duatScene"></g>
+      <g id="duatGods" opacity="1"></g>
+      <g id="duatMarkers"></g>
+    </svg>
+
+    <nav class="chips" id="chips" aria-label="Miejsca i bóstwa"></nav>
+
+    <aside class="card" id="card" aria-live="polite">
+      <button class="close" id="cardClose" aria-label="Zamknij">×</button>
+      <div class="eyebrow" id="cEyebrow"></div>
+      <h2 id="cTitle"></h2>
+      <div class="glyph" id="cGlyph"></div>
+      <div class="translit" id="cTranslit"></div>
+      <div id="cBody"></div>
+      <dl class="facts" id="cFacts"></dl>
+      <div class="heka" id="cHeka"></div>
+      <button class="go" id="cGo" hidden></button>
+    </aside>
+  </main>
+</div>
+
+<script>
+(function(){
+'use strict';
+const W=1600, H=900, HORIZON=430;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = id => document.getElementById(id);
+const stage=$('stage'), sceneSvg=$('scene'), duatSvg=$('duat');
+
+/* ------------------------------------------------------------------ */
+/* Generator sylwetek bóstw (profil jak na malowidłach grobowych)      */
+/* ------------------------------------------------------------------ */
+const WIG='#1b2140';
+function fig(o){
+  const s=o.skin||'#b5542a', k=o.kilt||'#f3e9c8', gold='#f0b73a';
+  let p='';
+  // laska / insygnia (za postacią)
+  if(o.item==='was') p+=`<path d="M14 36 L20 152" stroke="${gold}" stroke-width="3.5" stroke-linecap="round"/><path d="M8 34 Q14 26 22 34" fill="none" stroke="${gold}" stroke-width="3.5" stroke-linecap="round"/><path d="M14 152 l-5 6 M20 152 l5 6" stroke="${gold}" stroke-width="3"/>`;
+  if(o.item==='papyrus') p+=`<path d="M16 48 L20 152" stroke="#5aa66a" stroke-width="3.5" stroke-linecap="round"/><path d="M8 48 Q16 30 24 48 Z" fill="#5aa66a"/>`;
+  if(o.item==='lotus') p+=`<path d="M16 48 L20 152" stroke="#5aa66a" stroke-width="3.5" stroke-linecap="round"/><path d="M6 50 Q16 20 26 50Z" fill="#7fb8e8"/>`;
+  if(o.item==='staff3') p+=`<path d="M14 40 L20 152" stroke="${gold}" stroke-width="4" stroke-linecap="round"/><rect x="8" y="28" width="12" height="14" fill="${gold}"/><rect x="10" y="20" width="8" height="4" fill="${gold}"/><rect x="10" y="12" width="8" height="4" fill="${gold}"/>`;
+  if(o.mummy){
+    p+=`<rect x="33" y="36" width="34" height="120" rx="15" fill="${o.wrap||'#2f7f6a'}"/><path d="M33 90 H67 M33 110 H67 M33 130 H67" stroke="rgba(0,0,0,.25)" stroke-width="2"/>`;
+    p+=`<path d="M40 70 L22 62 L24 70 L40 78Z" fill="${s}"/>`; // ręce trzymają laskę
+  } else {
+    // nogi
+    p+=`<path d="M38 112 L33 158 L45 158 L48 114Z" fill="${s}"/><path d="M52 112 L60 158 L72 158 L63 114Z" fill="${s}"/>`;
+    if(o.dress){
+      p+=`<path d="M34 46 L66 46 L71 156 L31 156Z" fill="${k}"/><path d="M34 46 L66 46 L68 70 L32 70Z" fill="${s}" opacity=".0"/>`;
+    } else {
+      p+=`<path d="M30 82 L72 82 L77 118 L25 118Z" fill="${k}"/>`;
+    }
+    // tors
+    p+=`<path d="M33 44 L67 44 L71 84 L29 84Z" fill="${s}"/>`;
+    if(o.dress) p+=`<path d="M33 44 L67 44 L71 84 L29 84Z" fill="${k}" opacity=".55"/>`;
+    // pas, naszyjnik
+    p+=`<rect x="29" y="80" width="43" height="5" fill="${gold}"/><path d="M36 44 Q50 60 64 44Z" fill="${gold}"/>`;
+    // ramiona
+    p+=`<path d="M35 48 L18 94 L25 97 L42 54Z" fill="${s}"/><path d="M65 48 L74 100 L67 103 L59 56Z" fill="${s}"/>`;
+    // ankh w tylnej dłoni
+    if(o.ankh!==false) p+=`<g transform="translate(70,104)"><circle r="4" fill="none" stroke="${gold}" stroke-width="2"/><path d="M0 4 V16 M-5 7 H5" stroke="${gold}" stroke-width="2"/></g>`;
+  }
+  // szyja
+  p+=`<rect x="44" y="34" width="12" height="12" fill="${s}"/>`;
+  // głowy
+  const head=o.head||'human';
+  if(head==='human'||head==='cow'||head==='ram'){
+    p+=`<path d="M34 20 Q50 0 66 20 L69 44 L31 44Z" fill="${o.wig||WIG}"/><circle cx="46" cy="25" r="11.5" fill="${s}"/><path d="M40 24 l6 -1" stroke="#000" stroke-width="1.5" opacity=".6"/>`;
+    if(o.beard) p+=`<path d="M40 34 L38 50 L43 50 L44 36Z" fill="#1b2140"/>`;
+  }
+  if(head==='falcon'){
+    p+=`<circle cx="48" cy="24" r="13" fill="${o.wig||'#2c3a6b'}"/><path d="M38 22 L24 28 L38 32Z" fill="#2a2a2a"/><circle cx="43" cy="22" r="2.5" fill="#000"/><path d="M40 26 q4 6 8 2" fill="none" stroke="#000" stroke-width="1.3"/>`;
+  }
+  if(head==='jackal'){
+    p+=`<path d="M38 18 L32 -6 L46 14Z M54 14 L60 -8 L62 18Z" fill="#111118"/><circle cx="48" cy="26" r="12" fill="#111118"/><path d="M38 28 L12 34 L38 40Z" fill="#111118"/><circle cx="42" cy="24" r="2.2" fill="#f2c14e"/>`;
+  }
+  if(head==='ibis'){
+    p+=`<circle cx="48" cy="26" r="11" fill="#e9e4d5"/><path d="M40 24 C24 24 18 36 18 52 C22 40 30 32 42 30Z" fill="#1a1a1a"/><circle cx="44" cy="23" r="2" fill="#000"/><path d="M34 20 Q50 4 64 20 L66 40 L58 40 L56 30 Q50 26 44 32 L42 40 L34 40Z" fill="${o.wig||WIG}" opacity=".9"/>`;
+  }
+  if(head==='lion'){
+    p+=`<circle cx="48" cy="26" r="14" fill="#c99a52"/><circle cx="40" cy="14" r="4" fill="#c99a52"/><circle cx="58" cy="13" r="4" fill="#c99a52"/><rect x="30" y="26" width="16" height="10" rx="5" fill="#b07f3c"/><circle cx="42" cy="22" r="2.3" fill="#000"/>`;
+  }
+  if(head==='croc'){
+    p+=`<circle cx="50" cy="26" r="12" fill="#4f7a3d"/><path d="M40 22 L6 28 L40 36Z" fill="#4f7a3d"/><path d="M10 28 L38 30" stroke="#2f4a25" stroke-width="1.2"/><circle cx="46" cy="21" r="2.5" fill="#f2c14e"/>`;
+  }
+  if(head==='ram'){
+    p+=`<path d="M58 14 c10 -4 14 10 4 14 c-4 -6 -6 -8 -4 -14z" fill="#c9a066"/><path d="M36 14 c-10 -4 -14 10 -4 14 c4 -6 6 -8 4 -14z" fill="#c9a066"/>`;
+  }
+  if(head==='cow'){
+    p+=`<path d="M40 14 C30 2 32 -16 44 -12" fill="none" stroke="#3a2a18" stroke-width="4" stroke-linecap="round"/><path d="M60 14 C70 2 68 -16 56 -12" fill="none" stroke="#3a2a18" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="-8" r="11" fill="#f0b73a"/>`;
+  }
+  // korony
+  const c=o.crown;
+  if(c==='disc') p+=`<circle cx="50" cy="4" r="11" fill="#f0b73a"/><path d="M48 12 q-6 -10 2 -16 q2 6 -2 16" fill="#c8451c"/>`;
+  if(c==='atef') p+=`<path d="M41 12 Q50 -34 59 12Z" fill="#f5f0e6"/><path d="M39 14 Q28 -14 44 -6Z" fill="#e8d9a8"/><path d="M61 14 Q72 -14 56 -6Z" fill="#e8d9a8"/>`;
+  if(c==='plumes') p+=`<rect x="42" y="-28" width="7" height="38" rx="3" fill="#e8d9a8"/><rect x="51" y="-28" width="7" height="38" rx="3" fill="#e8d9a8"/>`;
+  if(c==='throne') p+=`<rect x="42" y="-4" width="16" height="12" fill="#f0b73a"/><rect x="42" y="-16" width="9" height="12" fill="#f0b73a"/>`;
+  if(c==='hwt') p+=`<rect x="40" y="-10" width="20" height="18" fill="none" stroke="#f0b73a" stroke-width="3"/><rect x="52" y="-2" width="8" height="10" fill="#f0b73a"/>`;
+  if(c==='lotus') p+=`<path d="M40 10 Q50 -30 60 10Z" fill="#7fb8e8"/><rect x="44" y="-40" width="5" height="20" fill="#e8d9a8"/><rect x="51" y="-40" width="5" height="20" fill="#e8d9a8"/>`;
+  if(c==='cap') p+=`<path d="M36 26 Q50 2 64 26Z" fill="#2a4e9a"/>`;
+  if(c==='moon') p+=`<circle cx="50" cy="2" r="10" fill="#f4efdc"/><path d="M36 10 Q50 24 64 10 Q50 16 36 10Z" fill="#f4efdc"/>`;
+  if(c==='feather') p+=`<path d="M48 8 Q44 -30 54 -32 Q58 -10 52 8Z" fill="#e8d9a8" stroke="#b89a5a" stroke-width="1"/>`;
+  if(c==='pot') p+=`<ellipse cx="50" cy="2" rx="9" ry="7" fill="#f0b73a"/><rect x="42" y="-10" width="16" height="4" fill="#f0b73a"/>`;
+  if(c==='heka') p+=`<path d="M38 4 L38 -10 L62 -10 L62 4" fill="none" stroke="#f0b73a" stroke-width="4"/>`;
+  if(c==='ureus') p+=`<path d="M50 14 q-8 -12 0 -18 q3 8 0 18" fill="#c8451c"/>`;
+  if(o.name) p+=`<text x="50" y="-46" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="18" fill="#ffe8a3" opacity=".95">${o.name}</text>`;
+  return p;
+}
+function god(id,x,y,sc,o){
+  const flip=o.flip?`scale(-1,1) translate(-100,0)`:'';
+  return `<g class="godfig" data-god="${id}" transform="translate(${x},${y}) scale(${sc})" filter="url(#glow)" opacity=".92"><g class="god-float"><g transform="${flip}">${fig(o)}</g></g></g>`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Dane: miejsca, bóstwa, Duat                                         */
+/* ------------------------------------------------------------------ */
+const P=(t)=>t.map(s=>`<p>${s}</p>`).join('');
+const PLACES=[
+ {id:'taras',kind:'place',x:800,y:760,zoom:1000,name:'Taras Wielkiego Domu',glyph:'𓉐𓉻',translit:'per-aa, „Wielki Dom”',
+  body:P(['Stoisz na tarasie pałacu królewskiego. Egipcjanie nazywali pałac <i>per-aa</i>, „Wielki Dom”. Z czasem słowo to zaczęło oznaczać samego władcę; po grecku brzmiało <i>pharaó</i>, stąd nasz „faraon”.',
+   'Memfis założył według tradycji Menes (Narmer) około 3100 r. p.n.e., tuż poniżej miejsca, gdzie dolina Nilu rozszerza się w Deltę. Stąd władca spinał Górny i Dolny Egipt: „Dwa Kraje”.']),
+  facts:[['Epoka','Stare Państwo, ok. 2686–2181 p.n.e.'],['Władca','faraon w podwójnej koronie pszent'],['Widok','zachód: nekropola, północ: Giza i Delta']],
+  heka:'Tron chroni ureusz, kobra Wadżet. Wierzono, że pluje ogniem w każdego, kto podniesie rękę na króla.'},
+ {id:'sufit',kind:'place',x:800,y:-380,zoom:900,name:'Strop tarasu',glyph:'𓇯𓇼𓇼𓇼',translit:'pet, „niebo”',
+  body:P(['Strop pomalowano na błękit lazurytu i pokryto złotymi gwiazdami: każdy dach w Egipcie był małym niebem. Belki wspierają kolumny o kapitelach papirusu i lotosu: roślin Dolnego i Górnego Egiptu.',
+   'W pałacu pracowali skrybowie, lekarze, kucharze i strażnicy; kobiety dworu mieszkały w osobnym skrzydle, <i>per-chener</i>.']),
+  facts:[['Kolory','lazuryt, malachit, ochra, biel wapienna'],['Kapitele','papirus (Delta) i lotos (Dolina)']],
+  heka:'Sępica Nechbet z rozpostartymi skrzydłami na stropie osłania władcę. Jej obraz nad głową to amulet w skali budynku.'},
+ {id:'hutkaptah',kind:'place',x:770,y:548,zoom:420,name:'Świątynia Ptaha',glyph:'𓉗𓂓𓊪𓏏𓎛𓊖',translit:'Hut-ka-Ptah, „Dom ka Ptaha”',
+  body:P(['Największa świątynia miasta, z pylonami, obeliskami i dziedzińcami. Grecy usłyszeli jej nazwę jako <i>Aigyptos</i>; tak cały kraj dostał imię, którym nazywamy go do dziś.',
+   'Ptah był tu bogiem-stwórcą: według „Teologii memfickiej” stworzył świat sercem (myślą) i językiem (słowem). Kapłani Ptaha nosili tytuł „wielkiego kierownika rzemieślników”.']),
+  facts:[['Bóstwo','Ptah, z Sechmet i Nefertumem (triada memficka)'],['Nazwa kraju','Hut-ka-Ptah → Aigyptos → Egipt'],['Dom Życia','skryptorium i szkoła przy świątyni']],
+  heka:'W Domu Życia (<i>per-anch</i>) przechowywano papirusy z zaklęciami i recepty. Magia i medycyna były jedną sztuką.'},
+ {id:'ineb',kind:'place',x:560,y:560,zoom:480,name:'Białe Mury',glyph:'𓊅𓌉𓊖',translit:'Ineb-hedż, „Biały Mur”',
+  body:P(['Najstarsza nazwa Memfis. Pobielona wapnem twierdza i mur miejski błyszczały w słońcu; stąd wzięło się imię miasta w czasach pierwszych dynastii.',
+   'Za murem leżało miasto z cegły mułowej: domy, warsztaty, spichlerze i targ. Nazwa „Memfis” przyszła później, od piramidy Pepiego I: <i>Men-nefer</i>, „Trwała i piękna”.']),
+  facts:[['Materiał','cegła mułowa bielona wapnem'],['Ludność','kilkadziesiąt tysięcy mieszkańców'],['Późniejsza nazwa','Men-nefer → Memfis']],
+  heka:'Na bramach malowano oko wedżat: strzegło wejścia tak, jak amulet strzeże szyi.'},
+ {id:'apis',kind:'place',x:655,y:598,zoom:360,name:'Stajnia byka Apisa',glyph:'𓎛𓊪𓃒',translit:'Hapi (Apis)',
+  body:P(['Przy świątyni Ptaha mieszkał żywy byk Apis: czarny, z białym trójkątem na czole i znakiem skarabeusza pod językiem. Uważano go za żywe wcielenie Ptaha.',
+   'Po śmierci byka balsamowano i chowano w gigantycznych granitowych sarkofagach w Serapeum w Sakkarze, a kapłani ruszali szukać następcy.']),
+  facts:[['Znaki','biały trójkąt na czole, 29 cech'],['Pochówek','Serapeum, Sakkara'],['Wyrocznia','odpowiedzi odczytywano z ruchów byka']],
+  heka:'Pytania zadawano Apisowi na głos; jeśli wszedł do jednej stajni, odpowiedź brzmiała „tak”, jeśli do drugiej: „nie”.'},
+ {id:'sakkara',kind:'place',x:380,y:395,zoom:400,name:'Nekropola Sakkara',glyph:'𓉴 𓇋𓇋𓅓𓊵𓏏𓊪',translit:'piramida schodkowa Dżesera',
+  body:P(['Na zachodniej skarpie wznosi się piramida schodkowa króla Dżesera (ok. 2650 r. p.n.e.): sześć stopni, 62 metry wysokości. To pierwsza wielka budowla z kamienia na świecie.',
+   'Zaprojektował ją Imhotep, kanclerz, kapłan i lekarz, którego po śmierci czczono jak boga. Wokół ciągną się mastaby dostojników i mniejsze piramidy późniejszych królów.']),
+  facts:[['Budowniczy','Imhotep, „ten, który przychodzi w pokoju”'],['Wysokość','62 m, 6 stopni'],['Teksty Piramid','w piramidzie Unasa, najstarsze zaklęcia świata']],
+  heka:'Ściany piramidy Unasa pokrywają Teksty Piramid: zaklęcia, które miały wynieść króla na niebo między gwiazdy „niezniszczalne”.'},
+ {id:'pustynia',kind:'place',x:140,y:430,zoom:520,name:'Pustynia Zachodnia',glyph:'𓅟𓏏𓈉',translit:'Deszeret, „Czerwona Ziemia”',
+  body:P(['Za polami zaczyna się <i>Deszeret</i>, Czerwona Ziemia: kraina Seta, karawan i grobów. Zachód, gdzie znika słońce, był stroną zmarłych; dlatego nekropole leżą na zachodnim brzegu.',
+   'Dolina z czarnym mułem to <i>Kemet</i>, Czarna Ziemia. Egipcjanie nazywali tak swój kraj i siebie: „lud Czarnej Ziemi”.']),
+  facts:[['Oazy','Fajum, Bahrija, Charga, Siwa'],['Szlaki','do Libii i kopalń alabastru'],['Strażniczka','Hathor, „Pani Zachodu”']],
+  heka:'Pustynia była groźna i święta zarazem: w jej jaskiniach odbywały się rytuały, a Set, pan burz, chronił barkę Ra przed wężem Apopem.'},
+ {id:'abusir',kind:'place',x:1030,y:420,zoom:300,name:'Abusir',glyph:'𓉴𓉴𓉴 𓇳',translit:'piramidy V dynastii',
+  body:P(['Na północ od Sakkary stoją piramidy królów V dynastii: Sahure, Neferirkare, Niuserre. Mniejsze od gizańskich, lecz słynne z pięknych płaskorzeźb w świątyniach grobowych.',
+   'Obok wznosiły się świątynie słońca z ogromnym obeliskiem na postumencie: władcy V dynastii nazywali się „synami Ra”.']),
+  facts:[['Królowie','Sahure, Neferirkare, Niuserre'],['Świątynie słońca','Abu Gurab, obelisk na podstawie'],['Papirusy z Abusir','najstarsze archiwum świątynne']],
+  heka:'Papirusy z Abusir to grafiki dyżurów kapłanów i spisy ofiar: magia codzienna, dbanie, by ka króla nigdy nie zgłodniało.'},
+ {id:'giza',kind:'place',x:1300,y:416,zoom:240,name:'Piramidy w Gizie',glyph:'𓉴𓉴𓉴 𓁶',translit:'Chufu, Chafre, Menkaure',
+  body:P(['Daleko na północy, na płaskowyżu, lśnią trzy piramidy: Chufu (146 m), Chafre i Menkaure. Pokryte wypolerowanym białym wapieniem z Tury, w słońcu widoczne z wielu kilometrów.',
+   'Pod nimi czuwa Sfinks: lew z twarzą króla, strażnik nekropoli. Piramidy wzniosły zespoły robotników, nie niewolnicy; mieszkali w osiedlu obok i dostawali chleb, piwo i mięso.']),
+  facts:[['Wielka Piramida','146 m, ok. 2,3 mln bloków'],['Data','ok. 2560 p.n.e.'],['Sfinks','73 m długości, twarz Chafre']],
+  heka:'Kształt piramidy to zastygły promień słońca i pagórek <i>benben</i>, z którego wyłonił się świat. Król spoczywał w środku jak w sercu stworzenia.'},
+ {id:'pola',kind:'place',x:960,y:605,zoom:480,name:'Pola i wioski',glyph:'𓆎𓅓𓏏𓊖',translit:'Kemet, „Czarna Ziemia”',
+  body:P(['Zielone prostokąty pól ciągną się aż do rzeki. Rolnicy sieją pszenicę płaskurkę, jęczmień i len; z papirusu robią łodzie, maty i papier. Wodę na wyżej położone grządki podnosi żuraw <i>szaduf</i>.',
+   'Rok dzielił się na trzy pory: <i>achet</i> (wylew, lipiec–październik), <i>peret</i> (siew) i <i>szemu</i> (żniwa). Wysokość wylewu mierzono nilometrem i od niej zależały podatki.']),
+  facts:[['Uprawy','pszenica, jęczmień, len, cebula, daktyle'],['Pory roku','achet, peret, szemu'],['Zwierzęta','woły, osły, gęsi, kozy']],
+  heka:'Przed siewem składano ofiary Ozyrysowi; zboże rosnące z „łoża Ozyrysa” w grobach miało dowodzić, że z martwych można wrócić.'},
+ {id:'nil',kind:'place',x:1450,y:620,zoom:560,name:'Nil',glyph:'𓇋𓏏𓂋𓅱𓈘',translit:'Iteru, „Rzeka”',
+  body:P(['Egipcjanie nie mieli słowa „Nil”: mówili po prostu <i>Iteru</i>, Rzeka. Płynie z południa na północ, więc „w górę rzeki” znaczyło na południe, a wiatr wieje zwykle od Delty, co pozwalało żeglować pod prąd pod żaglem.',
+   'Coroczny wylew niósł czarny muł. Herodot nazwał Egipt „darem Nilu”; sami Egipcjanie widzieli w nim boga Hapi, który mieszka w jaskini u katarakt.']),
+  facts:[['Kierunek','z południa na północ'],['Wylew','od lipca, szczyt we wrześniu'],['Mieszkańcy','hipopotamy, krokodyle, ibisy, sum nilowy']],
+  heka:'Do rzeki rzucano figurki i spisy zaklęć, by wylew był „dobry, nie za mały, nie za wielki”. Zbyt wysoki wylew niszczył wsie, zbyt niski niósł głód.'},
+ {id:'port',kind:'place',x:1255,y:655,zoom:420,name:'Port Peru-nefer',glyph:'𓊞𓊞 𓉐𓄤',translit:'Peru-nefer, „Szczęśliwa podróż”',
+  body:P(['Przy nabrzeżach cumują barki zbożowe i statki z cedrowego drewna z Byblos. W stoczniach cieśle składają kadłuby bez gwoździ, wiążąc deski sznurem.',
+   'Z portu wyruszano po kadzidło i mirrę do krainy Punt, po miedź na Synaj i po lazuryt, który wędrował aż z Afganistanu.']),
+  facts:[['Towary','cedr, miedź, lazuryt, kadzidło, oliwa'],['Statki','do 60 m długości, wiosła i żagiel'],['Ładunek','obeliski spławiano barkami z Asuanu']],
+  heka:'Na dziobie malowano oko: statek miał „widzieć” drogę. Przed rejsem kapłan okadzał kadłub, by nie dosięgnął go gniew wodnych demonów.'},
+];
+
+const GODS=[
+ {id:'ra',kind:'god',dyn:'sun',zoom:420,name:'Ra',glyph:'𓂋𓂝𓇳𓀭',translit:'Ra, bóg słońca',
+  body:P(['Ra płynie przez niebo w dziennej barce <i>Mandżet</i>. Rano rodzi się jako skarabeusz Chepri, w południe jest Ra w pełni sił, wieczorem starzeje się jako Atum, a nocą wędruje przez Duat.',
+   'Każdy faraon nosił tytuł „syn Ra”. Oko Ra, które wysłał przeciw ludziom, stało się lwicą Sechmet.']),
+  facts:[['Święte miasto','Heliopolis (Iunu)'],['Symbol','tarcza słoneczna z ureuszem'],['Barki','Mandżet za dnia, Mesektet nocą']],
+  heka:'W „Księdze Umarłych” zmarły wsiada do barki Ra i razem z nim pokonuje noc. Zaklęcie 15 to hymn, który ma otworzyć mu drzwi barki.'},
+ {id:'ptah',kind:'god',x:740,y:470,zoom:380,name:'Ptah',glyph:'𓊪𓏏𓎛𓀭',translit:'Ptah, stwórca i patron rzemiosła',
+  body:P(['Pan Memfis, zawinięty w całun jak mumia, w błękitnej czapce, z laską łączącą trzy znaki: <i>was</i> (władza), <i>dżed</i> (trwałość) i <i>anch</i> (życie).',
+   'Stworzył świat, wypowiadając imiona rzeczy. Patronował rzeźbiarzom, budowniczym i metalurgom; jego arcykapłan był naczelnikiem wszystkich rzemieślników kraju.']),
+  facts:[['Małżonka','Sechmet'],['Syn','Nefertum'],['Wcielenie','byk Apis']],
+  heka:'Teologia memficka: „Powstało każde słowo boga z tego, co pomyślało serce i rozkazał język”. Stworzenie przez mowę to najstarsza egipska teoria magii.'},
+ {id:'sekhmet',kind:'god',x:830,y:478,zoom:380,name:'Sechmet',glyph:'𓌂𓏏𓁐',translit:'Sechmet, „Potężna”',
+  body:P(['Lwiogłowa bogini wojny i zarazy, oko Ra. Gdy Ra zesłał ją, by ukarała ludzi, niemal ich wytępiła; bogowie upili ją piwem zabarwionym na czerwono jak krew i w ten sposób ocalili świat.',
+   'Jej kapłani byli zarazem lekarzami: kto sprowadza chorobę, umie ją też odwołać.']),
+  facts:[['Zwierzę','lwica'],['Święto','pijane święto na pamiątkę ocalenia ludzkości'],['Kapłani','uzdrowiciele, „kapłani Sechmet”']],
+  heka:'Zaklęcia „na siedmiu strzałach Sechmet” odpędzały zarazę na przełomie roku. Noszono wtedy amulety z jej lwią głową.'},
+ {id:'nefertum',kind:'god',x:660,y:482,zoom:380,name:'Nefertum',glyph:'𓄤𓍃𓅓𓀭',translit:'Nefertum, pan lotosu',
+  body:P(['Młody bóg z kwiatem lotosu na głowie, syn Ptaha i Sechmet. Na początku świata wyłonił się z błękitnego lotosu, który wypłynął z praoceanu Nun; z jego woni narodził się dzień.',
+   'Patron perfum i olejków: w jego imię kapłani przygotowywali wonne maści na święta.']),
+  facts:[['Rodzice','Ptah i Sechmet'],['Symbol','niebieski lotos'],['Dziedzina','zapach, piękno, poranek']],
+  heka:'Lotos zamyka się nocą i otwiera o świcie: Egipcjanie widzieli w nim codzienne zmartwychwstanie. Kwiat trzymany przy nosie na freskach to życzenie odrodzenia.'},
+ {id:'horus',kind:'god',x:800,y:240,zoom:520,name:'Horus',glyph:'𓅃',translit:'Hor, „Daleki”',
+  body:P(['Sokół rozpościera skrzydła nad tarasem: faraon jest żywym Horusem, a jego pierwsze imię zapisywano w ramie pałacu, <i>serech</i>, z sokołem na szczycie.',
+   'Syn Ozyrysa i Izydy, pomścił ojca w długiej walce z Setem i odzyskał tron Egiptu. Jego lewe oko, uszkodzone w walce i uzdrowione przez Thota, to <i>wedżat</i>.']),
+  facts:[['Rodzice','Ozyrys i Izyda'],['Święte miasto','Edfu, Hierakonpolis'],['Symbol','sokół, oko wedżat']],
+  heka:'Oko wedżat, „zdrowe”, jest najpopularniejszym amuletem Egiptu. Jego części służyły też jako ułamki w przepisach na leki: 1/2, 1/4, 1/8, aż do 1/64.'},
+ {id:'osiris',kind:'god',x:300,y:290,zoom:420,name:'Ozyrys',glyph:'𓊨𓁹𓀭',translit:'Usir, pan Zachodu',
+  body:P(['Zielonoskóry król zmarłych czuwa nad nekropolą. Zamordowany przez brata Seta, poćwiartowany i złożony na nowo przez Izydę, stał się pierwszym, który pokonał śmierć.',
+   'Każdy zmarły, który przeszedł sąd, stawał się „Ozyrysem”: do imienia dodawano jego imię. Zieleń skóry to kolor kiełkującego zboża.']),
+  facts:[['Korona','atef, z piórami'],['Insygnia','berło heka i bicz nechacha'],['Święte miasto','Abydos']],
+  heka:'W „Misteriach Ozyrysa” w Abydos odgrywano co roku jego śmierć i powrót. Pielgrzymi stawiali stele, by „widzieć” to na wieki.'},
+ {id:'anubis',kind:'god',x:430,y:320,zoom:420,name:'Anubis',glyph:'𓇋𓈖𓊪𓅱𓃢',translit:'Inpu, „ten na swej górze”',
+  body:P(['Czarny szakal z nekropoli: strażnik grobów i patron balsamistów. Czerń to nie żałoba, lecz kolor mułu i żywicy, kolor odrodzenia.',
+   'Anubis zabalsamował Ozyrysa jako pierwszego i odtąd kapłan-balsamista zakładał na rytuał maskę szakala.']),
+  facts:[['Zwierzę','szakal / pies'],['Rytuał','balsamowanie, otwarcie ust'],['Tytuł','„pan świętej krainy”']],
+  heka:'Rytuał „otwarcia ust” dłutem i toporkiem przywracał mumii zmysły: mogła jeść, mówić i oddychać w zaświatach.'},
+ {id:'imhotep',kind:'god',x:520,y:400,zoom:380,name:'Imhotep',glyph:'𓇋𓇋𓅓𓊵𓏏𓊪𓀭',translit:'Ii-em-hetep, mędrzec Dżesera',
+  body:P(['Jedyny Egipcjanin niekrólewskiej krwi, którego uczyniono bogiem. Architekt piramidy schodkowej, arcykapłan Heliopolis, lekarz i skryba.',
+   'Czczony z papirusem na kolanach jako patron uczonych i medyków; Grecy utożsamiali go z Asklepiosem. Jego grób w Sakkarze do dziś nie został odnaleziony.']),
+  facts:[['Żył','ok. 2650 p.n.e.'],['Dzieło','piramida schodkowa, zespół w Sakkarze'],['Kult','od Okresu Późnego, Sakkara i Memfis']],
+  heka:'Do jego kaplicy w Sakkarze pielgrzymowali chorzy; nocowali tam, by we śnie otrzymać od Imhotepa receptę.'},
+ {id:'hathor',kind:'god',x:120,y:300,zoom:450,name:'Hathor',glyph:'𓉡𓁐',translit:'Hut-Hor, „Dom Horusa”',
+  body:P(['Pani Zachodu wychodzi z pustynnej skały jako krowa i wita zmarłych u wejścia do zaświatów. Jest też boginią miłości, muzyki, tańca i pijaństwa.',
+   'W Memfis czczono ją jako „Panią Sykomory”: pod świętym drzewem na południu miasta poiła dusze wodą i cieniem.']),
+  facts:[['Symbol','rogi krowy z tarczą słońca, sistrum'],['Święte miasto','Dendera'],['Święto','festiwal pijaństwa']],
+  heka:'Grzechotka <i>sistrum</i> odpędzała zło dźwiękiem. Kapłanki Hathor potrząsały nią w rytmie tańca, by uspokoić gniew bogini.'},
+ {id:'isis',kind:'god',x:960,y:525,zoom:400,name:'Izyda',glyph:'𓊨𓏏𓁐',translit:'Aset, „Tron”',
+  body:P(['Najpotężniejsza czarodziejka Egiptu, z tronem na głowie: matka Horusa, siostra i żona Ozyrysa. Nad polami rozpościera skrzydła, by tchnąć życie w ziarno.',
+   'Poznała tajemne imię Ra, podstępnie go podtruwając i obiecując lek w zamian za imię; odtąd jej moc dorównuje mocy słońca.']),
+  facts:[['Symbol','tron, węzeł tjet'],['Święte miasto','File, Behbeit el-Hagar'],['Dziedzina','magia, macierzyństwo, ochrona']],
+  heka:'Zaklęcia lecznicze na ukąszenia skorpiona wzywają Izydę, która uzdrowiła małego Horusa na bagnach Delty. Woda lana po steli z jej słowami stawała się lekiem.'},
+ {id:'sobek',kind:'god',x:1330,y:505,zoom:380,name:'Sobek',glyph:'𓋴𓃀𓎡𓆊',translit:'Sebek, pan wód',
+  body:P(['Krokodyl czuwa w zakolu Nilu. Sobek daje rzece siłę i płodność, ale jego zwierzę pożera nieostrożnych. Groźny i konieczny, jak sam wylew.',
+   'W Fajum i Kom Ombo hodowano święte krokodyle, karmiono je ciastkami i miodem, a po śmierci mumifikowano.']),
+  facts:[['Zwierzę','krokodyl nilowy'],['Święte miasto','Krokodilopolis (Fajum), Kom Ombo'],['Epitet','„ten, który sprawia, że rośnie zieleń”']],
+  heka:'Przed kąpielą w rzece recytowano zaklęcie „odpędzenia krokodyla” i rysowano na wodzie oko Horusa.'},
+ {id:'hapi',kind:'god',x:1455,y:560,zoom:380,name:'Hapi',glyph:'𓎛𓂝𓊪𓇋𓇋𓈗𓀭',translit:'Hapi, duch wylewu',
+  body:P(['Pulchny, niebieskoskóry bóg z papirusem i lotosem: uosobienie samego wylewu. Jego obfite ciało oznacza dostatek, który przynosi rzeka.',
+   'Na tronach królewskich dwaj Hapi związują papirus i lotos w węzeł <i>sema-tawy</i>: jedność Dwóch Krajów.']),
+  facts:[['Mieszkanie','jaskinia u pierwszej katarakty'],['Symbol','papirus i lotos związane'],['Święto','hymn do Hapi śpiewany na początku wylewu']],
+  heka:'Gdy Nil nie wzbierał, król rzucał do rzeki dekret z rozkazem dla Hapi. Rzeka miała usłuchać słowa władcy jak każdy urzędnik.'},
+ {id:'thoth',kind:'god',x:1120,y:250,zoom:420,name:'Thot',glyph:'𓅝𓏏𓏭𓀭',translit:'Dżehuti, pan słowa bożego',
+  body:P(['Bóg z głową ibisa stoi blisko księżyca, który jest jego planetą. Wynalazł pismo, liczy dni i spisuje wyroki bogów; to on uzdrowił oko Horusa.',
+   'Skrybowie wylewali kroplę wody z kałamarza na jego cześć przed każdym pisaniem. Pawian też jest jego zwierzęciem: ten, który wita wschód słońca.']),
+  facts:[['Zwierzę','ibis, pawian'],['Święte miasto','Hermopolis (Chemenu)'],['Dziedzina','pismo, liczby, księżyc, magia']],
+  heka:'„Księga Thota” miała zawierać wszystkie zaklęcia świata. Według legendy kto ją przeczyta, zrozumie mowę zwierząt i ujrzy boga, ale ściągnie na siebie nieszczęście.'},
+ {id:'heka',kind:'god',x:1180,y:700,zoom:500,name:'Heka',glyph:'𓎛𓂓𓄿𓀭',translit:'Heka, moc magiczna',
+  body:P(['Stoi przy tronie, bo <i>heka</i> to siła, którą bogowie stworzyli świat, a król nią rządzi. Nie jest „czarną magią”: to energia, która porusza słowo, obraz i rytuał.',
+   'Heka płynie w barce Ra razem z Sia (rozumieniem) i Hu (rozkazem). Każdy lekarz i kapłan posługiwał się nią jawnie; tylko zwracanie jej przeciw królowi było zbrodnią.']),
+  facts:[['Znak','ramiona ka nad głową'],['Towarzysze','Sia i Hu'],['Narzędzia','słowo, imię, obraz, amulet, gest']],
+  heka:'Egipskie zaklęcie działa przez cztery rzeczy: właściwe słowa, właściwy czas, właściwy gest i właściwy przedmiot. Zapisane słowo samo w sobie było żywe.'},
+ {id:'nut',kind:'god',x:800,y:-200,zoom:1200,dyn:'night',name:'Nut',glyph:'𓏌𓏏𓇯𓁐',translit:'Nut, niebo',
+  body:P(['Nocą nad tarasem wygina się ciało Nut, bogini nieba: stopami dotyka wschodu, palcami zachodu, a jej ciało pokrywają gwiazdy. Każdego wieczoru połyka słońce, a o świcie rodzi je na nowo.',
+   'Pod nią leży jej mąż Geb, ziemia; rozdzielił ich ojciec Szu, powietrze. Wewnątrz sarkofagów malowano Nut, by zmarły spoczywał w jej objęciach jak w niebie.']),
+  facts:[['Rodzice','Szu i Tefnut'],['Dzieci','Ozyrys, Izyda, Set, Neftyda'],['Gwiazdy','„niezniszczalne” wokół bieguna']],
+  heka:'„Księga Nut” na stropach grobowców opisuje nocną drogę słońca przez jej ciało: dwanaście godzin, dwanaście bram.'},
+];
+
+const DUAT=[
+ {id:'brama',kind:'place',x:150,y:470,zoom:420,name:'Bramy Duat',glyph:'𓇽 𓉿',translit:'Duat, kraina nocy',
+  body:P(['Noc dzieli się na dwanaście godzin, a każda ma bramę strzeżoną przez węże ziejące ogniem. Zmarły musi znać imię każdego strażnika; bez imienia brama się nie otworzy.',
+   '„Księga Amduat” i „Księga Bram” na ścianach grobów królewskich to przewodniki po tej drodze, krok po kroku.']),
+  facts:[['Godziny nocy','12, każda z bramą'],['Księgi','Amduat, Księga Bram, Księga Jaskiń'],['Klucz','znajomość imion']],
+  heka:'„Znam cię, znam twoje imię”: ta formuła powtarza się przy każdej bramie. W Egipcie poznać imię znaczyło zyskać władzę.'},
+ {id:'barka',kind:'place',x:420,y:690,zoom:420,name:'Nocna barka Ra',glyph:'𓊞 𓂋𓂝𓇳',translit:'Mesektet',
+  body:P(['Nocą Ra przybiera postać boga z głową barana i płynie podziemną rzeką. Na dziobie stoi Set z włócznią, przy nim Sia, Hu i Heka; załoga odpiera Apopa.',
+   'W szóstej godzinie nocy Ra łączy się z Ozyrysem: słońce i król zmarłych stają się jednym, i z tego spotkania rodzi się nowy dzień.']),
+  facts:[['Postać Ra','baranogłowy Ra-Atum'],['Załoga','Set, Sia, Hu, Heka, Maat'],['Szósta godzina','spotkanie z Ozyrysem']],
+  heka:'Zmarły, który znał zaklęcia, dostawał miejsce w barce. Płynął wtedy z Ra i co rano odradzał się wraz ze słońcem.'},
+ {id:'apophis',kind:'place',x:900,y:760,zoom:520,name:'Apop',glyph:'𓂝𓊪𓊪 𓆙',translit:'Apep, wąż chaosu',
+  body:P(['Ogromny wąż czyha na barkę co noc. Jest chaosem sprzed stworzenia; nie można go zabić na zawsze, tylko pokonać na jedną noc.',
+   'Zaćmienie słońca tłumaczono tym, że Apopowi udało się na chwilę połknąć barkę.']),
+  facts:[['Długość','„szesnaście razy dwanaście łokci”'],['Zabójca','Set, włócznią, co noc'],['Zaćmienie','chwilowe zwycięstwo węża']],
+  heka:'„Księga obalenia Apopa”: kapłani lepili z wosku figurkę węża, pisali na niej jego imię, pluli na nią, deptali i palili. Tak co dzień pomagali Ra.'},
+ {id:'waga',kind:'place',x:800,y:470,zoom:640,name:'Ważenie serca',glyph:'𓄣 𓆄',translit:'Sala Dwóch Prawd',
+  body:P(['Na jednej szali leży serce zmarłego, na drugiej pióro Maat. Serce przechowuje pamięć czynów; jeśli jest lżejsze lub równe pióru, zmarły jest „usprawiedliwiony głosem”.',
+   'Scenę opisuje rozdział 125 „Księgi Umarłych”. Zmarły wygłasza „spowiedź negatywną”: „nie zabiłem, nie kradłem, nie zatrzymałem wody w jej porze”.']),
+  facts:[['Księga Umarłych','rozdział 125'],['Werdykt','maa-cheru, „prawdziwy głosem”'],['Świadkowie','42 sędziów']],
+  heka:'Amulet skarabeusza serca kładziono na piersi mumii z zaklęciem 30B: „Serce moje, nie świadcz przeciwko mnie”. Serce miało nie zdradzić grzechów.'},
+ {id:'anubisD',kind:'god',x:660,y:520,zoom:380,name:'Anubis przy wadze',glyph:'𓇋𓈖𓊪𓅱𓃢',translit:'Inpu',
+  body:P(['Anubis prowadzi zmarłego za rękę do sali i sprawdza języczek wagi. Jest sędzią technicznym: pilnuje, by waga była uczciwa.']),
+  facts:[['Rola','przewodnik i strażnik wagi'],['Tytuł','„ten, który jest w miejscu balsamowania”']],
+  heka:'Kapłan w masce Anubisa podtrzymywał mumię podczas rytuału otwarcia ust: bóg osobiście przygotowywał zmarłego do drogi.'},
+ {id:'maat',kind:'god',x:800,y:390,zoom:380,name:'Maat',glyph:'𓆄𓏏𓁐',translit:'Maat, ład i prawda',
+  body:P(['Pióro na szali to Maat: prawda, sprawiedliwość i porządek świata. Każdy faraon obiecywał „ustanowić Maat” w miejsce chaosu <i>isfet</i>.',
+   'Maat nie jest zbiorem praw, lecz równowagą: gdy jej brak, Nil nie wzbiera, a słońce może nie wzejść.']),
+  facts:[['Symbol','strusie pióro'],['Ojciec','Ra'],['Przeciwieństwo','isfet, chaos i kłamstwo']],
+  heka:'Codzienna ofiara w świątyni polegała na podaniu bogu figurki Maat: król oddawał bogom ład, a oni odwzajemniali go wylewem i plonem.'},
+ {id:'thothD',kind:'god',x:960,y:520,zoom:380,name:'Thot zapisuje wyrok',glyph:'𓅝𓏏𓏭𓀭',translit:'Dżehuti',
+  body:P(['Z paletą i trzciną w dłoni Thot notuje wynik ważenia i ogłasza go bogom. Jego pismo jest ostateczne.']),
+  facts:[['Narzędzia','paleta skryby, trzcina, zwój'],['Zwierzę','ibis lub pawian na wadze']],
+  heka:'Skrybowie wierzyli, że znaki pisma są „słowami boga” (<i>medu neczer</i>). Napisane zaklęcie działało samo, nawet nieczytane.'},
+ {id:'ammit',kind:'god',x:1090,y:560,zoom:360,name:'Ammit',glyph:'𓂝𓅓𓅓𓏏 𓄛',translit:'Ammit, „Pożeraczka Zmarłych”',
+  body:P(['Pod wagą czeka Ammit: paszcza krokodyla, grzywa i przednie łapy lwa, zad hipopotama. Trzy najgroźniejsze zwierzęta Egiptu w jednym ciele.',
+   'Jeśli serce okaże się ciężkie od zła, Ammit je pożera. To „druga śmierć”: koniec bez odrodzenia, bez imienia, bez pamięci.']),
+  facts:[['Ciało','krokodyl, lew, hipopotam'],['Kara','druga śmierć, nieistnienie'],['Kult','żaden: budziła tylko strach']],
+  heka:'Egipcjanie bali się nie piekła, lecz zapomnienia. Dlatego zaklęcia podkreślają: „imię moje nie zginie”.'},
+ {id:'osirisD',kind:'god',x:1330,y:470,zoom:420,name:'Ozyrys na tronie',glyph:'𓊨𓁹𓀭',translit:'Usir, sędzia zmarłych',
+  body:P(['W głębi sali na tronie zasiada Ozyrys w koronie atef, za nim siostry Izyda i Neftyda. Zmarły, usprawiedliwiony, staje przed nim i zostaje przyjęty do królestwa zmarłych.',
+   'Przed tronem na kwiecie lotosu stoją czterej synowie Horusa: strażnicy urn kanopskich z wnętrznościami zmarłego.']),
+  facts:[['Siostry','Izyda i Neftyda'],['Synowie Horusa','Imset, Hapi, Duamutef, Kebehsenuef'],['Zielona skóra','odrodzenie']],
+  heka:'Formuła ofiarna <i>hetep-di-nesu</i> na każdej steli: „ofiara, którą daje król Ozyrysowi” zapewniała zmarłemu chleb i piwo na wieczność.'},
+ {id:'sedziowie',kind:'place',x:800,y:300,zoom:700,name:'42 sędziów',glyph:'𓀭𓀭𓀭𓀭𓀭𓀭',translit:'sędziowie nomów',
+  body:P(['Wzdłuż sali siedzą 42 bóstwa, po jednym na każdy nom (prowincję) Egiptu. Zmarły zwraca się do każdego po imieniu i zaprzecza jednemu grzechowi: „O, Szerokokroczny z Heliopolis, nie czyniłem zła”.',
+   'Lista obejmuje kradzież, kłamstwo, zabójstwo, ale też cudzołóstwo, podsłuchiwanie i zatrzymanie wody sąsiada.']),
+  facts:[['Liczba','42, jak nomów'],['Formuła','spowiedź negatywna'],['Imiona','„Połykacz cieni”, „Łamacz kości”']],
+  heka:'Każde zaprzeczenie zaczynało się od imienia sędziego. Znajomość imion była ważniejsza niż czyste sumienie: tekst dawał zmarłemu „ściągę”.'},
+ {id:'iaru',kind:'place',x:1380,y:160,zoom:520,name:'Pola Iaru',glyph:'𓇏𓇏 𓋹',translit:'Sechet-Iaru, Pola Trzcin',
+  body:P(['Na wschodzie, za salą sądu, świeci kraina usprawiedliwionych: Pola Trzcin. Wyglądają jak idealny Egipt: kanały, jęczmień wysoki na siedem łokci, pszenica, daktylowe palmy.',
+   'Zmarły uprawia tam ziemię, ale za niego pracują figurki <i>uszebti</i>: „Oto jestem”, odpowiadają na wezwanie. W grobie wkładano ich nawet 365, po jednej na każdy dzień.']),
+  facts:[['Inaczej','Sechet-Hetep, Pola Ofiar'],['Plon','jęczmień 7 łokci, pszenica 8'],['Uszebti','rozdział 6 Księgi Umarłych']],
+  heka:'Zaklęcie uszebti: „O uszebti, jeśli zostanę wezwany do pracy w zaświatach: nawadniać, nosić piasek, powiedz: Oto jestem!”.'},
+];
+
+/* ------------------------------------------------------------------ */
+/* Rysowanie sceny 1                                                   */
+/* ------------------------------------------------------------------ */
+function pyramid(x,base,w,h,fill,shade){
+  return `<path d="M${x-w/2} ${base} L${x} ${base-h} L${x+w/2} ${base}Z" fill="${fill}"/><path d="M${x} ${base-h} L${x+w/2} ${base} L${x} ${base}Z" fill="${shade}"/>`;
+}
+function stepPyramid(x,base,w,h,steps,fill,shade){
+  let s='';
+  for(let i=0;i<steps;i++){
+    const f=1-i/steps, ww=w*f, hh=h/steps, y=base-i*hh;
+    s+=`<rect x="${x-ww/2}" y="${y-hh}" width="${ww}" height="${hh}" fill="${fill}"/><rect x="${x}" y="${y-hh}" width="${ww/2}" height="${hh}" fill="${shade}"/>`;
+  }
+  return s;
+}
+function palm(x,y,s){
+  let f='';
+  for(let i=0;i<6;i++){
+    const a=-90+(i-2.5)*32, r=a*Math.PI/180, ex=Math.cos(r)*26, ey=Math.sin(r)*26;
+    f+=`<path d="M0 0 Q${ex*.6} ${ey*.6-8} ${ex} ${ey+10}" stroke="#2f6b3a" stroke-width="4" stroke-linecap="round" fill="none"/>`;
+  }
+  return `<g transform="translate(${x},${y}) scale(${s})"><path d="M-3 0 Q2 -30 0 -60" stroke="#6b4a2a" stroke-width="5" fill="none" stroke-linecap="round"/><g transform="translate(0,-60)">${f}<circle r="4" fill="#8a5a2a"/></g></g>`;
+}
+function house(x,y,w,h,c){ return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/><rect x="${x+w*.4}" y="${y+h*.45}" width="${w*.2}" height="${h*.55}" fill="#5a4328"/><rect x="${x}" y="${y}" width="${w}" height="3" fill="#8a6a40"/>`; }
+function boat(x,y,s,sail){
+  return `<g transform="translate(${x},${y}) scale(${s})"><g class="boat"><path d="M-40 0 Q-46 -14 -34 -16 L34 -16 Q50 -14 44 2 Q0 10 -40 0Z" fill="#7a4e24"/><path d="M-34 -4 H38" stroke="#c9a066" stroke-width="2"/>${sail?`<path d="M0 -16 V-70" stroke="#5a3a1a" stroke-width="3"/><path d="M2 -66 L36 -28 L2 -20Z" fill="#f3e9c8"/>`:`<path d="M-20 -16 l-6 -18 M-8 -16 l-6 -18 M4 -16 l-6 -18 M16 -16 l-6 -18" stroke="#c9a066" stroke-width="2"/>`}</g></g>`;
+}
+function seeded(n){ let s=n; return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
+
+function buildScene(){
+  const rnd=seeded(7);
+  // gwiazdy
+  let st='';
+  for(let i=0;i<260;i++){ const x=-1200+rnd()*4000, y=-1400+rnd()*1800, r=.6+rnd()*1.8; st+=`<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r.toFixed(1)}" fill="#fff7d6" opacity="${(.4+rnd()*.6).toFixed(2)}"/>`; }
+  $('stars').innerHTML=st;
+  // ptaki (ibisy)
+  let b='';
+  for(let i=0;i<7;i++){ const x=300+rnd()*1000, y=120+rnd()*180, s=.6+rnd()*.8; b+=`<path transform="translate(${x},${y}) scale(${s})" d="M-14 0 Q-7 -8 0 0 Q7 -8 14 0"/>`; }
+  $('birds').innerHTML=b;
+  // dalekie piramidy: Abusir i Giza
+  let fp='';
+  fp+=pyramid(1010,418,34,26,'#e3cc9c','#c6a874')+pyramid(1045,420,30,22,'#e3cc9c','#c6a874')+pyramid(1075,418,24,18,'#e3cc9c','#c6a874');
+  fp+=`<rect x="1098" y="406" width="4" height="14" fill="#c6a874"/><rect x="1092" y="418" width="16" height="4" fill="#c6a874"/>`; // obelisk świątyni słońca
+  fp+=pyramid(1270,418,54,44,'#efe0bb','#cdb181')+pyramid(1316,418,50,40,'#efe0bb','#cdb181')+pyramid(1352,418,26,20,'#efe0bb','#cdb181');
+  fp+=`<path d="M1288 418 l10 -6 l12 2 l2 4z" fill="#cdb181"/>`; // sfinks
+  $('farPyramids').innerHTML=fp;
+  // Sakkara
+  let np=stepPyramid(380,456,120,88,6,'#e8d3a2','#c7a86f');
+  np+=pyramid(500,462,40,24,'#dcc08a','#b89a60')+pyramid(250,462,36,20,'#dcc08a','#b89a60');
+  for(let i=0;i<9;i++){ np+=`<rect x="${130+i*34+rnd()*8}" y="${458+rnd()*4}" width="20" height="6" fill="#c7a86f"/>`; }
+  for(let i=0;i<6;i++){ np+=`<rect x="${560+i*26}" y="${460+rnd()*4}" width="16" height="5" fill="#c7a86f"/>`; }
+  // Serapeum: zejście
+  np+=`<path d="M470 470 l14 -8 h18 l-8 8z" fill="#9a7a44"/>`;
+  $('nearPyramids').innerHTML=np;
+  // pola
+  let f='';
+  const greens=['#6f9a3e','#8bb24a','#5c8a37','#a4bd58','#7fa844'];
+  for(let i=0;i<14;i++){
+    const y0=476+i*9.5, y1=y0+9.5, skew=i*20;
+    for(let j=0;j<9;j++){
+      const x0=830+j*95-skew*.4, w=90;
+      f+=`<path d="M${x0} ${y0} L${x0+w} ${y0} L${x0+w+6} ${y1} L${x0+6} ${y1}Z" fill="${greens[(i+j)%5]}"/>`;
+    }
+  }
+  // kanały
+  f+=`<path d="M840 480 L1180 610" stroke="#4f86b8" stroke-width="3" fill="none"/><path d="M1000 478 L1300 600" stroke="#4f86b8" stroke-width="2.5" fill="none"/>`;
+  // szaduf
+  f+=`<g transform="translate(1210,600)"><path d="M0 0 V-26" stroke="#5a3a1a" stroke-width="3"/><path d="M-18 -30 L24 -14" stroke="#5a3a1a" stroke-width="3"/><circle cx="-18" cy="-30" r="4" fill="#3a2a18"/><path d="M24 -14 V-2" stroke="#5a3a1a" stroke-width="2"/></g>`;
+  $('fields').innerHTML=f;
+  // miasto
+  let c='';
+  // Białe Mury
+  c+=`<rect x="430" y="548" width="420" height="60" fill="#efe6cf"/><rect x="430" y="544" width="420" height="6" fill="#d9ccaa"/>`;
+  for(let i=0;i<30;i++) c+=`<rect x="${432+i*14}" y="538" width="8" height="7" fill="#efe6cf"/>`;
+  c+=`<rect x="470" y="520" width="34" height="34" fill="#efe6cf"/><rect x="800" y="518" width="34" height="36" fill="#efe6cf"/>`; // baszty
+  c+=`<rect x="630" y="586" width="26" height="22" fill="#5a4328"/>`; // brama
+  // domy przed murem i za nim
+  const hc=['#d9c39a','#cdb184','#e0cba5','#c9ad7c'];
+  for(let i=0;i<18;i++){ const x=440+i*44+rnd()*10, h=14+rnd()*14; c+=house(x,610-h+8,28+rnd()*10,h,hc[i%4]); }
+  for(let i=0;i<10;i++){ const x=900+i*40+rnd()*10, h=12+rnd()*10; c+=house(x,628-h,24+rnd()*8,h,hc[(i+1)%4]); }
+  for(let i=0;i<10;i++){ const x=160+i*32+rnd()*8, h=10+rnd()*10; c+=house(x,612-h,20+rnd()*8,h,hc[(i+2)%4]); }
+  // świątynia Ptaha: pylony, obeliski, mur temenos, jezioro
+  c+=`<rect x="680" y="500" width="200" height="60" fill="#e6d6ad"/>`;
+  c+=`<path d="M700 560 L708 500 L752 500 L760 560Z" fill="#d8c08c"/><path d="M790 560 L798 500 L842 500 L850 560Z" fill="#d8c08c"/>`;
+  c+=`<path d="M700 560 L708 500 L730 500 L730 560Z" fill="#c6a86f"/><path d="M790 560 L798 500 L820 500 L820 560Z" fill="#c6a86f"/>`;
+  c+=`<rect x="704" y="500" width="152" height="5" fill="#b89a60"/>`;
+  c+=`<rect x="760" y="540" width="30" height="20" fill="#5a4328"/>`; // brama między pylonami
+  c+=`<path d="M712 500 V470 M722 500 V468 M826 500 V470 M836 500 V468" stroke="#8a5a2a" stroke-width="2"/>`; // maszty
+  c+=`<path d="M712 470 l10 -4 l-10 -2z M826 470 l10 -4 l-10 -2z" fill="#c8451c"/>`;
+  c+=`<path d="M688 560 L692 486 L696 560Z M864 560 L868 486 L872 560Z" fill="#cdb181"/><path d="M692 486 l-3 6 h6z M868 486 l-3 6 h6z" fill="#f0b73a"/>`; // obeliski
+  c+=`<rect x="680" y="505" width="200" height="4" fill="#b89a60"/>`;
+  c+=`<rect x="890" y="520" width="60" height="22" fill="#4f86b8"/><rect x="888" y="518" width="64" height="3" fill="#b89a60"/>`; // jezioro święte
+  // stajnia Apisa
+  c+=`<rect x="628" y="582" width="54" height="24" fill="#d8c08c"/><rect x="636" y="590" width="10" height="16" fill="#5a4328"/><rect x="660" y="590" width="10" height="16" fill="#5a4328"/>`;
+  c+=`<g id="apisBull" transform="translate(655,598)"><path d="M-10 0 h18 v-8 h-18z" fill="#141418"/><path d="M8 -8 l6 -2 l2 4 l-5 2z" fill="#141418"/><path d="M12 -12 l-2 -5 M15 -11 l3 -4" stroke="#141418" stroke-width="1.5"/><path d="M-8 0 v4 M-2 0 v4 M3 0 v4 M7 0 v4" stroke="#141418" stroke-width="1.5"/><path d="M11 -9 l2 -2 l1 2z" fill="#fff"/></g>`;
+  // port
+  c+=`<rect x="1215" y="640" width="90" height="8" fill="#8a6a40"/><path d="M1220 648 v12 M1240 648 v12 M1260 648 v12 M1280 648 v12 M1300 648 v12" stroke="#5a3a1a" stroke-width="3"/>`;
+  c+=`<rect x="1230" y="620" width="40" height="20" fill="#cdb181"/><rect x="1276" y="624" width="26" height="16" fill="#d9c39a"/>`;
+  for(let i=0;i<6;i++) c+=`<rect x="${1222+i*12}" y="634" width="8" height="6" fill="#b58a4a"/>`; // worki/towary
+  $('city').innerHTML=c;
+  // palmy
+  let pz='';
+  const spots=[[120,620,.7],[300,614,.6],[412,612,.65],[905,626,.6],[960,632,.7],[1060,634,.65],[1140,640,.7],[1180,620,.5],[1330,660,.8],[1370,690,.9],[1420,720,1],[1100,600,.5],[600,615,.55],[860,626,.5]];
+  spots.forEach(s=>pz+=palm(s[0],s[1],s[2]));
+  $('palms').innerHTML=pz;
+  // łodzie
+  $('boats').innerHTML=boat(1420,560,.55,true)+boat(1540,640,.8,false)+boat(1360,500,.35,true)+boat(1650,740,1,true);
+  // migotanie wody
+  let sh='';
+  for(let i=0;i<40;i++){ const t=rnd(); const x=1310+t*380+rnd()*60, y=440+t*290; sh+=`<rect x="${x}" y="${y}" width="${6+rnd()*14}" height="1.5"/>`; }
+  $('nileShimmer').innerHTML=sh;
+  // balustrada
+  let bl='';
+  for(let x=-2000;x<4000;x+=36) bl+=`<path d="M${x} 618 V592 M${x+18} 618 V592" stroke="#c9a96e" stroke-width="6"/><circle cx="${x}" cy="590" r="5" fill="#f0b73a"/><circle cx="${x+18}" cy="590" r="5" fill="#f0b73a"/>`;
+  bl+=`<rect x="-3000" y="582" width="8000" height="8" fill="#d9bf8a"/>`;
+  $('balusters').innerHTML=`<g opacity=".95">${bl}</g>`;
+  // kolumny (papirusowe i lotosowe)
+  function column(x,w,top,lotus){
+    const cap=lotus
+      ? `<path d="M${x-w*.9} ${top+60} Q${x} ${top-20} ${x+w*.9} ${top+60} L${x+w*.55} ${top+70} L${x-w*.55} ${top+70}Z" fill="#7fb8e8"/><path d="M${x-w*.5} ${top+62} Q${x} ${top+8} ${x+w*.5} ${top+62}Z" fill="#a9d3f0"/>`
+      : `<path d="M${x-w*.9} ${top+70} Q${x-w*.9} ${top} ${x} ${top-10} Q${x+w*.9} ${top} ${x+w*.9} ${top+70}Z" fill="#5aa66a"/><path d="M${x-w*.5} ${top+70} Q${x} ${top+20} ${x+w*.5} ${top+70}Z" fill="#8fcf98"/>`;
+    const bands=[0,1,2].map(i=>`<rect x="${x-w*.56}" y="${top+76+i*8}" width="${w*1.12}" height="4" fill="#c8451c"/>`).join('');
+    const glyphs=`<text x="${x}" y="${top+260}" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="26" fill="#6f5636" opacity=".8" writing-mode="tb" letter-spacing="6">𓋹𓊽𓌀𓇳𓅃𓆣</text>`;
+    return `<rect x="${x-w*.55}" y="${top+70}" width="${w*1.1}" height="${900-top}" fill="url(#column)"/>${bands}${cap}${glyphs}<rect x="${x-w*.7}" y="760" width="${w*1.4}" height="24" fill="#8c7046"/>`;
+  }
+  $('columns').innerHTML=column(150,48,-320,false)+column(1450,48,-320,true)+column(-420,52,-320,true)+column(2020,52,-320,false);
+  // strop
+  let ce=`<rect x="-3000" y="-3000" width="8000" height="2700" fill="#1b2a5a"/>`;
+  const cr=seeded(3);
+  for(let i=0;i<220;i++){ const x=-1500+cr()*4600, y=-1300+cr()*990; ce+=`<path transform="translate(${x.toFixed(0)},${y.toFixed(0)}) scale(${(.5+cr()*.5).toFixed(2)})" d="M0 -9 L2.6 -2.6 L9 -2 L4 2.5 L5.5 9 L0 5.5 L-5.5 9 L-4 2.5 L-9 -2 L-2.6 -2.6Z" fill="#f0b73a"/>`; }
+  ce+=`<rect x="-3000" y="-310" width="8000" height="30" fill="#8c7046"/><rect x="-3000" y="-280" width="8000" height="10" fill="#c8451c"/><rect x="-3000" y="-270" width="8000" height="8" fill="#f0b73a"/>`;
+  // sępica Nechbet
+  ce+=`<g transform="translate(800,-520)" fill="#d8c08c"><path d="M0 0 C-120 -30 -260 -20 -380 20 C-260 10 -120 30 0 40Z"/><path d="M0 0 C120 -30 260 -20 380 20 C260 10 120 30 0 40Z"/><ellipse cx="0" cy="22" rx="22" ry="34"/><circle cx="0" cy="-10" r="12"/><path d="M-6 -8 l-14 6 l14 4z" fill="#c8451c"/><path d="M-80 30 l-10 20 M80 30 l10 20" stroke="#d8c08c" stroke-width="4"/></g>`;
+  ce+=`<text x="800" y="-400" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="30" fill="#f0b73a" opacity=".9" letter-spacing="8">𓋹𓊽𓌀 𓇳𓏤 𓋹𓊽𓌀</text>`;
+  $('ceiling').innerHTML=ce;
+  // pochodnie
+  function torch(x,y){ return `<g transform="translate(${x},${y})"><circle class="torchGlow" r="90" fill="url(#torchGlow)" opacity="0"/><rect x="-5" y="-60" width="10" height="70" fill="#5a3a1a"/><rect x="-10" y="-70" width="20" height="14" fill="#8c7046"/><path class="flame" d="M0 -70 Q-12 -90 0 -112 Q12 -90 0 -70Z" fill="#ffb347" opacity=".95"/><path class="flame" d="M0 -74 Q-6 -86 0 -98 Q6 -86 0 -74Z" fill="#fff1b8"/></g>`; }
+  $('torches').innerHTML=torch(330,660)+torch(1270,660)+torch(-260,660)+torch(1860,660);
+  // tron, podest, stolik ze zwojami, posąg kobry
+  let th=`<g transform="translate(800,0)">`;
+  th+=`<path d="M-120 905 L120 905 L140 960 L-140 960Z" fill="#a08455"/>`; // podest
+  th+=`<rect x="-40" y="820" width="80" height="90" rx="4" fill="#8c5a2a"/><rect x="-44" y="760" width="88" height="64" rx="6" fill="#c8451c"/><rect x="-40" y="766" width="80" height="52" fill="#f0b73a"/><text x="0" y="802" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="30" fill="#8c5a2a">𓅃𓋹</text>`;
+  th+=`<path d="M-56 826 h12 v80 h-12z M44 826 h12 v80 h-12z" fill="#8c5a2a"/><path d="M-56 826 q-8 -22 10 -24 M44 826 q8 -22 -10 -24" fill="none" stroke="#f0b73a" stroke-width="4"/>`;
+  th+=`</g>`;
+  th+=`<g transform="translate(560,790)"><rect x="-50" y="0" width="100" height="10" fill="#8c5a2a"/><rect x="-44" y="10" width="8" height="40" fill="#8c5a2a"/><rect x="36" y="10" width="8" height="40" fill="#8c5a2a"/><rect x="-40" y="-8" width="34" height="8" rx="4" fill="#f3e9c8"/><rect x="-2" y="-8" width="34" height="8" rx="4" fill="#f3e9c8"/><rect x="2" y="-14" width="30" height="6" rx="3" fill="#e8d9a8"/></g>`;
+  th+=`<g transform="translate(1040,780)"><rect x="-22" y="0" width="44" height="30" fill="#a08455"/><path d="M0 0 C-16 -8 -16 -40 0 -46 C10 -42 12 -30 6 -22 C0 -14 -4 -10 0 0Z" fill="#2a2a2a"/><path d="M0 -46 q-10 -14 2 -20 q4 10 -2 20" fill="#c8451c"/><circle cx="4" cy="-38" r="2" fill="#f0b73a"/></g>`;
+  $('throne').innerHTML=th;
+
+  // bogowie
+  let g='';
+  g+=god('ptah',740,470,.8,{mummy:true,wrap:'#2f7f6a',skin:'#3a8f72',crown:'cap',item:'staff3',name:'𓊪𓏏𓎛'});
+  g+=god('sekhmet',830,478,.8,{head:'lion',skin:'#c99a52',kilt:'#c8451c',dress:true,crown:'disc',item:'papyrus',name:'𓌂𓏏'});
+  g+=god('nefertum',660,482,.78,{head:'human',skin:'#b5542a',crown:'lotus',item:'was',name:'𓄤𓍃𓅓'});
+  g+=god('osiris',300,290,.95,{mummy:true,wrap:'#f3e9c8',skin:'#3f8f5a',crown:'atef',item:'staff3',name:'𓊨𓁹'});
+  g+=god('anubis',430,320,.95,{head:'jackal',skin:'#111118',kilt:'#f0b73a',item:'was',name:'𓇋𓈖𓊪𓅱'});
+  g+=god('imhotep',520,400,.7,{head:'human',skin:'#b5542a',wig:'#2a4e9a',kilt:'#f3e9c8',item:'papyrus',ankh:false,name:'𓇋𓇋𓅓𓊵'});
+  g+=god('hathor',120,300,1,{head:'cow',skin:'#e8c070',dress:true,kilt:'#c8451c',item:'papyrus',name:'𓉡'});
+  g+=god('isis',960,525,.8,{head:'human',skin:'#e8c070',dress:true,kilt:'#f3e9c8',crown:'throne',item:'papyrus',name:'𓊨𓏏',flip:true});
+  g+=god('sobek',1330,505,.8,{head:'croc',skin:'#4f7a3d',kilt:'#f3e9c8',crown:'disc',item:'was',name:'𓋴𓃀𓎡',flip:true});
+  g+=god('hapi',1455,560,.85,{head:'human',skin:'#3a8fc8',kilt:'#2a4e9a',crown:'pot',item:'lotus',name:'𓎛𓂝𓊪𓇋',flip:true});
+  g+=god('thoth',1120,250,.9,{head:'ibis',skin:'#b5542a',kilt:'#f3e9c8',crown:'moon',item:'papyrus',ankh:false,name:'𓅝',flip:true});
+  g+=god('heka',1180,700,1.1,{head:'human',skin:'#b5542a',kilt:'#f3e9c8',crown:'heka',item:'was',name:'𓎛𓂓𓄿',flip:true});
+  // Horus: sokół z rozpostartymi skrzydłami
+  g+=`<g class="godfig" data-god="horus" transform="translate(800,240)" filter="url(#glow)" opacity=".95"><g class="god-float"><g fill="#d9b25a" stroke="#8a6a1a" stroke-width="2" stroke-linejoin="round"><path d="M0 0 C-80 -40 -220 -40 -340 30 C-220 10 -90 30 0 50Z"/><path d="M0 0 C80 -40 220 -40 340 30 C220 10 90 30 0 50Z"/><path d="M-300 36 l-20 34 M-250 44 l-10 34 M300 36 l20 34 M250 44 l10 34" stroke="#d9b25a" stroke-width="5"/><ellipse cx="0" cy="30" rx="26" ry="44"/><path d="M-20 60 l-10 40 h60 l-10 -40z" fill="#b89a3a"/></g><circle cx="0" cy="-8" r="18" fill="#2c3a6b"/><path d="M-12 -10 L-34 -4 L-12 4Z" fill="#2a2a2a"/><circle cx="-5" cy="-11" r="3.5" fill="#000"/><g transform="translate(0,-26)"><circle r="12" fill="#f0b73a"/><path d="M-2 10 q-8 -14 2 -20 q4 8 -2 20" fill="#c8451c"/></g><text x="0" y="-52" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="22" fill="#ffe8a3">𓅃</text></g></g>`;
+  // Ra: w słońcu (pozycja ustawiana dynamicznie)
+  g+=`<g id="raFig" class="godfig" filter="url(#glow)" opacity=".95"><g transform="translate(-50,-150) scale(1)">${fig({head:'falcon',skin:'#b5542a',kilt:'#f3e9c8',crown:'disc',item:'was',name:'𓂋𓂝𓇳'})}</g></g>`;
+  // Apis w blasku
+  g+=`<g class="godfig" filter="url(#glow)" opacity=".9"><g transform="translate(655,598) scale(1.6)"><path d="M-10 0 h18 v-8 h-18z" fill="#141418"/><path d="M8 -8 l6 -2 l2 4 l-5 2z" fill="#141418"/><path d="M12 -12 l-2 -5 M15 -11 l3 -4" stroke="#141418" stroke-width="1.5"/><path d="M-8 0 v4 M-2 0 v4 M3 0 v4 M7 0 v4" stroke="#141418" stroke-width="1.5"/><circle cx="13" cy="-17" r="4" fill="#f0b73a"/></g></g>`;
+  // iskry heka
+  const sr=seeded(11); let sp='';
+  for(let i=0;i<60;i++){ const x=sr()*1600, y=sr()*700, d=(sr()*4).toFixed(1); sp+=`<circle class="spark" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(1+sr()*2).toFixed(1)}" fill="#ffe8a3" style="animation-delay:-${d}s"/>`; }
+  g+=`<g>${sp}</g>`;
+  $('gods').innerHTML=g;
+  // Nut
+  let nut=`<path d="M60 420 C 300 -450, 1300 -450, 1540 420" fill="none" stroke="#1d2a5a" stroke-width="46" stroke-linecap="round" opacity=".9"/>`;
+  nut+=`<path d="M60 420 C 300 -450, 1300 -450, 1540 420" fill="none" stroke="#2c3a7a" stroke-width="30" stroke-linecap="round"/>`;
+  const nr=seeded(5);
+  for(let i=0;i<70;i++){ const t=nr(); const mt=1-t; const x=mt*mt*mt*60+3*mt*mt*t*300+3*mt*t*t*1300+t*t*t*1540; const y=mt*mt*mt*420+3*mt*mt*t*(-450)+3*mt*t*t*(-450)+t*t*t*420; nut+=`<circle cx="${x.toFixed(0)}" cy="${(y+(nr()-.5)*24).toFixed(0)}" r="${(1.5+nr()*2).toFixed(1)}" fill="#ffe8a3"/>`; }
+  nut+=`<g transform="translate(60,420)"><circle cx="0" cy="-40" r="24" fill="#e8c070"/><path d="M-26 -50 Q0 -80 26 -50 L30 -20 L-30 -20Z" fill="#1b2140"/><circle cx="-6" cy="-36" r="20" fill="#e8c070"/><ellipse cx="0" cy="-2" rx="9" ry="7" fill="#f0b73a"/></g>`;
+  nut+=`<path d="M200 60 L80 420 M1400 60 L1520 420" stroke="#2c3a7a" stroke-width="22" stroke-linecap="round"/>`;
+  nut+=`<text x="800" y="-262" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="40" fill="#ffe8a3" opacity=".9">𓏌𓏏𓇯</text>`;
+  $('nutGroup').innerHTML=nut;
+}
+
+/* ------------------------------------------------------------------ */
+/* Rysowanie sceny 2: Duat                                             */
+/* ------------------------------------------------------------------ */
+function buildDuat(){
+  const r=seeded(21);
+  let st='';
+  for(let i=0;i<220;i++){ st+=`<circle cx="${(-1000+r()*3600).toFixed(0)}" cy="${(-1000+r()*1500).toFixed(0)}" r="${(.5+r()*1.6).toFixed(1)}" fill="#cfd6ff" opacity="${(.3+r()*.6).toFixed(2)}"/>`; }
+  $('duatStars').innerHTML=st;
+  // Pola Iaru
+  let ia=`<ellipse cx="1380" cy="190" rx="360" ry="200" fill="url(#iaru)"/>`;
+  for(let i=0;i<5;i++){ ia+=`<path d="M1180 ${150+i*18} L1580 ${150+i*18}" stroke="#4f86b8" stroke-width="3" opacity=".7"/>`; for(let j=0;j<16;j++) ia+=`<path d="M${1190+j*24} ${160+i*18} v-10 l3 -4 M${1190+j*24} ${160+i*18} v-10 l-3 -4" stroke="#8bb24a" stroke-width="2"/>`; }
+  for(let j=0;j<6;j++) ia+=palm(1200+j*70,250,.7);
+  ia+=`<text x="1380" y="90" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="26" fill="#ffe8a3">𓇏𓇏𓇏 𓋹</text>`;
+  $('iaruGroup').innerHTML=ia;
+  let s='';
+  // 42 sędziów w ławach w głębi
+  for(let i=0;i<42;i++){ const x=170+i*30, y=300; s+=`<g transform="translate(${x},${y}) scale(.3)"><g transform="scale(-1,1) translate(-100,0)">${fig({head:'human',skin:i%7===0?'#3f8f5a':'#b5542a',kilt:'#f3e9c8',item:null,ankh:false,crown:i%3===0?'feather':null,beard:true})}</g></g>`; }
+  s+=`<rect x="150" y="348" width="1300" height="6" fill="#3a2d55"/>`;
+  // kolumny sali
+  for(let i=0;i<7;i++){ const x=120+i*220; s+=`<rect x="${x}" y="80" width="26" height="480" fill="#2a2140"/><path d="M${x-10} 100 Q${x+13} 60 ${x+36} 100Z" fill="#4a3a6a"/><text x="${x+13}" y="300" text-anchor="middle" writing-mode="tb" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="18" fill="#6a5a8a" letter-spacing="4">𓋹𓊽𓂀𓇼𓆣</text>`; }
+  // bramy po lewej z wężami ognia
+  s+=`<rect x="60" y="380" width="180" height="180" fill="#2a2140"/><rect x="100" y="420" width="100" height="140" fill="#0a0612"/><path d="M60 380 h180 v-20 h-180z" fill="#4a3a6a"/>`;
+  s+=`<path d="M70 380 C50 340 90 320 70 290 C50 260 90 240 80 210" fill="none" stroke="#c8451c" stroke-width="10" stroke-linecap="round"/><path d="M230 380 C250 340 210 320 230 290 C250 260 210 240 220 210" fill="none" stroke="#c8451c" stroke-width="10" stroke-linecap="round"/>`;
+  s+=`<circle cx="80" cy="205" r="30" fill="url(#fire)"/><circle cx="220" cy="205" r="30" fill="url(#fire)"/>`;
+  s+=`<text x="150" y="410" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="22" fill="#ffe8a3">𓇽</text>`;
+  // waga
+  s+=`<g transform="translate(800,470)"><rect x="-6" y="-120" width="12" height="130" fill="#d9b25a"/><rect x="-40" y="10" width="80" height="12" fill="#d9b25a"/><path d="M-140 -110 H140" stroke="#d9b25a" stroke-width="8" stroke-linecap="round"/>`;
+  s+=`<path d="M-140 -106 V-40 M-110 -106 V-40" stroke="#d9b25a" stroke-width="2"/><path d="M-150 -40 h50 l-6 16 h-38z" fill="#d9b25a"/><path d="M-125 -62 c-8 -12 10 -22 10 -6 c4 -12 20 -2 6 10 c-8 8 -12 10 -16 -4z" fill="#c8451c"/>`;
+  s+=`<path d="M140 -106 V-40 M110 -106 V-40" stroke="#d9b25a" stroke-width="2"/><path d="M100 -40 h50 l-6 16 h-38z" fill="#d9b25a"/><path d="M122 -46 Q118 -84 130 -86 Q134 -64 128 -46Z" fill="#e8d9a8" stroke="#b89a5a"/>`;
+  s+=`<circle cx="0" cy="-126" r="10" fill="#f0b73a"/><text x="0" y="-140" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="22" fill="#ffe8a3">𓄣 𓆄</text></g>`;
+  // zmarły (usprawiedliwiony) prowadzony przez Anubisa: biała szata
+  s+=`<g transform="translate(560,470) scale(.75)">${fig({head:'human',skin:'#b5542a',kilt:'#f3e9c8',dress:true,item:null,ankh:false})}</g>`;
+  // tron Ozyrysa
+  s+=`<g transform="translate(1330,470)"><rect x="-60" y="60" width="140" height="30" fill="#3a2d55"/><rect x="-10" y="-70" width="70" height="140" rx="6" fill="#2a4e9a"/><rect x="-6" y="-66" width="62" height="40" fill="#f0b73a" opacity=".6"/></g>`;
+  // 4 synów Horusa na lotosie
+  s+=`<g transform="translate(1230,540)"><path d="M-20 20 Q0 -20 20 20Z" fill="#7fb8e8"/><path d="M0 20 V60" stroke="#5aa66a" stroke-width="4"/>${[0,1,2,3].map(i=>`<g transform="translate(${-24+i*16},-24) scale(.22)">${fig({head:['human','falcon','jackal','human'][i],skin:'#f3e9c8',mummy:true,wrap:'#f3e9c8',item:null})}</g>`).join('')}</g>`;
+  // rzeka: wiosła, łódź Mesektet, Apop
+  s+=`<g transform="translate(420,690)"><path d="M-120 0 Q-130 -40 -100 -40 L100 -40 Q140 -40 130 0 Q0 16 -120 0Z" fill="#2a2140" stroke="#6a5a8a" stroke-width="2"/><path d="M-100 -36 l-20 -30 M110 -36 l20 -30" stroke="#6a5a8a" stroke-width="4"/>`;
+  s+=`<g transform="translate(-60,-44) scale(.5)">${fig({head:'human',skin:'#b5542a',kilt:'#f3e9c8',item:'was',ankh:false,flip:false})}</g>`; // Set na dziobie z włócznią
+  s+=`<path d="M-80 -70 L-140 -20" stroke="#d9b25a" stroke-width="3"/>`;
+  s+=`<g transform="translate(10,-150) scale(.68)">${fig({head:'ram',skin:'#b5542a',kilt:'#f3e9c8',crown:'disc',item:null,ankh:false})}</g>`; // Ra baranogłowy
+  s+=`<circle cx="44" cy="-150" r="30" fill="url(#fire)"/>`;
+  s+=`<g transform="translate(50,-44) scale(.5)">${fig({head:'human',skin:'#b5542a',kilt:'#f3e9c8',crown:'heka',item:null,ankh:false})}</g><g transform="translate(90,-44) scale(.5)">${fig({head:'human',skin:'#e8c070',dress:true,kilt:'#c8451c',crown:'feather',item:null,ankh:false})}</g>`;
+  s+=`<text x="0" y="30" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="22" fill="#ffe8a3">𓊞 𓂋𓂝𓇳</text></g>`;
+  // Apop
+  s+=`<g transform="translate(900,760)"><path d="M-320 20 C-260 -60 -200 60 -140 -20 C-80 -100 -20 60 40 -20 C100 -100 160 40 220 -10 C260 -40 300 -20 330 -40" fill="none" stroke="#3f8f5a" stroke-width="22" stroke-linecap="round"/><path d="M-320 20 C-260 -60 -200 60 -140 -20 C-80 -100 -20 60 40 -20 C100 -100 160 40 220 -10 C260 -40 300 -20 330 -40" fill="none" stroke="#7fcf98" stroke-width="6" stroke-dasharray="12 18" opacity=".7"/><path d="M330 -40 l40 -16 l-6 20 l18 10 l-36 6z" fill="#3f8f5a"/><circle cx="346" cy="-44" r="4" fill="#ff6a1a"/><text x="0" y="70" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="22" fill="#ffe8a3">𓆙</text></g>`;
+  $('duatScene').innerHTML=s;
+  let g='';
+  g+=god('anubisD',660,520,.85,{head:'jackal',skin:'#111118',kilt:'#f0b73a',item:null,ankh:false,name:'𓇋𓈖𓊪𓅱',flip:true});
+  g+=god('thothD',960,520,.85,{head:'ibis',skin:'#b5542a',kilt:'#f3e9c8',crown:'moon',item:'papyrus',ankh:false,name:'𓅝'});
+  g+=god('maat',800,390,.6,{head:'human',skin:'#e8c070',dress:true,kilt:'#c8451c',crown:'feather',item:null,name:'𓆄𓏏'});
+  g+=god('osirisD',1330,470,1,{mummy:true,wrap:'#f3e9c8',skin:'#3f8f5a',crown:'atef',item:'staff3',name:'𓊨𓁹'});
+  g+=god('isisD',1420,480,.8,{head:'human',skin:'#e8c070',dress:true,kilt:'#f3e9c8',crown:'throne',item:null,ankh:false,name:'𓊨𓏏'});
+  g+=god('nephthys',1490,484,.8,{head:'human',skin:'#e8c070',dress:true,kilt:'#f3e9c8',crown:'hwt',item:null,ankh:false,name:'𓉠'});
+  // Ammit
+  g+=`<g class="godfig" data-god="ammit" transform="translate(1090,560)" filter="url(#glow)" opacity=".95"><g class="god-float"><path d="M-60 20 Q-70 -20 -30 -22 L30 -22 Q60 -24 60 10 L60 24 L-60 24Z" fill="#6b7f3a"/><path d="M30 -22 Q50 -60 20 -70 Q-10 -60 -6 -24Z" fill="#c99a52"/><path d="M-6 -28 L-70 -34 L-6 -14Z" fill="#4f7a3d"/><path d="M-66 -32 L-10 -24" stroke="#fff" stroke-width="2" stroke-dasharray="4 4"/><circle cx="-14" cy="-32" r="3" fill="#ff6a1a"/><path d="M-50 24 v16 M-30 24 v16 M20 24 v16 M44 24 v16" stroke="#6b7f3a" stroke-width="8"/><text x="0" y="-80" text-anchor="middle" font-family="'Noto Sans Egyptian Hieroglyphs',sans-serif" font-size="18" fill="#ffe8a3">𓂝𓅓𓅓𓏏</text></g></g>`;
+  $('duatGods').innerHTML=g;
+}
+
+/* ------------------------------------------------------------------ */
+/* Niebo i pora dnia                                                   */
+/* ------------------------------------------------------------------ */
+const SKY=[
+ [0,['#070a1e','#0d1538','#1a2550']],
+ [4.5,['#070a1e','#121a40','#2a2a5a']],
+ [6,['#1f2f6a','#b06a4a','#f0b36a']],
+ [7.5,['#2a62b8','#7fb3e2','#e6c98f']],
+ [11,['#1f66c6','#6aa9e2','#cfe3f0']],
+ [15,['#2461c0','#79aee0','#d9e3ea']],
+ [17.4,['#2c5aa8','#d78c4e','#f6c67a']],
+ [19,['#1a2355','#8b3f4a','#e07a3a']],
+ [20.5,['#0a0f2e','#1e2252','#3a2f55']],
+ [24,['#070a1e','#0d1538','#1a2550']],
+];
+function hex(c){ return [1,3,5].map(i=>parseInt(c.slice(i,i+2),16)); }
+function mix(a,b,t){ const A=hex(a),B=hex(b); return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join(''); }
+function skyAt(t){
+  for(let i=0;i<SKY.length-1;i++){ const [t0,c0]=SKY[i],[t1,c1]=SKY[i+1]; if(t>=t0&&t<=t1){ const u=(t-t0)/(t1-t0); return c0.map((c,j)=>mix(c,c1[j],u)); } }
+  return SKY[0][1];
+}
+function nightFactor(t){ if(t<=4.8||t>=20) return 1; if(t>=7&&t<=17.8) return 0; if(t<7) return 1-(t-4.8)/2.2; return (t-17.8)/2.2; }
+/* Taras patrzy na zachód: południe jest po lewej, północ po prawej.
+   Słońce wschodzi za plecami (lewy skraj), góruje po lewej i zachodzi przed nami. */
+function sunPos(t){ const f=(t-6)/12; return {x:60+f*760, y:HORIZON-Math.sin(Math.PI*f)*470}; }
+function moonPos(t){ const f=(((t+6)%24))/12; return {x:60+f*760, y:HORIZON-Math.sin(Math.PI*f)*440}; }
+let T=17.4;
+function setTime(t){
+  T=t;
+  const [a,b,c]=skyAt(t);
+  $('sky0').setAttribute('stop-color',a); $('sky1').setAttribute('stop-color',b); $('sky2').setAttribute('stop-color',c);
+  const n=nightFactor(t);
+  $('stars').setAttribute('opacity',n*.95);
+  $('nightLand').setAttribute('opacity',n*.62);
+  const day=t>5.3&&t<18.7;
+  const sp=sunPos(t);
+  $('sunGroup').setAttribute('transform',`translate(${sp.x},${sp.y})`);
+  $('sunGroup').setAttribute('opacity',day?1:0);
+  const low=Math.max(0,1-Math.abs(t-12)/6);
+  $('sun').setAttribute('fill',mix('#ffb347','#fff1b8',Math.min(1,low*1.6)));
+  const mp=moonPos(t);
+  $('moonGroup').setAttribute('transform',`translate(${mp.x},${mp.y})`);
+  $('moonGroup').setAttribute('opacity',n);
+  const [ta,tb,tc]=[a,b,c]; $('moonShade').setAttribute('fill',tb); $('moonShade').setAttribute('opacity',.85);
+  document.querySelectorAll('.torchGlow').forEach(e=>e.setAttribute('opacity',n*.9));
+  $('birds').setAttribute('opacity',(1-n)*.7);
+  const ra=$('raFig'); if(ra){ ra.setAttribute('transform',`translate(${sp.x},${sp.y+40})`); ra.setAttribute('opacity',day?.95:0); }
+  $('nutGroup').setAttribute('opacity',magic?n:0);
+  const hh=Math.floor(t)%24, mm=Math.round((t-Math.floor(t))*60)%60;
+  $('timeOut').value=`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  $('time').value=t;
+  renderMarkers();
+}
+
+/* ------------------------------------------------------------------ */
+/* Zoom / przesuwanie                                                  */
+/* ------------------------------------------------------------------ */
+let scene='memfis';
+let vb={x:0,y:0,w:W,h:H};
+const MINW=150, MAXW=1700;
+function aspect(){ return stage.clientHeight/Math.max(1,stage.clientWidth); }
+function clampVB(v){
+  v.w=Math.min(MAXW,Math.max(MINW,v.w)); v.h=v.w*aspect();
+  const cx=v.x+v.w/2, cy=v.y+v.h/2;
+  const ccx=Math.min(1700,Math.max(-100,cx));
+  const minCy=scene==='memfis'?-620:-200, maxCy=scene==='memfis'?1100:950;
+  const ccy=Math.min(maxCy,Math.max(minCy,cy));
+  v.x=ccx-v.w/2; v.y=ccy-v.h/2; return v;
+}
+function currentSvg(){ return scene==='memfis'?sceneSvg:duatSvg; }
+function render(){
+  clampVB(vb);
+  currentSvg().setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  renderMarkers();
+}
+function fitInitial(){
+  const a=aspect();
+  if(a>1){ vb.w=Math.min(MAXW,1200); } else { vb.w=W; }
+  vb.h=vb.w*a; vb.x=W/2-vb.w/2; vb.y=(scene==='memfis'?420:450)-vb.h/2; render();
+}
+let anim=null;
+function flyTo(cx,cy,w,ms=800){
+  if(anim) cancelAnimationFrame(anim);
+  const from={...vb}; const to=clampVB({x:cx-w/2,y:cy-(w*aspect())/2,w,h:w*aspect()});
+  if(reduced||ms===0){ vb=to; render(); return; }
+  const t0=performance.now();
+  const step=now=>{ let u=Math.min(1,(now-t0)/ms); u=u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;
+    vb={x:from.x+(to.x-from.x)*u,y:from.y+(to.y-from.y)*u,w:from.w+(to.w-from.w)*u,h:from.h+(to.h-from.h)*u};
+    render(); if(u<1) anim=requestAnimationFrame(step); else anim=null; };
+  anim=requestAnimationFrame(step);
+}
+function zoomAt(px,py,factor){
+  const r=stage.getBoundingClientRect();
+  const wx=vb.x+(px-r.left)/r.width*vb.w, wy=vb.y+(py-r.top)/r.height*vb.h;
+  const nw=Math.min(MAXW,Math.max(MINW,vb.w*factor)); const k=nw/vb.w;
+  vb={x:wx-(wx-vb.x)*k, y:wy-(wy-vb.y)*k, w:nw, h:vb.h*k}; render();
+}
+const ptrs=new Map(); let dragStart=null, moved=false, pinch=null;
+stage.addEventListener('pointerdown',e=>{
+  if(e.target.closest('.card,.chips,.hint')) return;
+  stage.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(anim){ cancelAnimationFrame(anim); anim=null; }
+  if(ptrs.size===1){ dragStart={x:e.clientX,y:e.clientY,vx:vb.x,vy:vb.y}; moved=false; stage.classList.add('dragging'); }
+  if(ptrs.size===2){ const [a,b]=[...ptrs.values()]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y),w:vb.w,mx:(a.x+b.x)/2,my:(a.y+b.y)/2}; dragStart=null; }
+});
+stage.addEventListener('pointermove',e=>{
+  if(!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const r=stage.getBoundingClientRect();
+  if(ptrs.size===2&&pinch){
+    const [a,b]=[...ptrs.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    const nw=Math.min(MAXW,Math.max(MINW,pinch.w*pinch.d/d)); const k=nw/vb.w;
+    const wx=vb.x+(pinch.mx-r.left)/r.width*vb.w, wy=vb.y+(pinch.my-r.top)/r.height*vb.h;
+    vb={x:wx-(wx-vb.x)*k-(mx-pinch.mx)/r.width*nw, y:wy-(wy-vb.y)*k-(my-pinch.my)/r.height*nw*aspect(), w:nw, h:nw*aspect()};
+    pinch.mx=mx; pinch.my=my; moved=true; render(); return;
+  }
+  if(dragStart){
+    const dx=e.clientX-dragStart.x, dy=e.clientY-dragStart.y;
+    if(Math.hypot(dx,dy)>4) moved=true;
+    vb.x=dragStart.vx-dx/r.width*vb.w; vb.y=dragStart.vy-dy/r.height*vb.h; render();
+  }
+});
+function endPtr(e){
+  ptrs.delete(e.pointerId); if(ptrs.size<2) pinch=null;
+  if(ptrs.size===0){ stage.classList.remove('dragging'); dragStart=null; }
+  else if(ptrs.size===1){ const p=[...ptrs.values()][0]; dragStart={x:p.x,y:p.y,vx:vb.x,vy:vb.y}; }
+}
+stage.addEventListener('pointerup',endPtr); stage.addEventListener('pointercancel',endPtr);
+stage.addEventListener('wheel',e=>{ e.preventDefault(); zoomAt(e.clientX,e.clientY,Math.pow(1.0016,e.deltaY)); },{passive:false});
+stage.addEventListener('dblclick',e=>{ if(e.target.closest('.card,.chips')) return; const r=stage.getBoundingClientRect(); const wx=vb.x+(e.clientX-r.left)/r.width*vb.w, wy=vb.y+(e.clientY-r.top)/r.height*vb.h; flyTo(wx,wy,vb.w*.5); });
+$('zoomIn').onclick=()=>flyTo(vb.x+vb.w/2,vb.y+vb.h/2,vb.w*.6,400);
+$('zoomOut').onclick=()=>flyTo(vb.x+vb.w/2,vb.y+vb.h/2,vb.w/.6,400);
+$('zoomReset').onclick=()=>{ closeCard(); flyTo(W/2,scene==='memfis'?420:450,aspect()>1?W:1200,700); };
+addEventListener('resize',()=>{ render(); });
+
+/* ------------------------------------------------------------------ */
+/* Znaczniki, żetony, karta                                            */
+/* ------------------------------------------------------------------ */
+let magic=false, selected=null;
+function items(){
+  if(scene==='duat') return DUAT;
+  return magic?PLACES.concat(GODS):PLACES;
+}
+function posOf(it){
+  if(it.dyn==='sun'){ const d=T>5.3&&T<18.7; const p=d?sunPos(T):{x:1500,y:430}; return {x:p.x,y:p.y-(d?110:0)}; }
+  return {x:it.x,y:it.y};
+}
+function renderMarkers(){
+  const host=scene==='duat'?$('duatMarkers'):$('markers');
+  const list=items();
+  const kpx=vb.w/Math.max(1,stage.clientWidth); // jednostki świata na piksel
+  const showLabels=vb.w<1150;
+  let html='';
+  for(const it of list){
+    if(it.dyn==='night'&&nightFactor(T)<.3) continue;
+    const p=posOf(it); const sel=selected&&selected.id===it.id;
+    html+=`<g class="hs ${it.kind}${sel?' sel':''}" data-id="${it.id}" transform="translate(${p.x},${p.y}) scale(${kpx})"><circle class="halo" r="14"/><circle class="ring" r="11"/><circle class="dot" r="4.5"/>${(showLabels||sel)?`<text x="16" y="4">${it.name}</text>`:''}<circle r="22" fill="transparent"/></g>`;
+  }
+  host.innerHTML=html;
+  $('markers').style.display=scene==='memfis'?'':'none';
+}
+document.querySelectorAll('svg').forEach(s=>s.addEventListener('click',e=>{
+  if(moved) return; const hs=e.target.closest('.hs'); if(!hs) return; select(hs.dataset.id,true);
+}));
+function renderChips(){
+  const list=items(); let html='';
+  for(const it of list){ if(it.dyn==='night'&&nightFactor(T)<.3) continue; html+=`<button class="${it.kind}" data-id="${it.id}" aria-current="${selected&&selected.id===it.id}"><span class="g" aria-hidden="true">${it.glyph.split(' ')[0].slice(0,2)}</span>${it.name}</button>`; }
+  $('chips').innerHTML=html;
+}
+$('chips').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) select(b.dataset.id,true); });
+function select(id,fly){
+  const it=items().find(x=>x.id===id); if(!it) return;
+  if(it.id==='ra'&&!(T>5.3&&T<18.7)){ switchScene('duat'); setTimeout(()=>select('barka',true),50); return; }
+  selected=it;
+  const p=posOf(it);
+  if(fly) flyTo(p.x,p.y,it.zoom);
+  const card=$('card'); card.classList.toggle('god',it.kind==='god'); card.classList.add('open'); document.body.classList.add('card-open');
+  $('cEyebrow').textContent=it.kind==='god'?(scene==='duat'?'Bóstwo · Duat':'Bóstwo · świat magii'):(scene==='duat'?'Duat · kraina nocy':'Miejsce · Egipt Starego Państwa');
+  $('cTitle').textContent=it.name; $('cGlyph').textContent=it.glyph; $('cTranslit').textContent=it.translit;
+  $('cBody').innerHTML=it.body;
+  $('cFacts').innerHTML=it.facts.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('');
+  $('cHeka').innerHTML=`<b>Heka · magia</b>${it.heka}`;
+  const go=$('cGo');
+  if(scene==='memfis'&&(it.id==='sakkara'||it.id==='osiris'||it.id==='anubis'||it.id==='heka')){ go.hidden=false; go.textContent='Zejdź do Duat →'; go.onclick=()=>{ switchScene('duat'); setTimeout(()=>select('waga',true),50); }; }
+  else if(scene==='duat'&&it.id==='iaru'){ go.hidden=false; go.textContent='Wróć na taras pałacu →'; go.onclick=()=>switchScene('memfis'); }
+  else go.hidden=true;
+  renderMarkers(); renderChips();
+  card.scrollTop=0;
+}
+function closeCard(){ selected=null; $('card').classList.remove('open'); document.body.classList.remove('card-open'); renderMarkers(); renderChips(); }
+$('cardClose').onclick=closeCard;
+
+/* sceny i magia */
+function switchScene(s){
+  if(scene===s) return; scene=s; closeCard();
+  sceneSvg.toggleAttribute('hidden',s!=='memfis'); duatSvg.toggleAttribute('hidden',s!=='duat');
+  $('sceneMemfis').setAttribute('aria-pressed',s==='memfis'); $('sceneDuat').setAttribute('aria-pressed',s==='duat');
+  $('hint').textContent=s==='duat'?'Duat: noc, przez którą płynie Ra. Kliknij znaczniki, by poznać sąd Ozyrysa':'Przeciągnij, by się rozejrzeć · kółko lub szczypnięcie: zbliżenie';
+  fitInitial(); renderChips();
+}
+$('sceneMemfis').onclick=()=>switchScene('memfis');
+$('sceneDuat').onclick=()=>switchScene('duat');
+$('magic').onclick=()=>{
+  magic=!magic; $('magic').setAttribute('aria-pressed',magic); document.body.classList.toggle('magic',magic);
+  $('gods').setAttribute('opacity',magic?1:0); $('gods').style.pointerEvents=magic?'':'none';
+  setTime(T); renderChips();
+  if(selected&&selected.kind==='god'&&!magic) closeCard();
+};
+$('time').addEventListener('input',e=>{ stopPlay(); setTime(parseFloat(e.target.value)); renderChips(); });
+let playing=false, playRaf=null, lastTs=0;
+function stopPlay(){ playing=false; $('play').setAttribute('aria-pressed','false'); $('play').textContent='▶'; if(playRaf) cancelAnimationFrame(playRaf); }
+$('play').onclick=()=>{
+  if(playing){ stopPlay(); return; }
+  playing=true; $('play').setAttribute('aria-pressed','true'); $('play').textContent='❚❚'; lastTs=performance.now();
+  const step=now=>{ if(!playing) return; const dt=(now-lastTs)/1000; lastTs=now; setTime((T+dt*0.5)%24); playRaf=requestAnimationFrame(step); };
+  playRaf=requestAnimationFrame(step);
+};
+
+/* start */
+buildScene(); buildDuat();
+$('gods').style.pointerEvents='none';
+fitInitial(); setTime(17.4); renderChips();
+try{ if(localStorage.getItem('memfis-magic')==='1'){ $('magic').click(); } }catch(e){}
+$('magic').addEventListener('click',()=>{ try{ localStorage.setItem('memfis-magic',magic?'1':'0'); }catch(e){} });
+})();
+</script>
+</body>
+</html>

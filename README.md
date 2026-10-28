@@ -197,6 +197,17 @@ npm test          # test e2e (Playwright): pełny przepływ + walidacja pliku .d
   Po wyczyszczeniu danych przeglądarki zostaną usunięte — eksportuj protokół do `.docx`,
   aby zachować kopię.
 
+## Świat starożytnego Egiptu (`public/egipt/`)
+
+Samodzielna, interaktywna scena bez budowania: `public/egipt/index.html` (po wdrożeniu
+dostępna pod `/workt/egipt/`). Widok z tarasu pałacu faraona w Memfis na Egipt Starego
+Państwa: przeciąganie, zbliżenie kółkiem lub szczypnięciem, znaczniki miejsc (Sakkara,
+Abusir, Giza, Nil, port, świątynia Ptaha, Białe Mury, stajnia Apisa), suwak pory dnia
+z wędrówką słońca i księżyca, przełącznik **Świat bogów** (Ra, Ptah, Sechmet, Nefertum,
+Horus, Ozyrys, Anubis, Imhotep, Hathor, Izyda, Sobek, Hapi, Thot, Heka, nocą Nut) oraz
+druga scena **Duat** z sądem Ozyrysa (ważenie serca, Maat, Ammit, 42 sędziów, barka Ra,
+Apop, Pola Iaru). Każda karta ma hieroglificzny zapis imienia i sekcję „Heka · magia”.
+
 ## Gry historyczne — osobne repozytorium
 
 Grywalne osie czasu i Forum Romanum zostały przeniesione do repozytorium
