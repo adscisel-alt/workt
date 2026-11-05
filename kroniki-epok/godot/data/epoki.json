@@ -1,0 +1,6 @@
+[
+  {"nazwa": "Epoka Ciemna", "podtytul": "wczesne średniowiecze, V–X w.", "koszt": {}, "wiedza": 0, "budynki": 0, "czas": 0},
+  {"nazwa": "Epoka Feudalna", "podtytul": "X–XI w.: lenno, wasal, gród", "koszt": {"zywnosc": 500}, "wiedza": 2, "budynki": 2, "czas": 60},
+  {"nazwa": "Epoka Zamków", "podtytul": "XII–XIII w.: romanizm, krucjaty, lokacje miast", "koszt": {"zywnosc": 800, "zloto": 200}, "wiedza": 6, "budynki": 2, "czas": 90},
+  {"nazwa": "Epoka Imperiów", "podtytul": "XIV–XV w.: gotyk, czarna śmierć, druk", "koszt": {"zywnosc": 1000, "zloto": 800}, "wiedza": 11, "budynki": 2, "czas": 120}
+]

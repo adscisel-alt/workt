@@ -1,0 +1,26 @@
+[
+  {"id": "kupcy", "czas": 180, "tytul": "Wędrowni kupcy", 
+   "tresc": "Do osady przybywa karawana kupców z południa. Oferują srebro za drewno: w średniowieczu wymiana towarowa była równie ważna jak moneta, a drewno z lasów Europy Środkowej płynęło Wisłą do Gdańska i dalej do Flandrii.",
+   "wybory": [
+     {"tekst": "Sprzedaj 100 drewna za 70 złota", "koszt": {"drewno": 100}, "efekt": {"zloto": 70}},
+     {"tekst": "Odmów: drewno potrzebne na budowę", "efekt": {}}
+   ]},
+  {"id": "zaraza", "czas": 420, "tytul": "Zaraza w sąsiedniej wsi",
+   "tresc": "W sąsiedniej wsi wybuchła zaraza. Kronikarz radzi wprowadzić kwarantannę, jak w Dubrowniku w 1377 r.: podróżnych zatrzymać poza osadą na 40 dni, co kosztuje żywność dla strażników i zapasy dla odizolowanych.",
+   "wybory": [
+     {"tekst": "Wprowadź kwarantannę (-80 żywności)", "koszt": {"zywnosc": 80}, "efekt": {"wiedza": 1}, "komunikat": "Kwarantanna zadziałała. Kronikarz zapisuje nową wiedzę (+1)."},
+     {"tekst": "Zignoruj ostrzeżenie", "efekt": {"strata_osadnikow": 2}, "komunikat": "Zaraza dotarła do osady: zmarło 2 osadników."}
+   ]},
+  {"id": "lokacja", "czas": 660, "tytul": "Przywilej lokacyjny",
+   "tresc": "Książę proponuje lokację osady na prawie magdeburskim. Zasadźca wytyczy rynek i ulice, mieszczanie dostaną samorząd, ale trzeba opłacić przywilej.",
+   "wybory": [
+     {"tekst": "Przyjmij przywilej (-150 złota): +10 ludności, +1 wiedzy", "koszt": {"zloto": 150}, "efekt": {"pop_cap": 10, "wiedza": 1}},
+     {"tekst": "Odłóż decyzję", "efekt": {}}
+   ]},
+  {"id": "turniej", "czas": 900, "tytul": "Turniej rycerski",
+   "tresc": "Okoliczni rycerze zapraszają na turniej. Turnieje były treningiem bojowym, ale też widowiskiem i okazją do zawarcia sojuszy. Zwycięzca zdobywał konie i zbroje pokonanych.",
+   "wybory": [
+     {"tekst": "Wyślij drużynę (-100 żywności): szansa na 150 złota", "koszt": {"zywnosc": 100}, "efekt": {"zloto": 150}, "komunikat": "Twoi rycerze zwyciężyli i zdobyli okup za konie i zbroje!"},
+     {"tekst": "Zostań w domu i pilnuj zbiorów", "efekt": {"zywnosc": 40}}
+   ]}
+]

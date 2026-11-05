@@ -1,0 +1,22 @@
+{
+  "polacy": {
+    "nazwa": "Polacy", "bonus_opis": "Kopalnie: +20% złota i kamienia (złoża Olkusza i Wieliczki).",
+    "bonus": {"zbieranie_zloto": 1.2, "zbieranie_kamien": 1.2},
+    "historia": "Państwo Piastów powstało w X w. wokół Gniezna i Poznania. Chrzest Mieszka I (966) włączył je w krąg łacińskiej Europy. Bogactwo przynosiły kopalnie soli w Wieliczce i Bochni oraz srebra i ołowiu w Olkuszu."
+  },
+  "frankowie": {
+    "nazwa": "Frankowie", "bonus_opis": "Zamki tańsze o 25% (potęga feudalnego rycerstwa).",
+    "bonus": {"koszt_zamek": 0.75},
+    "historia": "Frankowie zbudowali największe państwo wczesnośredniowiecznej Europy. Karol Wielki koronował się na cesarza w Rzymie w 800 r., a jego dwór w Akwizgranie stał się ośrodkiem „renesansu karolińskiego”."
+  },
+  "wikingowie": {
+    "nazwa": "Wikingowie", "bonus_opis": "Obozy drwali: +15% drewna (mistrzowie szkutnictwa).",
+    "bonus": {"zbieranie_drewno": 1.15},
+    "historia": "Skandynawscy żeglarze i wojownicy od końca VIII w. najeżdżali, handlowali i osiedlali się od Nowej Fundlandii po Ruś. Ich długie łodzie (langskipy) pozwalały pływać po morzach i płytkich rzekach."
+  },
+  "bizantyjczycy": {
+    "nazwa": "Bizantyjczycy", "bonus_opis": "Budynki +15% wytrzymałości (mury Teodozjusza).",
+    "bonus": {"hp_budynki": 1.15},
+    "historia": "Cesarstwo Wschodniorzymskie przetrwało upadek Rzymu o tysiąc lat. Konstantynopol chroniły potrójne mury Teodozjusza, a bizantyjska kultura i prawo (Kodeks Justyniana) kształtowały całe średniowiecze."
+  }
+}

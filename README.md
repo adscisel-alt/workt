@@ -197,6 +197,13 @@ npm test          # test e2e (Playwright): pełny przepływ + walidacja pliku .d
   Po wyczyszczeniu danych przeglądarki zostaną usunięte — eksportuj protokół do `.docx`,
   aby zachować kopię.
 
+## Kroniki Epok — gra edukacyjna (Godot + Blender)
+
+W katalogu [`kroniki-epok/`](kroniki-epok/) znajduje się strategia czasu rzeczywistego w klimacie Age of Empires II
+z warstwą edukacyjną (Kodeks średniowiecza, egzaminy epok, wydarzenia historyczne). Silnik: Godot 4.3+,
+grafika: sprite'y renderowane w Blenderze w rzucie 2:1, praca agentowa: Antigravity (`.agent/`).
+Szczegóły, uruchomienie i lista rzeczy potrzebnych do grafiki „jak pierwowzór”: [`kroniki-epok/README.md`](kroniki-epok/README.md).
+
 ## Gry historyczne — osobne repozytorium
 
 Grywalne osie czasu i Forum Romanum zostały przeniesione do repozytorium

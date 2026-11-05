@@ -3,3 +3,9 @@ dist
 dev-dist
 .DS_Store
 *.local
+
+# Kroniki Epok (Godot + Blender)
+kroniki-epok/godot/.godot/
+kroniki-epok/godot/assets/sprites/_frames/
+kroniki-epok/blender/models/*.blend1
+kroniki-epok/blender/__pycache__/

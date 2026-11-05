@@ -1,0 +1,52 @@
+{
+  "centrum": {
+    "nazwa": "Centrum osady", "rozmiar": 3, "koszt": {"drewno": 275, "kamien": 100}, "hp": 2400, "czas": 150,
+    "pop_bonus": 5, "szkoli": ["osadnik"], "sklad": ["drewno", "zywnosc", "zloto", "kamien"], "epoka": 2,
+    "wysokosc": 70, "opis": "Serce osady: szkoli osadników, przyjmuje surowce, pozwala awansować do kolejnej epoki."
+  },
+  "dom": {
+    "nazwa": "Dom", "rozmiar": 2, "koszt": {"drewno": 25}, "hp": 550, "czas": 25, "pop_bonus": 5, "epoka": 0,
+    "wysokosc": 40, "opis": "Mieści 5 osób. Buduj domy, aby powiększać ludność."
+  },
+  "koszary": {
+    "nazwa": "Koszary", "rozmiar": 3, "koszt": {"drewno": 175}, "hp": 1200, "czas": 50, "szkoli": ["milicja", "wlocznik"], "epoka": 0,
+    "wysokosc": 55, "opis": "Szkoli piechotę."
+  },
+  "mlyn": {
+    "nazwa": "Młyn", "rozmiar": 2, "koszt": {"drewno": 100}, "hp": 600, "czas": 35, "sklad": ["zywnosc"], "epoka": 0,
+    "wysokosc": 48, "opis": "Skład żywności. Pozwala zakładać pola uprawne."
+  },
+  "tartak": {
+    "nazwa": "Obóz drwali", "rozmiar": 2, "koszt": {"drewno": 100}, "hp": 600, "czas": 35, "sklad": ["drewno"], "epoka": 0,
+    "wysokosc": 36, "opis": "Skład drewna. Stawiaj blisko lasu."
+  },
+  "kopalnia": {
+    "nazwa": "Obóz górniczy", "rozmiar": 2, "koszt": {"drewno": 100}, "hp": 600, "czas": 35, "sklad": ["zloto", "kamien"], "epoka": 0,
+    "wysokosc": 36, "opis": "Skład złota i kamienia."
+  },
+  "farma": {
+    "nazwa": "Pole uprawne", "rozmiar": 2, "koszt": {"drewno": 60}, "hp": 480, "czas": 15, "epoka": 0,
+    "farma": true, "zapas": 250, "wymaga": "mlyn", "wysokosc": 4,
+    "opis": "Odnawialne źródło żywności (250). Wymaga młyna. Po wyczerpaniu trzeba obsiać je na nowo."
+  },
+  "strzelnica": {
+    "nazwa": "Strzelnica", "rozmiar": 3, "koszt": {"drewno": 175}, "hp": 1200, "czas": 50, "szkoli": ["lucznik"], "epoka": 1,
+    "wysokosc": 50, "opis": "Szkoli łuczników."
+  },
+  "stajnia": {
+    "nazwa": "Stajnia", "rozmiar": 3, "koszt": {"drewno": 175}, "hp": 1200, "czas": 50, "szkoli": ["rycerz"], "epoka": 1,
+    "wysokosc": 50, "opis": "Szkoli jazdę."
+  },
+  "uniwersytet": {
+    "nazwa": "Uniwersytet", "rozmiar": 3, "koszt": {"drewno": 200}, "hp": 1500, "czas": 60, "epoka": 2,
+    "wysokosc": 64, "dysputa": true, "opis": "Ośrodek nauki: „dysputy” (quizy) dają punkty wiedzy."
+  },
+  "zamek": {
+    "nazwa": "Zamek", "rozmiar": 4, "koszt": {"kamien": 650}, "hp": 4800, "czas": 200, "epoka": 2,
+    "wysokosc": 90, "obrona": 12, "opis": "Potężna warownia. Ostrzeliwuje wrogów w zasięgu i jest warunkiem budowy Cudu."
+  },
+  "cud": {
+    "nazwa": "Cud (katedra)", "rozmiar": 4, "koszt": {"drewno": 1000, "zloto": 1000, "kamien": 1000}, "hp": 4800, "czas": 300, "epoka": 3,
+    "wymaga": "zamek", "wysokosc": 120, "zwyciestwo": true, "opis": "Ukończenie Cudu oznacza zwycięstwo."
+  }
+}

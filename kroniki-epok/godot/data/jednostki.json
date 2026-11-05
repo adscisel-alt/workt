@@ -1,0 +1,27 @@
+{
+  "osadnik": {
+    "nazwa": "Osadnik", "koszt": {"zywnosc": 50}, "hp": 25, "szybkosc": 80, "czas": 20, "pop": 1,
+    "atak": 3, "zasieg": 1, "epoka": 0, "typ": "cywil",
+    "opis": "Zbiera surowce i wznosi budynki. Bez osadników osada umiera."
+  },
+  "milicja": {
+    "nazwa": "Milicja", "koszt": {"zywnosc": 60, "zloto": 20}, "hp": 40, "szybkosc": 85, "czas": 18, "pop": 1,
+    "atak": 4, "zasieg": 1, "epoka": 0, "typ": "piechota",
+    "opis": "Lekka piechota: chłopi i mieszczanie powołani do obrony."
+  },
+  "wlocznik": {
+    "nazwa": "Włócznik", "koszt": {"zywnosc": 35, "drewno": 25}, "hp": 45, "szybkosc": 85, "czas": 18, "pop": 1,
+    "atak": 3, "zasieg": 1, "epoka": 1, "typ": "piechota", "bonus_vs": {"kawaleria": 12},
+    "opis": "Tania piechota z długą bronią drzewcową, groźna dla jazdy."
+  },
+  "lucznik": {
+    "nazwa": "Łucznik", "koszt": {"drewno": 25, "zloto": 45}, "hp": 30, "szybkosc": 85, "czas": 22, "pop": 1,
+    "atak": 4, "zasieg": 4, "epoka": 1, "typ": "strzelec",
+    "opis": "Razi wroga z dystansu. Słaby w walce wręcz."
+  },
+  "rycerz": {
+    "nazwa": "Rycerz", "koszt": {"zywnosc": 60, "zloto": 75}, "hp": 100, "szybkosc": 125, "czas": 30, "pop": 1,
+    "atak": 10, "zasieg": 1, "epoka": 2, "typ": "kawaleria",
+    "opis": "Ciężkozbrojny konny wojownik, elita średniowiecznych armii."
+  }
+}
