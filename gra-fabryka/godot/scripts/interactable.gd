@@ -10,6 +10,7 @@ var occupied_by: Node = null
 var world: World = null
 var mesh_root: Node3D = null
 var body: StaticBody3D = null
+var night_light: OmniLight3D = null
 
 
 func setup(p_kind: String, p_grid: Vector2i, p_rot: int, p_world: World) -> void:
@@ -115,6 +116,20 @@ func _build_visual() -> void:
 	body.add_child(shape)
 	body.set_meta("owner_node", self)
 	add_child(body)
+	if kind in ["lampa", "latarnia"]:
+		night_light = OmniLight3D.new()
+		night_light.light_color = Color(1.0, 0.82, 0.55)
+		night_light.shadow_enabled = false
+		if kind == "lampa":
+			night_light.position = Vector3(0, 0.95, 0)
+			night_light.omni_range = 4.5
+			night_light.light_energy = 1.6
+		else:
+			night_light.position = Vector3(0, 3.4, 0)
+			night_light.omni_range = 8.0
+			night_light.light_energy = 2.2
+		night_light.visible = false
+		add_child(night_light)
 
 
 func _update_transform() -> void:

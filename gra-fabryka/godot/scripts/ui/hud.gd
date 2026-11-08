@@ -107,6 +107,7 @@ func _button(text: String, cb: Callable, size: int = 14) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.add_theme_font_size_override("font_size", size)
+	b.pressed.connect(func(): Game.ui_click.emit())
 	b.pressed.connect(cb)
 	b.focus_mode = Control.FOCUS_NONE
 	return b
@@ -609,7 +610,7 @@ func show_intro() -> void:
 		"[b]Twoje zadanie:[/b] przez 5 tygodni dbaj o potrzeby rodziny, zarabiaj na czynsz i jedzenie, a przy tym decyduj, czy dzieci będą się uczyć, czy pracować. " +
 		"Każda decyzja odsłania kartę wiedzy o życiu w XIX-wiecznej fabryce.\n\n" +
 		"Kliknij Sima, by go wybrać, potem kliknij przedmiot, by zlecić czynność. Simowie sami zadbają o siebie, gdy nic im nie zlecisz. " +
-		"Spacja – pauza, 1/2/3 – prędkość, Q/E – obrót kamery, kółko – zoom, H – ściany."))
+		"Spacja – pauza, 1/2/3 – prędkość, prawy przycisk myszy lub Q/E – obrót kamery, kółko – zoom, H – ściany. W niedzielę rodzina idzie do kościoła, na targu rano kupisz taniej, a szynk kusi wieczorami."))
 	Edu.unlock("lodz_1892")
 	Edu.unlock("famula")
 	body.add_child(_fact_card("lodz_1892"))
@@ -622,7 +623,7 @@ func _show_help() -> void:
 		"[b]Sterowanie[/b]\n" +
 		"• Kliknij Sima (lub jego portret), by go wybrać. Kliknij przedmiot – wybierz czynność z menu.\n" +
 		"• Kliknij innego Sima, mając wybranego – zlecisz rozmowę.\n" +
-		"• Spacja – pauza · 1 / 2 / 3 – prędkość · Q / E – obrót kamery · kółko lub +/− – zoom · WSAD / strzałki / środkowy przycisk – przesuwanie.\n" +
+		"• Spacja – pauza · 1 / 2 / 3 – prędkość · prawy przycisk myszy lub Q / E – obrót i pochylenie kamery · kółko lub +/− – zoom · WSAD / strzałki / środkowy przycisk – przesuwanie.\n" +
 		"• H – podnoszenie/opuszczanie ścian.\n" +
 		"• Tryb „Kup”: wybierz mebel z katalogu, ustaw w izbie (R – obrót) i kliknij. Kliknięcie mebla w izbie – sprzedaż za 50%.\n\n" +
 		"[b]Zasady[/b]\n" +

@@ -63,17 +63,36 @@
     "kobiety": {
       "title": "Kobiety w fabryce",
       "text": "W łódzkim przemyśle bawełnianym kobiety stanowiły około połowy zatrudnionych, głównie w przędzalniach. Zarabiały mniej niż mężczyźni za podobną pracę i po zmianie wracały do obowiązków domowych: gotowania, prania i opieki nad dziećmi. Ustawa z 1885 r. zakazała pracy nocnej kobiet i młodocianych w przemyśle włókienniczym."
+    },
+    "kosciol": {
+      "title": "Niedziela i kościół",
+      "text": "Niedziela była jedynym dniem wolnym robotnika. Rano dzwony wzywały na mszę, a kościół był miejscem, gdzie rodzina spotykała sąsiadów i słyszała wiadomości. Łódź nazywano „miastem czterech kultur”: obok siebie żyli katolicy (głównie Polacy), ewangelicy (głównie Niemcy), żydzi i prawosławni Rosjanie, a fabrykanci różnych wyznań fundowali kościoły, cerkwie i synagogi."
+    },
+    "szynk": {
+      "title": "Szynk – odpoczynek i pułapka",
+      "text": "Szynk (karczma) był dla robotników miejscem spotkań, plotek i polityki – ale też przyczyną nędzy wielu rodzin. Tania wódka pochłaniała część tygodniówki, a pijaństwo było jedną z najczęstszych skarg żon robotników. Od lat 40. XIX w. Kościół i działacze społeczni zakładali bractwa trzeźwości, a później towarzystwa abstynenckie i czytelnie ludowe jako alternatywę dla szynku."
+    },
+    "targ": {
+      "title": "Targ – skąd brało się jedzenie",
+      "text": "Chłopi z okolicznych wsi przywozili na targ ziemniaki, kapustę, mąkę, jajka i mleko. Robotnicza rodzina wydawała na jedzenie większość zarobku, a jadłospis opierał się na chlebie, ziemniakach, kaszy i kapuście; mięso jadano w niedzielę. Zakupy na targu były tańsze niż w sklepie, ale wymagały wolnego poranka – a w tygodniu wszyscy dorośli pracowali."
     }
   },
-
   "events": {
     "praca_antka": {
       "title": "Majster ma propozycję",
       "text": "Przy bramie zatrzymuje Cię majster Krauze: „Walczak, twój Antek ma dwanaście lat? Potrzebuję chłopaka do noszenia szpul. Dwa kopiejki za godzinę, po osiem godzin – prawo pozwala. Albo niech dalej siedzi w tej ruskiej szkole, wasza sprawa.”",
       "fact": "prawo_1882",
       "choices": [
-        {"label": "Antek idzie do fabryki (ok. 1 rb tygodniowo)", "apply": "antek_praca", "say": "Antek od jutra pracuje jako szpulacz, 6:00–15:00."},
-        {"label": "Antek zostaje w szkole (składka 20 kop./tydzień)", "apply": "antek_szkola", "say": "Antek chodzi do szkoły w godzinach 8:00–13:00."}
+        {
+          "label": "Antek idzie do fabryki (ok. 1 rb tygodniowo)",
+          "apply": "antek_praca",
+          "say": "Antek od jutra pracuje jako szpulacz, 6:00–15:00."
+        },
+        {
+          "label": "Antek zostaje w szkole (składka 20 kop./tydzień)",
+          "apply": "antek_szkola",
+          "say": "Antek chodzi do szkoły w godzinach 8:00–13:00."
+        }
       ]
     },
     "praca_zosi": {
@@ -81,8 +100,16 @@
       "text": "Majster wraca do sprawy: „Zosia ma dziewięć lat? Oficjalnie za młoda, ale w dziale czyszczenia maszyn nikt nie pyta o metrykę. Jak przyjdzie inspektor, to się ją schowa. Dwa kopiejki za godzinę.” Marianna milczy. Decyzja należy do Ciebie.",
       "fact": "prawo_1882",
       "choices": [
-        {"label": "Zgódź się – każda kopiejka się liczy", "apply": "zosia_praca", "say": "Zosia pracuje nielegalnie. Jeśli przyjdzie inspektor fabryczny, mogą być kłopoty."},
-        {"label": "Odmów – Zosia idzie do szkoły", "apply": "zosia_szkola", "say": "Zosia chodzi do szkoły. Majster kręci głową."}
+        {
+          "label": "Zgódź się – każda kopiejka się liczy",
+          "apply": "zosia_praca",
+          "say": "Zosia pracuje nielegalnie. Jeśli przyjdzie inspektor fabryczny, mogą być kłopoty."
+        },
+        {
+          "label": "Odmów – Zosia idzie do szkoły",
+          "apply": "zosia_szkola",
+          "say": "Zosia chodzi do szkoły. Majster kręci głową."
+        }
       ]
     },
     "kary_fabryczne": {
@@ -90,8 +117,16 @@
       "text": "Józef wszedł do hali minutę po gwizdku. Portier wpisał go do książki kar: „Spóźnienie – 10 kopiejek. Rozmowy przy krośnie – 5 kopiejek.” Przy wypłacie potrącą to z tygodniówki. Takie są zasady regulaminu wiszącego przy bramie.",
       "fact": "kary",
       "choices": [
-        {"label": "Zapłać karę bez słowa", "money": -15, "say": "Potrącono 15 kop. kary."},
-        {"label": "Pokłóć się z majstrem (ryzyko)", "money": -30, "say": "Majster dopisał karę za „nieposłuszeństwo”. Razem 30 kop."}
+        {
+          "label": "Zapłać karę bez słowa",
+          "money": -15,
+          "say": "Potrącono 15 kop. kary."
+        },
+        {
+          "label": "Pokłóć się z majstrem (ryzyko)",
+          "money": -30,
+          "say": "Majster dopisał karę za „nieposłuszeństwo”. Razem 30 kop."
+        }
       ]
     },
     "choroba": {
@@ -99,8 +134,16 @@
       "text": "Marianna od tygodnia kaszle – pył bawełniany w przędzalni robi swoje. Sąsiadka radzi lekarza z ulicy Piotrkowskiej (1 rb 20 kop. za wizytę z lekarstwem) albo domowe sposoby: ciepłe mleko z czosnkiem i odpoczynek w niedzielę.",
       "fact": "choroby",
       "choices": [
-        {"label": "Lekarz – 1 rb 20 kop.", "money": -120, "apply": "lekarz", "say": "Lekarz zalecił unikać pyłu. Cała rodzina odzyskała trochę zdrowia."},
-        {"label": "Domowe sposoby – za darmo", "say": "Marianna odpoczywa. Pilnuj, żeby jej zdrowie nie spadało."}
+        {
+          "label": "Lekarz – 1 rb 20 kop.",
+          "money": -120,
+          "apply": "lekarz",
+          "say": "Lekarz zalecił unikać pyłu. Cała rodzina odzyskała trochę zdrowia."
+        },
+        {
+          "label": "Domowe sposoby – za darmo",
+          "say": "Marianna odpoczywa. Pilnuj, żeby jej zdrowie nie spadało."
+        }
       ]
     },
     "tajne_nauczanie": {
@@ -108,8 +151,19 @@
       "text": "Pani Wiśniewska z parteru w niedziele po mszy uczy dzieci czytać z elementarza Promyka – po polsku, po cichu, bo za tajne nauczanie grozi kara. Prosi o 10 kopiejek tygodniowo na świece i książki.",
       "fact": "tajne_nauczanie",
       "choices": [
-        {"label": "Posyłaj dzieci (−10 kop., edukacja +)", "money": -10, "apply": "tajne_nauczanie", "set": {"tajne": true}, "say": "Dzieci chodzą w niedziele na tajne lekcje."},
-        {"label": "Zbyt ryzykowne – odmów", "say": "Dzieci zostają w domu."}
+        {
+          "label": "Posyłaj dzieci (−10 kop., edukacja +)",
+          "money": -10,
+          "apply": "tajne_nauczanie",
+          "set": {
+            "tajne": true
+          },
+          "say": "Dzieci chodzą w niedziele na tajne lekcje."
+        },
+        {
+          "label": "Zbyt ryzykowne – odmów",
+          "say": "Dzieci zostają w domu."
+        }
       ]
     },
     "inspektor_zapowiedz": {
@@ -117,7 +171,10 @@
       "text": "W fabryce szepczą, że inspektor okręgowy objeżdża łódzkie zakłady i sprawdza księgi zatrudnienia dzieci. Majster każe mniejszym dzieciom „zniknąć na zaplecze”, gdy pojawi się obcy w cylindrze.",
       "fact": "prawo_1882",
       "choices": [
-        {"label": "Rozumiem", "say": "Jeżeli Zosia pracuje nielegalnie, może zostać zwolniona."}
+        {
+          "label": "Rozumiem",
+          "say": "Jeżeli Zosia pracuje nielegalnie, może zostać zwolniona."
+        }
       ]
     },
     "inspektor": {
@@ -126,7 +183,11 @@
       "fact": "factory_acts",
       "once": false,
       "choices": [
-        {"label": "Zosia wraca do szkoły", "apply": "zosia_zwolniona", "say": "Zosia została zwolniona i chodzi do szkoły."}
+        {
+          "label": "Zosia wraca do szkoły",
+          "apply": "zosia_zwolniona",
+          "say": "Zosia została zwolniona i chodzi do szkoły."
+        }
       ]
     },
     "strajk": {
@@ -134,8 +195,22 @@
       "text": "Rano fabryczna syrena milczy. Tłum robotników zatrzymał maszyny i wyszedł na ulice: żądają krótszego dnia pracy i podwyżek. Przez kilka dni nikt nie zarobi ani kopiejki. Józef i Marianna muszą zdecydować, czy dołączą do strajkujących, czy spróbują przejść przez bramę.",
       "fact": "bunt_lodzki",
       "choices": [
-        {"label": "Dołączamy do strajku (bez zarobku, solidarność)", "apply": "strajk_udzial", "set": {"strajk": "udzial"}, "say": "Rodzina strajkuje. Fabryka stoi do 6 maja."},
-        {"label": "Idziemy do pracy – mamy długi", "apply": "strajk_praca", "set": {"strajk": "praca"}, "say": "Brama fabryczna i tak jest zamknięta – wojsko zajęło ulicę. Zarobku nie będzie, a sąsiedzi pamiętają."}
+        {
+          "label": "Dołączamy do strajku (bez zarobku, solidarność)",
+          "apply": "strajk_udzial",
+          "set": {
+            "strajk": "udzial"
+          },
+          "say": "Rodzina strajkuje. Fabryka stoi do 6 maja."
+        },
+        {
+          "label": "Idziemy do pracy – mamy długi",
+          "apply": "strajk_praca",
+          "set": {
+            "strajk": "praca"
+          },
+          "say": "Brama fabryczna i tak jest zamknięta – wojsko zajęło ulicę. Zarobku nie będzie, a sąsiedzi pamiętają."
+        }
       ]
     },
     "wyplata": {
@@ -143,58 +218,300 @@
       "text": "W kantorze fabryki kasjer wylicza tygodniówkę według kartek z godzinami. Część sumy znika w rubryce „kary”. Pamiętaj: w poniedziałek rano trzeba zapłacić czynsz za izbę (1 rb 50 kop.) i składkę szkolną za każde dziecko w szkole (20 kop.).",
       "fact": "zarobki",
       "once": true,
-      "choices": [{"label": "Dalej", "say": ""}]
+      "choices": [
+        {
+          "label": "Dalej",
+          "say": ""
+        }
+      ]
     },
     "raport_tygodnia": {
       "title": "Niedziela – podsumowanie tygodnia",
       "dynamic": "raport",
       "text": "",
       "once": false,
-      "choices": [{"label": "Nowy tydzień", "say": ""}]
+      "choices": [
+        {
+          "label": "Nowy tydzień",
+          "say": ""
+        }
+      ]
     },
     "eksmisja": {
       "title": "Eksmisja",
       "text": "Gospodarz famuły po raz drugi nie dostał czynszu. Rzeczy Walczaków wylądowały na podwórzu. Dla rodziny robotniczej bez mieszkania i oszczędności oznaczało to zwykle przytułek albo powrót na wieś.",
       "fact": "famula",
-      "choices": [{"label": "Koniec gry", "apply": "eksmisja"}]
+      "choices": [
+        {
+          "label": "Koniec gry",
+          "apply": "eksmisja"
+        }
+      ]
+    },
+    "szynk_zaproszenie": {
+      "title": "Sąsiad zaprasza do szynku",
+      "text": "Po wypłacie Walenty z drugiej klatki zaczepia Józefa na podwórzu: „Chodź na jednego, uczcimy tygodniówkę. Po robocie człowiekowi się należy.” Marianna patrzy znacząco na pusty garnek.",
+      "fact": "szynk",
+      "choices": [
+        {
+          "label": "Józef idzie do szynku (−15 kop., zabawa +, zdrowie −)",
+          "money": -15,
+          "apply": "szynk_wieczor",
+          "say": "Józef wrócił późno i w dobrym humorze. Portfel lżejszy o 15 kop."
+        },
+        {
+          "label": "Odmów – pieniądze są na czynsz",
+          "say": "Józef odmawia. Walenty wzrusza ramionami i idzie sam."
+        }
+      ]
     }
   },
-
   "quiz": [
-    {"q": "Od jakiego wieku dzieci mogły legalnie pracować w fabrykach Królestwa Polskiego po 1882 r.?", "a": ["od 9 lat", "od 12 lat", "od 15 lat"], "correct": 1, "fact": "prawo_1882"},
-    {"q": "Ile godzin dziennie mogły pracować dzieci w wieku 12–15 lat według ustawy z 1882 r.?", "a": ["6 godzin", "8 godzin", "12 godzin"], "correct": 1, "fact": "prawo_1882"},
-    {"q": "Kto uruchomił pierwszą maszynę parową w Łodzi (1839)?", "a": ["Izrael Poznański", "Karol Scheibler", "Ludwik Geyer"], "correct": 2, "fact": "maszyna_parowa"},
-    {"q": "Jak nazywały się domy robotnicze budowane przez łódzkich fabrykantów?", "a": ["famuły", "kamienice czynszowe", "dwory"], "correct": 0, "fact": "famula"},
-    {"q": "W jakim języku uczono w szkołach elementarnych Królestwa Polskiego po 1869–1885 r.?", "a": ["po polsku", "po rosyjsku", "po niemiecku"], "correct": 1, "fact": "szkola"},
-    {"q": "Autorem popularnego elementarza (1875) do nauki czytania po polsku był…", "a": ["Konrad Prószyński (Promyk)", "Władysław Reymont", "Bolesław Prus"], "correct": 0, "fact": "tajne_nauczanie"},
-    {"q": "Do ilu godzin ograniczyła dzień pracy ustawa rosyjska z 1897 r.?", "a": ["8 godzin", "10 godzin", "11,5 godziny"], "correct": 2, "fact": "dzien_pracy"},
-    {"q": "Który brytyjski akt prawny z 1833 r. zabronił pracy dzieci poniżej 9 lat w fabrykach tekstylnych?", "a": ["Factory Act", "Magna Carta", "Poor Law"], "correct": 0, "fact": "factory_acts"},
-    {"q": "Ile kopiejek ma jeden rubel?", "a": ["60", "100", "120"], "correct": 1, "fact": "zarobki"},
-    {"q": "Bunt łódzki – strajk powszechny – wybuchł w…", "a": ["maju 1892 r.", "styczniu 1863 r.", "listopadzie 1918 r."], "correct": 0, "fact": "bunt_lodzki"},
-    {"q": "Kto skonstruował krosno mechaniczne (1785)?", "a": ["James Watt", "Edmund Cartwright", "Richard Arkwright"], "correct": 1, "fact": "krosno"},
-    {"q": "Jaka choroba płuc groziła robotnikom przędzalni z powodu pyłu?", "a": ["pylica bawełniana", "szkorbut", "malaria"], "correct": 0, "fact": "choroby"},
-    {"q": "Która powieść opisuje rozwój przemysłowej Łodzi?", "a": ["„Lalka”", "„Ziemia obiecana”", "„Chłopi”"], "correct": 1, "fact": "lodz_1892"},
-    {"q": "O ile dni kalendarz juliański był w XIX w. spóźniony względem gregoriańskiego?", "a": ["o 7 dni", "o 12 dni", "o 30 dni"], "correct": 1, "fact": "kalendarz"}
+    {
+      "q": "Od jakiego wieku dzieci mogły legalnie pracować w fabrykach Królestwa Polskiego po 1882 r.?",
+      "a": [
+        "od 9 lat",
+        "od 12 lat",
+        "od 15 lat"
+      ],
+      "correct": 1,
+      "fact": "prawo_1882"
+    },
+    {
+      "q": "Ile godzin dziennie mogły pracować dzieci w wieku 12–15 lat według ustawy z 1882 r.?",
+      "a": [
+        "6 godzin",
+        "8 godzin",
+        "12 godzin"
+      ],
+      "correct": 1,
+      "fact": "prawo_1882"
+    },
+    {
+      "q": "Kto uruchomił pierwszą maszynę parową w Łodzi (1839)?",
+      "a": [
+        "Izrael Poznański",
+        "Karol Scheibler",
+        "Ludwik Geyer"
+      ],
+      "correct": 2,
+      "fact": "maszyna_parowa"
+    },
+    {
+      "q": "Jak nazywały się domy robotnicze budowane przez łódzkich fabrykantów?",
+      "a": [
+        "famuły",
+        "kamienice czynszowe",
+        "dwory"
+      ],
+      "correct": 0,
+      "fact": "famula"
+    },
+    {
+      "q": "W jakim języku uczono w szkołach elementarnych Królestwa Polskiego po 1869–1885 r.?",
+      "a": [
+        "po polsku",
+        "po rosyjsku",
+        "po niemiecku"
+      ],
+      "correct": 1,
+      "fact": "szkola"
+    },
+    {
+      "q": "Autorem popularnego elementarza (1875) do nauki czytania po polsku był…",
+      "a": [
+        "Konrad Prószyński (Promyk)",
+        "Władysław Reymont",
+        "Bolesław Prus"
+      ],
+      "correct": 0,
+      "fact": "tajne_nauczanie"
+    },
+    {
+      "q": "Do ilu godzin ograniczyła dzień pracy ustawa rosyjska z 1897 r.?",
+      "a": [
+        "8 godzin",
+        "10 godzin",
+        "11,5 godziny"
+      ],
+      "correct": 2,
+      "fact": "dzien_pracy"
+    },
+    {
+      "q": "Który brytyjski akt prawny z 1833 r. zabronił pracy dzieci poniżej 9 lat w fabrykach tekstylnych?",
+      "a": [
+        "Factory Act",
+        "Magna Carta",
+        "Poor Law"
+      ],
+      "correct": 0,
+      "fact": "factory_acts"
+    },
+    {
+      "q": "Ile kopiejek ma jeden rubel?",
+      "a": [
+        "60",
+        "100",
+        "120"
+      ],
+      "correct": 1,
+      "fact": "zarobki"
+    },
+    {
+      "q": "Bunt łódzki – strajk powszechny – wybuchł w…",
+      "a": [
+        "maju 1892 r.",
+        "styczniu 1863 r.",
+        "listopadzie 1918 r."
+      ],
+      "correct": 0,
+      "fact": "bunt_lodzki"
+    },
+    {
+      "q": "Kto skonstruował krosno mechaniczne (1785)?",
+      "a": [
+        "James Watt",
+        "Edmund Cartwright",
+        "Richard Arkwright"
+      ],
+      "correct": 1,
+      "fact": "krosno"
+    },
+    {
+      "q": "Jaka choroba płuc groziła robotnikom przędzalni z powodu pyłu?",
+      "a": [
+        "pylica bawełniana",
+        "szkorbut",
+        "malaria"
+      ],
+      "correct": 0,
+      "fact": "choroby"
+    },
+    {
+      "q": "Która powieść opisuje rozwój przemysłowej Łodzi?",
+      "a": [
+        "„Lalka”",
+        "„Ziemia obiecana”",
+        "„Chłopi”"
+      ],
+      "correct": 1,
+      "fact": "lodz_1892"
+    },
+    {
+      "q": "O ile dni kalendarz juliański był w XIX w. spóźniony względem gregoriańskiego?",
+      "a": [
+        "o 7 dni",
+        "o 12 dni",
+        "o 30 dni"
+      ],
+      "correct": 1,
+      "fact": "kalendarz"
+    },
+    {
+      "q": "Dlaczego Łódź nazywano „miastem czterech kultur”?",
+      "a": [
+        "bo miała cztery dzielnice",
+        "bo żyli w niej obok siebie Polacy, Niemcy, Żydzi i Rosjanie",
+        "bo zbudowano w niej cztery teatry"
+      ],
+      "correct": 1,
+      "fact": "kosciol"
+    },
+    {
+      "q": "Jak nazywały się organizacje zakładane w XIX w. przeciw pijaństwu?",
+      "a": [
+        "bractwa trzeźwości",
+        "cechy rzemieślnicze",
+        "kasy zapomogowe"
+      ],
+      "correct": 0,
+      "fact": "szynk"
+    }
   ],
-
   "glossary": [
-    {"term": "Famuła", "def": "Dom mieszkalny dla robotników budowany przez fabrykanta obok fabryki."},
-    {"term": "Kątnik", "def": "Sublokator wynajmujący „kąt” (miejsce do spania) w cudzej izbie."},
-    {"term": "Majster", "def": "Brygadzista nadzorujący robotników w hali; wymierzał kary i decydował o zatrudnieniu."},
-    {"term": "Szpulacz / szpularka", "def": "Dziecko lub młodociany roznoszący szpule z przędzą między maszynami."},
-    {"term": "Krosno mechaniczne", "def": "Maszyna tkacka napędzana pasem transmisyjnym od maszyny parowej."},
-    {"term": "Przędzarka obrączkowa", "def": "Maszyna skręcająca włókna bawełny w nić (przędzę)."},
-    {"term": "Osnowa i wątek", "def": "Nitki podłużne (osnowa) i poprzeczne (wątek) tworzące tkaninę."},
-    {"term": "Pas transmisyjny", "def": "Skórzany pas przenoszący napęd z wału na maszynę; częsta przyczyna wypadków."},
-    {"term": "Inspektor fabryczny", "def": "Urzędnik kontrolujący przestrzeganie prawa pracy, zwłaszcza zatrudnianie dzieci (w Rosji od 1884 r.)."},
-    {"term": "Regulamin fabryczny", "def": "Spis obowiązków i kar, który każdy robotnik musiał zaakceptować przy zatrudnieniu."},
-    {"term": "Tygodniówka", "def": "Wypłata za tydzień pracy, wydawana zwykle w sobotę."},
-    {"term": "Rubel i kopiejka", "def": "Waluta Cesarstwa Rosyjskiego używana w Królestwie Polskim od połowy XIX w.; 1 rubel = 100 kopiejek."},
-    {"term": "Funt", "def": "Jednostka wagi (ok. 0,41 kg) używana w handlu."},
-    {"term": "Kasa zapomogowa", "def": "Fundusz samopomocy robotniczej na wypadek choroby lub kalectwa."},
-    {"term": "Rusyfikacja", "def": "Narzucanie języka rosyjskiego w szkołach i urzędach Królestwa Polskiego po 1864 r."},
-    {"term": "Tajne nauczanie", "def": "Nielegalna nauka po polsku w prywatnych domach."},
-    {"term": "Elementarz", "def": "Podręcznik do nauki czytania i pisania."},
-    {"term": "Pylica bawełniana", "def": "Choroba płuc wywołana wdychaniem pyłu bawełnianego w przędzalni."}
+    {
+      "term": "Famuła",
+      "def": "Dom mieszkalny dla robotników budowany przez fabrykanta obok fabryki."
+    },
+    {
+      "term": "Kątnik",
+      "def": "Sublokator wynajmujący „kąt” (miejsce do spania) w cudzej izbie."
+    },
+    {
+      "term": "Majster",
+      "def": "Brygadzista nadzorujący robotników w hali; wymierzał kary i decydował o zatrudnieniu."
+    },
+    {
+      "term": "Szpulacz / szpularka",
+      "def": "Dziecko lub młodociany roznoszący szpule z przędzą między maszynami."
+    },
+    {
+      "term": "Krosno mechaniczne",
+      "def": "Maszyna tkacka napędzana pasem transmisyjnym od maszyny parowej."
+    },
+    {
+      "term": "Przędzarka obrączkowa",
+      "def": "Maszyna skręcająca włókna bawełny w nić (przędzę)."
+    },
+    {
+      "term": "Osnowa i wątek",
+      "def": "Nitki podłużne (osnowa) i poprzeczne (wątek) tworzące tkaninę."
+    },
+    {
+      "term": "Pas transmisyjny",
+      "def": "Skórzany pas przenoszący napęd z wału na maszynę; częsta przyczyna wypadków."
+    },
+    {
+      "term": "Inspektor fabryczny",
+      "def": "Urzędnik kontrolujący przestrzeganie prawa pracy, zwłaszcza zatrudnianie dzieci (w Rosji od 1884 r.)."
+    },
+    {
+      "term": "Regulamin fabryczny",
+      "def": "Spis obowiązków i kar, który każdy robotnik musiał zaakceptować przy zatrudnieniu."
+    },
+    {
+      "term": "Tygodniówka",
+      "def": "Wypłata za tydzień pracy, wydawana zwykle w sobotę."
+    },
+    {
+      "term": "Rubel i kopiejka",
+      "def": "Waluta Cesarstwa Rosyjskiego używana w Królestwie Polskim od połowy XIX w.; 1 rubel = 100 kopiejek."
+    },
+    {
+      "term": "Funt",
+      "def": "Jednostka wagi (ok. 0,41 kg) używana w handlu."
+    },
+    {
+      "term": "Kasa zapomogowa",
+      "def": "Fundusz samopomocy robotniczej na wypadek choroby lub kalectwa."
+    },
+    {
+      "term": "Rusyfikacja",
+      "def": "Narzucanie języka rosyjskiego w szkołach i urzędach Królestwa Polskiego po 1864 r."
+    },
+    {
+      "term": "Tajne nauczanie",
+      "def": "Nielegalna nauka po polsku w prywatnych domach."
+    },
+    {
+      "term": "Elementarz",
+      "def": "Podręcznik do nauki czytania i pisania."
+    },
+    {
+      "term": "Pylica bawełniana",
+      "def": "Choroba płuc wywołana wdychaniem pyłu bawełnianego w przędzalni."
+    },
+    {
+      "term": "Szynk",
+      "def": "Karczma, w której sprzedawano piwo i wódkę; miejsce spotkań robotników."
+    },
+    {
+      "term": "Przekupka",
+      "def": "Handlarka sprzedająca na targu warzywa, nabiał lub owoce."
+    },
+    {
+      "term": "Bractwo trzeźwości",
+      "def": "Stowarzyszenie religijne, którego członkowie zobowiązywali się nie pić alkoholu."
+    }
   ]
 }

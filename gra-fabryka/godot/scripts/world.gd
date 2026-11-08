@@ -1,12 +1,12 @@
 class_name World
 extends Node3D
-## Parcela: fabryka, szkoła, ulica, famuła z izbą Walczaków, podwórze, sklep i skwer.
-## Siatka 1 kafelek = 1 m. Oś X w prawo, oś Z „w dół” (ku kamerze).
+## Parcela: fabryka, szkoła, kościół, ulica, famuła z izbą Walczaków, podwórze, sklep,
+## szynk, targ i skwer. Siatka 1 kafelek = 1 m. Oś X w prawo, oś Z „w dół” (ku kamerze).
 
 signal objects_changed
 
-const W := 38
-const H := 26
+const W := 56
+const H := 34
 
 const COL := {
 	"trawa": Color(0.36, 0.46, 0.26),
@@ -16,27 +16,40 @@ const COL := {
 	"deski_szkola": Color(0.52, 0.40, 0.26),
 	"cegla_podloga": Color(0.40, 0.30, 0.26),
 	"sklep": Color(0.50, 0.38, 0.24),
+	"kamien": Color(0.62, 0.60, 0.55),
 	"mur_cegla": Color(0.56, 0.27, 0.19),
 	"mur_tynk": Color(0.78, 0.72, 0.62),
 	"mur_drewno": Color(0.45, 0.32, 0.20),
 }
+## Kolor → tekstura z assets/textures (floor_*.png)
+const TEX := {
+	"trawa": "floor_trawa", "bruk": "floor_bruk", "ziemia": "floor_ziemia", "deski": "floor_deski",
+	"deski_szkola": "floor_deski_ciemne", "cegla_podloga": "floor_cegla_podloga", "sklep": "floor_deski_ciemne",
+	"kamien": "floor_kamien", "mur_cegla": "floor_cegla", "mur_tynk": "floor_tynk", "mur_drewno": "floor_drewno_sciana",
+}
 
-## Obszary podłóg: nazwa, prostokąt (kafelki), kolor.
+## Obszary podłóg: nazwa, prostokąt (kafelki), kolor/tekstura.
 const FLOORS := [
 	["fabryka", Rect2i(1, 1, 20, 8), "cegla_podloga"],
 	["szkola", Rect2i(25, 1, 10, 8), "deski_szkola"],
-	["ulica", Rect2i(0, 10, 38, 3), "bruk"],
+	["kosciol", Rect2i(40, 1, 12, 8), "kamien"],
+	["ulica", Rect2i(0, 10, 56, 3), "bruk"],
 	["dom", Rect2i(1, 14, 8, 7), "deski"],
 	["podworze", Rect2i(10, 13, 8, 9), "ziemia"],
 	["sklep", Rect2i(20, 14, 6, 5), "sklep"],
+	["szynk", Rect2i(29, 14, 7, 6), "deski_szkola"],
+	["targ", Rect2i(39, 13, 14, 10), "bruk"],
+	["sciezka", Rect2i(10, 22, 8, 1), "ziemia"],
 ]
 
 ## Ściany: prostokąt zewnętrzny, kolor, kafelki drzwi (przerwy).
 const WALLS := [
 	[Rect2i(0, 0, 22, 10), "mur_cegla", [Vector2i(10, 9), Vector2i(11, 9)]],
 	[Rect2i(24, 0, 12, 10), "mur_tynk", [Vector2i(29, 9), Vector2i(30, 9)]],
+	[Rect2i(39, 0, 14, 10), "mur_cegla", [Vector2i(45, 9), Vector2i(46, 9)]],
 	[Rect2i(0, 13, 10, 9), "mur_cegla", [Vector2i(4, 13), Vector2i(9, 17)]],
 	[Rect2i(19, 13, 8, 7), "mur_drewno", [Vector2i(22, 13)]],
+	[Rect2i(28, 13, 9, 8), "mur_drewno", [Vector2i(32, 13)]],
 ]
 
 const HOME_RECT := Rect2i(1, 14, 8, 7)
@@ -55,8 +68,13 @@ const OBJECTS := [
 	["tablica", Vector2i(29, 1), 0],
 	["lawka_szkolna", Vector2i(27, 3), 0], ["lawka_szkolna", Vector2i(29, 3), 0], ["lawka_szkolna", Vector2i(31, 3), 0],
 	["lawka_szkolna", Vector2i(27, 5), 0], ["lawka_szkolna", Vector2i(29, 5), 0], ["lawka_szkolna", Vector2i(31, 5), 0],
+	# kościół
+	["oltarz", Vector2i(45, 1), 0],
+	["lawka_koscielna", Vector2i(41, 4), 1], ["lawka_koscielna", Vector2i(41, 6), 1],
+	["lawka_koscielna", Vector2i(44, 4), 1], ["lawka_koscielna", Vector2i(44, 6), 1],
+	["lawka_koscielna", Vector2i(48, 4), 1], ["lawka_koscielna", Vector2i(48, 6), 1],
 	# ulica
-	["latarnia", Vector2i(6, 12), 0], ["latarnia", Vector2i(20, 12), 0], ["latarnia", Vector2i(33, 12), 0],
+	["latarnia", Vector2i(6, 12), 0], ["latarnia", Vector2i(20, 12), 0], ["latarnia", Vector2i(33, 12), 0], ["latarnia", Vector2i(47, 12), 0],
 	# izba Walczaków
 	["lozko", Vector2i(1, 14), 0], ["lozko", Vector2i(1, 18), 0],
 	["piec", Vector2i(8, 14), 0], ["kredens", Vector2i(7, 14), 0],
@@ -68,15 +86,27 @@ const OBJECTS := [
 	["drzewo", Vector2i(11, 19), 0], ["drzewo", Vector2i(16, 20), 0], ["lawka_parkowa", Vector2i(15, 17), 0],
 	# sklep
 	["lada_sklepowa", Vector2i(24, 15), 0],
-	# skwer
-	["drzewo", Vector2i(30, 15), 0], ["drzewo", Vector2i(34, 17), 0], ["drzewo", Vector2i(29, 21), 0], ["drzewo", Vector2i(35, 22), 0],
-	["lawka_parkowa", Vector2i(32, 18), 0], ["latarnia", Vector2i(28, 13), 0],
+	# szynk
+	["szynkwas", Vector2i(35, 15), 0], ["stol_szynk", Vector2i(30, 15), 0], ["stol_szynk", Vector2i(30, 18), 0],
+	["beczka", Vector2i(35, 19), 0], ["beczka", Vector2i(29, 19), 0],
+	# targ
+	["stragan", Vector2i(41, 15), 0], ["stragan", Vector2i(45, 15), 0], ["stragan", Vector2i(49, 15), 0],
+	["kosz", Vector2i(44, 18), 0], ["kosz", Vector2i(48, 18), 0], ["latarnia", Vector2i(40, 22), 0],
+	# skwer i południe
+	["drzewo", Vector2i(30, 23), 0], ["drzewo", Vector2i(34, 25), 0], ["drzewo", Vector2i(29, 29), 0], ["drzewo", Vector2i(35, 30), 0],
+	["drzewo", Vector2i(31, 32), 0], ["lawka_parkowa", Vector2i(32, 27), 0], ["latarnia", Vector2i(28, 22), 0],
+	["drzewo", Vector2i(3, 25), 0], ["drzewo", Vector2i(8, 28), 0], ["drzewo", Vector2i(14, 25), 0], ["drzewo", Vector2i(20, 27), 0],
+	["drzewo", Vector2i(24, 31), 0], ["lawka_parkowa", Vector2i(12, 29), 0], ["drzewo", Vector2i(44, 27), 0], ["drzewo", Vector2i(50, 30), 0],
+	["lawka_parkowa", Vector2i(47, 26), 0],
 ]
 
 const NPCS := [
 	["npc_majster", Vector2i(14, 6), "majster Krauze"],
 	["npc_nauczyciel", Vector2i(30, 2), "nauczyciel"],
-	["npc_majster", Vector2i(25, 15), "sklepikarz"],
+	["npc_szynkarz", Vector2i(25, 15), "sklepikarz"],
+	["npc_ksiadz", Vector2i(46, 2), "ksiądz"],
+	["npc_szynkarz", Vector2i(35, 17), "szynkarz"],
+	["npc_przekupka", Vector2i(46, 14), "przekupka"],
 ]
 
 const FAMILY := [
@@ -138,10 +168,10 @@ func _ready() -> void:
 func _build_ground() -> void:
 	var ground := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(W + 6, H + 6)
+	plane.size = Vector2(W + 40, H + 40)
 	ground.mesh = plane
 	ground.position = Vector3(W * 0.5, -0.01, H * 0.5)
-	ground.material_override = ModelLoader.flat_material(COL["trawa"])
+	ground.material_override = ModelLoader.surface_material(TEX["trawa"], COL["trawa"], Vector2(W + 40, H + 40))
 	add_child(ground)
 
 	var body := StaticBody3D.new()
@@ -149,14 +179,13 @@ func _build_ground() -> void:
 	body.collision_mask = 0
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(W + 6, 0.1, H + 6)
+	box.size = Vector3(W + 40, 0.1, H + 40)
 	shape.shape = box
 	body.add_child(shape)
 	body.position = Vector3(W * 0.5, -0.05, H * 0.5)
 	body.set_meta("ground", true)
 	add_child(body)
 
-	# siatka pomocnicza (cienkie linie) – widoczna w trybie „Kup”
 	var grid := MeshInstance3D.new()
 	grid.name = "Grid"
 	var im := ImmediateMesh.new()
@@ -186,7 +215,7 @@ func _build_floors() -> void:
 		plane.size = Vector2(r.size.x, r.size.y)
 		mi.mesh = plane
 		mi.position = Vector3(r.position.x + r.size.x * 0.5, 0.005, r.position.y + r.size.y * 0.5)
-		mi.material_override = ModelLoader.flat_material(COL[f[2]])
+		mi.material_override = ModelLoader.surface_material(TEX[f[2]], COL[f[2]], Vector2(r.size.x, r.size.y))
 		mi.name = "Floor_" + f[0]
 		add_child(mi)
 
@@ -194,7 +223,7 @@ func _build_floors() -> void:
 func _build_walls() -> void:
 	for wdef in WALLS:
 		var r: Rect2i = wdef[0]
-		var color: Color = COL[wdef[1]]
+		var mat := ModelLoader.surface_material(TEX[wdef[1]], COL[wdef[1]], Vector2(1, 1), true)
 		var doors: Array = wdef[2]
 		for x in range(r.position.x, r.end.x):
 			for z in range(r.position.y, r.end.y):
@@ -204,10 +233,10 @@ func _build_walls() -> void:
 				var t := Vector2i(x, z)
 				if t in doors:
 					continue
-				_add_wall_tile(t, color)
+				_add_wall_tile(t, mat)
 
 
-func _add_wall_tile(t: Vector2i, color: Color) -> void:
+func _add_wall_tile(t: Vector2i, mat: Material) -> void:
 	if wall_tiles.has(t):
 		return
 	wall_tiles[t] = true
@@ -216,7 +245,7 @@ func _add_wall_tile(t: Vector2i, color: Color) -> void:
 	var box := BoxMesh.new()
 	box.size = Vector3(1.0, 1.0, 1.0)
 	mi.mesh = box
-	mi.material_override = ModelLoader.flat_material(color)
+	mi.material_override = mat
 	mi.position = Vector3(t.x + 0.5, 0.5, t.y + 0.5)
 	add_child(mi)
 	wall_nodes.append(mi)
@@ -224,10 +253,16 @@ func _add_wall_tile(t: Vector2i, color: Color) -> void:
 
 func set_walls_low(low: bool) -> void:
 	walls_low = low
-	var h := 0.45 if low else 2.8
+	var h := 0.45 if low else 3.0
 	for w in wall_nodes:
 		w.scale = Vector3(1.0, h, 1.0)
 		w.position.y = h * 0.5
+
+
+func set_night(night: bool) -> void:
+	for o in objects:
+		if o.night_light:
+			o.night_light.visible = night
 
 
 func set_grid_visible(v: bool) -> void:
@@ -262,7 +297,6 @@ func find_path(from: Vector2i, to: Vector2i) -> Array:
 		return []
 	if not in_bounds(to) or is_solid(to) or not in_bounds(from):
 		return []
-	# Sim może stać na kafelku mebla (krzesło, ławka) – na czas liczenia trasy odblokuj start
 	var from_was_solid := astar.is_point_solid(from)
 	if from_was_solid:
 		astar.set_point_solid(from, false)
@@ -350,7 +384,7 @@ func can_place(kind: String, grid: Vector2i, rot: int) -> bool:
 		if not HOME_RECT.has_point(t) or is_solid(t) or _sim_on_tile(t):
 			ok = false
 			break
-	if ok and not probe.def.get("actions", []).is_empty():
+	if ok and not probe.def.get("actions", []).is_empty() and not probe.def.has("sit_facing"):
 		var u := probe.use_tile()
 		if is_solid(u) or not in_bounds(u):
 			ok = false
@@ -372,14 +406,20 @@ func _place_npc(model: String, t: Vector2i, label_text: String) -> void:
 	if inst == null:
 		inst = ModelLoader.fallback_person(1.75, Color(0.3, 0.3, 0.3))
 	n.add_child(inst)
+	var ap := ModelLoader.find_animation_player(inst)
+	if ap and ap.has_animation("idle"):
+		ap.get_animation("idle").loop_mode = Animation.LOOP_LINEAR
+		ap.play("idle")
+		ap.seek(randf() * 1.5, true)
 	n.position = Vector3(t.x + 0.5, 0.0, t.y + 0.5)
 	var lbl := Label3D.new()
 	lbl.text = label_text
-	lbl.font_size = 44
-	lbl.pixel_size = 0.008
+	lbl.font_size = 22
+	lbl.pixel_size = 0.0009
+	lbl.fixed_size = true
 	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	lbl.no_depth_test = true
-	lbl.position.y = 2.0
+	lbl.position.y = 2.05
 	lbl.outline_size = 8
 	n.add_child(lbl)
 	add_child(n)
@@ -413,7 +453,7 @@ func find_object_for_need(need: String, sim: Sim) -> Interactable:
 		for a in o.actions_for(sim):
 			if a.get("need", "") != need or a.get("kind", "zwykla") != "zwykla":
 				continue
-			if a.has("family_meal") or a.has("teach") or a.has("family_hygiene"):
+			if a.has("family_meal") or a.has("teach") or a.has("family_hygiene") or a.has("health"):
 				continue
 			if int(a.get("cost", 0)) > Game.money or int(a.get("food", 0)) > Game.food:
 				continue

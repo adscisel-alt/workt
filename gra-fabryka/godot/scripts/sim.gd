@@ -52,6 +52,9 @@ var world: World = null
 var mesh_root: Node3D = null
 var plumbob: MeshInstance3D = null
 var label: Label3D = null
+var anim: AnimationPlayer = null
+var _anim_name: String = ""
+var _pose_locked: bool = false   # Sim leży/siedzi na meblu – pozycja ustawiona ręcznie
 var selected: bool = false:
 	set(v):
 		selected = v
@@ -98,6 +101,11 @@ func _build_visual() -> void:
 	if inst == null:
 		inst = ModelLoader.fallback_person(height(), portrait_color)
 	mesh_root.add_child(inst)
+	anim = ModelLoader.find_animation_player(inst)
+	if anim:
+		for a in anim.get_animation_list():
+			anim.get_animation(a).loop_mode = Animation.LOOP_LINEAR
+		_play_anim("idle")
 
 	# „plumbob” – zielony kryształ nad wybranym Simem, jak w The Sims
 	plumbob = MeshInstance3D.new()
@@ -115,8 +123,9 @@ func _build_visual() -> void:
 
 	label = Label3D.new()
 	label.text = sim_name
-	label.font_size = 48
-	label.pixel_size = 0.008
+	label.font_size = 26
+	label.pixel_size = 0.0009
+	label.fixed_size = true
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.position.y = height() + 0.25
@@ -161,12 +170,44 @@ func _process(delta: float) -> void:
 			elif _idle_timer <= 0.0:
 				_idle_timer = 8.0
 				_autonomy()
-	# lekkie kołysanie podczas chodzenia
-	if state == State.WALK:
-		_bob_t += delta * 12.0
-		mesh_root.position.y = absf(sin(_bob_t)) * 0.05
-	else:
-		mesh_root.position.y = 0.0
+	if anim == null:
+		# zapasowy model bez szkieletu – lekkie kołysanie podczas chodzenia
+		if state == State.WALK:
+			_bob_t += delta * 12.0
+			mesh_root.position.y = absf(sin(_bob_t)) * 0.05
+		else:
+			mesh_root.position.y = 0.0
+	elif state == State.WALK:
+		_play_anim("walk")
+		anim.speed_scale = 1.0 + 0.15 * (Game.speed - 1)
+	elif state == State.IDLE:
+		_play_anim("idle")
+		anim.speed_scale = 1.0
+
+
+func _play_anim(anim_name: String) -> void:
+	if anim == null or _anim_name == anim_name:
+		return
+	if not anim.has_animation(anim_name):
+		anim_name = "idle"
+		if not anim.has_animation(anim_name):
+			return
+	_anim_name = anim_name
+	anim.play(anim_name, 0.2)
+
+
+## Animacja odpowiadająca czynności (jawna w katalogu albo wynikająca z obiektu).
+func _anim_for(obj: Interactable, act: Dictionary) -> String:
+	if act.has("anim"):
+		return String(act["anim"])
+	match String(act.get("kind", "zwykla")):
+		"praca":
+			return "work"
+		"szkola":
+			return "sit"
+	if obj != null and obj.def.has("sit_facing"):
+		return "sit"
+	return "idle"
 
 
 func _on_tick(minutes: int) -> void:
@@ -342,6 +383,19 @@ func _arrive() -> void:
 		Edu.unlock("szkola")
 	if act.has("fact"):
 		Edu.unlock(String(act["fact"]))
+	var an := _anim_for(obj, act)
+	if an == "sleep":
+		# połóż się na łóżku: głowa przy zagłówku (przód mebla)
+		position = obj.center_position()
+		mesh_root.rotation.y = obj.mesh_root.rotation.y + PI
+		_pose_locked = true
+	elif an == "sit" and obj.def.has("sit_facing"):
+		position = Vector3(obj.use_tile().x + 0.5, 0.0, obj.use_tile().y + 0.5)
+		mesh_root.rotation.y = obj.mesh_root.rotation.y + float(obj.def["sit_facing"])
+		_pose_locked = true
+	_play_anim(an)
+	if anim:
+		anim.speed_scale = 1.0
 	_set_text(String(act.get("label", "")))
 
 
@@ -453,8 +507,11 @@ func _finish() -> void:
 	if current.get("target") != null and is_instance_valid(current["target"]):
 		var t: Sim = current["target"]
 		t.needs["towarzystwo"] = clampf(t.needs["towarzystwo"] + 25.0, 0.0, 100.0)
+	if act.has("health"):
+		health = clampf(health + float(act["health"]), 0.0, 100.0)
 	if is_instance_valid(obj) and obj.occupied_by == self:
 		obj.occupied_by = null
+	_unlock_pose()
 	current = {}
 	state = State.IDLE
 	_idle_timer = 1.0
@@ -462,11 +519,19 @@ func _finish() -> void:
 	queue_changed.emit()
 
 
+func _unlock_pose() -> void:
+	if _pose_locked:
+		_pose_locked = false
+		position = _tile_pos(tile)
+	_play_anim("idle")
+
+
 func _interrupt() -> void:
 	if not current.is_empty():
 		var obj: Interactable = current["object"]
 		if is_instance_valid(obj) and obj.occupied_by == self:
 			obj.occupied_by = null
+	_unlock_pose()
 	current = {}
 	path = []
 	state = State.IDLE
@@ -509,12 +574,30 @@ func _autonomy() -> void:
 	if (hour >= 21.5 or hour < 4.5) and needs["energia"] < 85.0:
 		if _go_for_need("energia"):
 			return
+	# 3b. niedzielna msza
+	if Game.is_sunday() and hour >= float(Catalog.CHURCH["start"]) and hour < float(Catalog.CHURCH["end"]) and not Game.flags.get("msza_" + sim_id + "_" + str(Game.day), false):
+		var pew := world.find_object_with_action("msza", self)
+		if pew:
+			Game.flags["msza_" + sim_id + "_" + str(Game.day)] = true
+			enqueue(pew, _action_of_id(pew, "msza"))
+			return
+	# 3c. wieczór w szynku (dorośli, gdy nudno i są drobne)
+	if is_adult() and hour >= 19.5 and hour < 22.0 and needs["zabawa"] < 40.0 and Game.money >= 5 and randf() < 0.25:
+		var table := world.find_object_with_action("piwo", self)
+		if table:
+			enqueue(table, _action_of_id(table, "piwo"))
+			return
 	# 4. zakupy – gdy w domu brak zapasów, a dorosły ma czas i pieniądze
-	if is_adult() and Game.food < 2 and Game.money >= 24 and not Game.is_sunday():
+	if is_adult() and Game.food < 2 and Game.money >= 16 and not Game.is_sunday() and not _another_adult_shopping():
+		# rano taniej na targu, po południu zostaje sklep
+		if hour < Catalog.MARKET_END:
+			var stall := world.find_object_with_action("targ_zakupy", self)
+			if stall:
+				enqueue(stall, _action_of_id(stall, "targ_duze" if Game.money >= 150 else "targ_zakupy"))
+				return
 		var shop := world.find_object_with_action("zakupy", self)
-		if shop and not _another_adult_shopping():
-			var act := _action_of_id(shop, "zakupy_duze" if Game.money >= 150 else "zakupy")
-			enqueue(shop, act)
+		if shop and Game.money >= 24:
+			enqueue(shop, _action_of_id(shop, "zakupy_duze" if Game.money >= 150 else "zakupy"))
 			return
 	# 4b. najniższa potrzeba
 	var lowest := ""
@@ -540,7 +623,7 @@ func _autonomy() -> void:
 
 func _another_adult_shopping() -> bool:
 	for s in Game.adults():
-		if s != self and (s.current_action_id().begins_with("zakupy") or s.queue.any(func(q): return String(q["action"].get("id", "")).begins_with("zakupy"))):
+		if s != self and (s.current_action_id().begins_with("zakupy") or s.current_action_id().begins_with("targ") or s.queue.any(func(q): return String(q["action"].get("id", "")).begins_with("zakupy") or String(q["action"].get("id", "")).begins_with("targ"))):
 			return true
 	return false
 

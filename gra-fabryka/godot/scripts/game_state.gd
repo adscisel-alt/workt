@@ -11,6 +11,7 @@ signal speed_changed(speed: int)
 signal event_requested(event: Dictionary)
 signal game_over(report: Dictionary)
 signal quiz_requested(sim: Node)
+signal ui_click
 
 const START_YEAR := 1892
 const START_MONTH := 4
@@ -227,6 +228,8 @@ func _on_new_day() -> void:
 			request_event("praca_zosi")
 		9:
 			request_event("kary_fabryczne")
+		11:
+			request_event("szynk_zaproszenie")
 		13:
 			request_event("choroba")
 		18:
@@ -364,6 +367,13 @@ func _apply_choice_effect(effect: String) -> void:
 				s.striking = false
 		"eksmisja":
 			_finish_game()
+		"szynk_wieczor":
+			var j = sim_by_id("jozef")
+			if j:
+				j.needs["zabawa"] = minf(100.0, j.needs["zabawa"] + 30.0)
+				j.needs["towarzystwo"] = minf(100.0, j.needs["towarzystwo"] + 20.0)
+				j.health = maxf(0.0, j.health - 3.0)
+			Edu.unlock("szynk")
 		"tajne_nauczanie":
 			for c in children():
 				c.needs["edukacja"] = minf(100.0, c.needs["edukacja"] + 10.0)

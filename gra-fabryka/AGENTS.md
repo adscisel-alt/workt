@@ -18,8 +18,13 @@ Ten katalog to gra **„Fabryka 1892 – Rodzina Walczaków”** (Godot 4.6 + mo
 godot --headless --path godot --import
 godot --headless --path godot res://scenes/test_run.tscn --quit-after 3000
 
-# regeneracja modeli (pip install bpy)
-python blender/generate_assets.py godot/assets/models
+# regeneracja modeli, tekstur i dźwięków (pip install bpy numpy)
+python blender/generate_assets.py godot/assets/models godot/assets/textures
+python blender/generate_audio.py godot/assets/audio
+
+# eksport (szablony Godot 4.6 w ~/.local/share/godot/export_templates/4.6.stable)
+godot --headless --path godot --export-release "Web" ../export/web/index.html
+godot --headless --path godot --export-release "Windows Desktop" ../export/windows/Fabryka1892.exe
 
 # zrzut ekranu bez monitora (Linux, xvfb)
 xvfb-run -a -s "-screen 0 1366x800x24" godot --path godot --rendering-driver opengl3 \
@@ -33,3 +38,7 @@ xvfb-run -a -s "-screen 0 1366x800x24" godot --path godot --rendering-driver ope
 - Zdarzenia fabularne mają `id` w `wiedza.json` → `events`; wywołanie `Game.request_event(id)`;
   efekty wyborów w `Game._apply_choice_effect`.
 - Sygnały zamiast bezpośrednich odwołań z `Game` do HUD.
+- Postacie: szkielet 11 kości (`hips, chest, head, upperarm/forearm.L/R, thigh/shin.L/R`), animacje
+  `idle, walk, work, sit, sleep` kluczowane w osiach świata (`Rig.rot/loc`). Nowa animacja = nowy
+  blok w `animate()` + ewentualnie `anim` w czynności katalogu.
+- Dźwięki są syntetyczne (własne, CC0) – nie dodawaj plików o niejasnej licencji.

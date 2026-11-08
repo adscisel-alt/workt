@@ -1,9 +1,13 @@
 class_name ModelLoader
-## Wczytywanie modeli GLB wygenerowanych w Blenderze, z zapasowymi bryłami,
-## gdy plik nie istnieje (projekt działa także bez uruchomienia Blendera).
+## Wczytywanie modeli GLB i tekstur z Blendera, z zapasowymi bryłami,
+## gdy plik nie istnieje. Ujednolica wygląd materiałów (miękkie cieniowanie
+## i delikatne światło krawędziowe – styl zbliżony do The Sims 3).
 
 const MODEL_DIR := "res://assets/models/"
+const TEX_DIR := "res://assets/textures/"
 static var _cache: Dictionary = {}
+static var _tex_cache: Dictionary = {}
+static var _tuned: Dictionary = {}
 
 
 static func instantiate_model(model_name: String) -> Node3D:
@@ -17,11 +21,64 @@ static func instantiate_model(model_name: String) -> Node3D:
 	if scene == null or not (scene is PackedScene):
 		return null
 	var inst := (scene as PackedScene).instantiate()
+	var root: Node3D
 	if inst is Node3D:
-		return inst as Node3D
-	var wrapper := Node3D.new()
-	wrapper.add_child(inst)
-	return wrapper
+		root = inst as Node3D
+	else:
+		root = Node3D.new()
+		root.add_child(inst)
+	_tune_materials(root)
+	return root
+
+
+## Zwraca AnimationPlayer z zaimportowanej sceny (postacie) lub null.
+static func find_animation_player(root: Node) -> AnimationPlayer:
+	if root == null:
+		return null
+	var ap := root.find_child("AnimationPlayer", true, false)
+	return ap as AnimationPlayer
+
+
+static func _tune_materials(root: Node) -> void:
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = mi.mesh
+		if mesh == null:
+			continue
+		for i in mesh.get_surface_count():
+			var m := mesh.surface_get_material(i)
+			if m is StandardMaterial3D and not _tuned.has(m.get_instance_id()):
+				_tuned[m.get_instance_id()] = true
+				var sm := m as StandardMaterial3D
+				sm.rim_enabled = true
+				sm.rim = 0.22
+				sm.rim_tint = 0.6
+				sm.specular_mode = BaseMaterial3D.SPECULAR_SCHLICK_GGX
+				sm.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+				if sm.cull_mode == BaseMaterial3D.CULL_DISABLED:
+					sm.cull_mode = BaseMaterial3D.CULL_BACK
+
+
+static func texture(name: String) -> Texture2D:
+	var path := TEX_DIR + name + ".png"
+	if not _tex_cache.has(path):
+		_tex_cache[path] = load(path) if ResourceLoader.exists(path) else null
+	return _tex_cache[path]
+
+
+## Materiał podłogi / ściany z teksturą kafelkowaną co 1 m (lub płaski kolor, gdy brak pliku).
+static func surface_material(tex_name: String, fallback: Color, uv_scale: Vector2 = Vector2.ONE, triplanar: bool = false) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.roughness = 0.9
+	var t := texture(tex_name)
+	if t:
+		m.albedo_texture = t
+		m.albedo_color = Color(1, 1, 1)
+		m.uv1_scale = Vector3(uv_scale.x, uv_scale.y, 1.0)
+		m.uv1_triplanar = triplanar
+		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	else:
+		m.albedo_color = fallback
+	return m
 
 
 static func fallback_box(size_tiles: Vector2i, color: Color, height: float = 0.8) -> Node3D:

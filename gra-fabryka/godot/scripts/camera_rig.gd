@@ -1,45 +1,53 @@
 class_name CameraRig
 extends Node3D
-## Kamera izometryczna w stylu The Sims: rzut ortogonalny, obrót co 45°, przybliżanie.
+## Kamera w stylu The Sims 3: perspektywa, swobodny obrót (prawy przycisk myszy / Q, E),
+## pochylenie, przybliżanie kółkiem, przesuwanie WSAD / strzałkami / środkowym przyciskiem.
 
-const PITCH_DEG := -32.0
-const ZOOM_MIN := 8.0
-const ZOOM_MAX := 34.0
+const ZOOM_MIN := 6.0
+const ZOOM_MAX := 45.0
+const PITCH_MIN := -70.0
+const PITCH_MAX := -18.0
 
 var camera: Camera3D
-var yaw_index: int = 1          ## 0..7 – co 45°
-var target_yaw: float = 0.0
-var zoom: float = 18.0
-var pan_speed: float = 14.0
+var pivot: Node3D
+var zoom: float = 22.0
+var yaw_deg: float = 45.0
+var pitch_deg: float = -38.0
+var pan_speed: float = 16.0
+var bounds := Rect2(0, 0, 56, 34)
+var _rotating := false
 var _dragging := false
-var bounds := Rect2(0, 0, 38, 26)
+var _target_zoom: float = 22.0
 
 
 func _ready() -> void:
-	var pivot := Node3D.new()
+	pivot = Node3D.new()
 	pivot.name = "Pitch"
-	pivot.rotation_degrees = Vector3(PITCH_DEG, 0, 0)
 	add_child(pivot)
 	camera = Camera3D.new()
-	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = zoom
-	camera.near = 0.1
-	camera.far = 200.0
-	camera.position = Vector3(0, 0, 60)
+	camera.projection = Camera3D.PROJECTION_PERSPECTIVE
+	camera.fov = 42.0
+	camera.near = 0.2
+	camera.far = 300.0
 	pivot.add_child(camera)
 	camera.current = true
-	position = Vector3(bounds.size.x * 0.5, 0, bounds.size.y * 0.55)
-	target_yaw = yaw_index * 45.0
-	rotation_degrees.y = target_yaw
+	_target_zoom = zoom
+	position = Vector3(10.0, 0.0, 17.0)
+	_apply()
+
+
+func _apply() -> void:
+	rotation_degrees.y = yaw_deg
+	pivot.rotation_degrees.x = pitch_deg
+	camera.position = Vector3(0, 0, zoom)
 
 
 func _process(delta: float) -> void:
-	# płynny obrót
-	var cur := rotation_degrees.y
-	var diff := fmod(target_yaw - cur + 540.0, 360.0) - 180.0
-	rotation_degrees.y = cur + diff * minf(1.0, delta * 8.0)
-	camera.size = lerpf(camera.size, zoom, minf(1.0, delta * 8.0))
-	# przesuwanie klawiszami
+	zoom = lerpf(zoom, _target_zoom, minf(1.0, delta * 8.0))
+	if Input.is_action_pressed("cam_rotate_left"):
+		yaw_deg += 70.0 * delta
+	if Input.is_action_pressed("cam_rotate_right"):
+		yaw_deg -= 70.0 * delta
 	var move := Vector2.ZERO
 	if Input.is_action_pressed("cam_left"):
 		move.x -= 1
@@ -50,7 +58,8 @@ func _process(delta: float) -> void:
 	if Input.is_action_pressed("cam_down"):
 		move.y += 1
 	if move != Vector2.ZERO:
-		_pan(move.normalized() * pan_speed * delta * (zoom / 18.0))
+		_pan(move.normalized() * pan_speed * delta * (zoom / 20.0))
+	_apply()
 
 
 func _pan(v: Vector2) -> void:
@@ -70,24 +79,30 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
-			zoom = clampf(zoom - 2.0, ZOOM_MIN, ZOOM_MAX)
+			_target_zoom = clampf(_target_zoom * 0.88, ZOOM_MIN, ZOOM_MAX)
 		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN and mb.pressed:
-			zoom = clampf(zoom + 2.0, ZOOM_MIN, ZOOM_MAX)
+			_target_zoom = clampf(_target_zoom * 1.14, ZOOM_MIN, ZOOM_MAX)
 		elif mb.button_index == MOUSE_BUTTON_MIDDLE:
 			_dragging = mb.pressed
-	elif event is InputEventMouseMotion and _dragging:
+		elif mb.button_index == MOUSE_BUTTON_RIGHT:
+			_rotating = mb.pressed
+	elif event is InputEventMouseMotion:
 		var mm := event as InputEventMouseMotion
-		_pan(-mm.relative * 0.02 * (zoom / 18.0))
-	elif event.is_action_pressed("cam_rotate_left"):
-		yaw_index = (yaw_index + 1) % 8
-		target_yaw = yaw_index * 45.0
-	elif event.is_action_pressed("cam_rotate_right"):
-		yaw_index = (yaw_index + 7) % 8
-		target_yaw = yaw_index * 45.0
+		if _dragging:
+			_pan(-mm.relative * 0.025 * (zoom / 20.0))
+		elif _rotating:
+			yaw_deg -= mm.relative.x * 0.3
+			pitch_deg = clampf(pitch_deg - mm.relative.y * 0.2, PITCH_MIN, PITCH_MAX)
 	elif event.is_action_pressed("cam_zoom_in"):
-		zoom = clampf(zoom - 3.0, ZOOM_MIN, ZOOM_MAX)
+		_target_zoom = clampf(_target_zoom - 3.0, ZOOM_MIN, ZOOM_MAX)
 	elif event.is_action_pressed("cam_zoom_out"):
-		zoom = clampf(zoom + 3.0, ZOOM_MIN, ZOOM_MAX)
+		_target_zoom = clampf(_target_zoom + 3.0, ZOOM_MIN, ZOOM_MAX)
+
+
+func set_zoom(z: float) -> void:
+	zoom = clampf(z, ZOOM_MIN, ZOOM_MAX)
+	_target_zoom = zoom
+	_apply()
 
 
 func focus_on(p: Vector3) -> void:

@@ -6,6 +6,8 @@ var cam: CameraRig
 var hud: Hud
 var sun: DirectionalLight3D
 var env: WorldEnvironment
+var audio: AudioManager
+var _night: bool = false
 
 var selected: Sim = null
 var mode: String = "zyj"
@@ -23,7 +25,13 @@ func _ready() -> void:
 	add_child(world)
 	cam = CameraRig.new()
 	cam.name = "CameraRig"
+	cam.bounds = Rect2(0, 0, World.W, World.H)
 	add_child(cam)
+	cam.focus_on(Vector3(9.0, 0.0, 16.0))
+	audio = AudioManager.new()
+	audio.name = "Audio"
+	add_child(audio)
+	audio.setup_world(world)
 	hud = Hud.new()
 	hud.name = "HUD"
 	hud.main = self
@@ -62,7 +70,9 @@ func _setup_lighting() -> void:
 	sun.rotation_degrees = Vector3(-50, 35, 0)
 	sun.shadow_enabled = true
 	sun.light_energy = 1.0
-	sun.directional_shadow_max_distance = 120.0
+	sun.shadow_blur = 1.5
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	sun.directional_shadow_max_distance = 90.0
 	add_child(sun)
 	env = WorldEnvironment.new()
 	var e := Environment.new()
@@ -87,12 +97,17 @@ func _update_daylight() -> void:
 	var h := Game.hour_f()
 	# jasność: noc 0.15, dzień 1.1; wschód ~5:30, zachód ~19:30 (kwiecień/maj)
 	var day_t := clampf((h - 5.0) / 2.0, 0.0, 1.0) * clampf((20.5 - h) / 2.0, 0.0, 1.0)
-	sun.light_energy = lerpf(0.12, 1.0, day_t)
+	sun.light_energy = lerpf(0.3, 1.0, day_t)
+	var night := day_t < 0.5
+	if night != _night:
+		_night = night
+		world.set_night(night)
 	sun.light_color = Color(1.0, 0.93, 0.82).lerp(Color(0.5, 0.6, 0.9), 1.0 - day_t)
 	sun.rotation_degrees.x = lerpf(-15.0, -55.0, sin(clampf((h - 5.0) / 15.0, 0.0, 1.0) * PI))
 	var e := env.environment
-	e.ambient_light_energy = lerpf(0.25, 0.55, day_t)
-	e.background_color = Color(0.08, 0.09, 0.14).lerp(Color(0.55, 0.60, 0.66), day_t)
+	e.ambient_light_energy = lerpf(0.4, 0.55, day_t)
+	e.ambient_light_color = Color(0.45, 0.5, 0.75).lerp(Color(0.72, 0.76, 0.85), day_t)
+	e.background_color = Color(0.08, 0.09, 0.14).lerp(Color(0.47, 0.53, 0.60), day_t)
 	# dym fabryczny: mgła gęstsza w godzinach pracy
 	var working := h >= 6.0 and h < 19.0 and not Game.is_sunday() and not Game.strike_active
 	e.fog_density = 0.0011 if working else 0.0005
