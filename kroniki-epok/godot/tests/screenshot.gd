@@ -1,7 +1,7 @@
 extends Node
 ## Zrzut ekranu gry po kilku sekundach (do dokumentacji / szybkiej kontroli wizualnej).
 ##   xvfb-run -s "-screen 0 1280x720x24" godot --path godot --rendering-driver opengl3 res://tests/screenshot.tscn
-## Ścieżka wyjściowa: zmienna środowiskowa SCREENSHOT_PATH (domyślnie user://zrzut.png).
+## Ścieżka wyjściowa: zmienna środowiskowa SCREENSHOT_PATH (domyślnie user://zrzut.png); SCREENSHOT_ZOOM (np. 2) zbliża kamerę.
 
 var main: Node2D
 
@@ -27,6 +27,10 @@ func _ready() -> void:
 	main._set_selection([vils[0], vils[1], vils[2]])
 	var tc: Building = world.find_first(func(e: Entity) -> bool: return e is Building and e.kind == "centrum" and e.team == 0)
 	tc.enqueue("osadnik")
+	var zoom := OS.get_environment("SCREENSHOT_ZOOM").to_float()
+	if zoom > 0.0:
+		main.cam.zoom = Vector2(zoom, zoom)
+		main.cam.position = tc.position + Vector2(60, 40)
 	Engine.time_scale = 6.0
 	var t0 := Time.get_ticks_msec()
 	while Time.get_ticks_msec() - t0 < 2500:

@@ -78,7 +78,9 @@ def build_rig(scene, frame_px, anchor):
     scene.collection.objects.link(sun)
     sun.parent = rig
     # kierunek światła w układzie świata (dla rigu w pozycji bazowej): w lewo-górę ekranu = -X świata, z góry
-    light_dir = Vector((1.0, 0.15, -1.3)).normalized()   # wektor, wzdłuż którego biegnie światło
+    # światło biegnie w stronę (+X, +Y, w dół): pada z lewej-góry ekranu, oświetla lewą (frontową) ścianę,
+    # a cienie kładą się w prawo i lekko w dół, jak w AoE2
+    light_dir = Vector((0.8, 0.6, -1.1)).normalized()
     sun.rotation_euler = light_dir.to_track_quat("-Z", "Y").to_euler()
     sun.location = (0, 0, 10)
     # delikatne światło wypełniające, by cienie nie były czarne

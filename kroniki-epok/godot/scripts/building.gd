@@ -62,14 +62,43 @@ func trains() -> Array:
 	return def.get("szkoli", [])
 
 
+func _ready() -> void:
+	super._ready()
+	_update_construction_visual()
+
+
 func add_progress(work: float) -> void:
 	if built:
 		return
 	progress += work
 	hp = minf(max_hp, max_hp * (0.1 + 0.9 * progress / build_time))
+	_update_construction_visual()
 	queue_redraw()
 	if progress >= build_time:
 		_complete()
+
+
+## Sprite nieukończonego budynku jest przycięty od dołu proporcjonalnie do postępu i lekko przyciemniony.
+func _update_construction_visual() -> void:
+	if sprite == null or sprite.texture == null:
+		return
+	if built:
+		sprite.region_enabled = false
+		sprite.modulate = Color.WHITE
+		var sheet := SpriteLib.get_sheet(kind, anim_name if anim_name != "" else "idle")
+		if not sheet.is_empty():
+			var origin: Array = sheet["meta"].get("origin", [0, 0])
+			sprite.offset = Vector2(-float(origin[0]), -float(origin[1]))
+		return
+	var size_px: Vector2 = sprite.texture.get_size()
+	var ratio := clampf(0.08 + 0.92 * build_ratio(), 0.0, 1.0)
+	var cut := floorf(size_px.y * (1.0 - ratio))
+	sprite.region_enabled = true
+	sprite.region_rect = Rect2(0, cut, size_px.x, size_px.y - cut)
+	var sheet := SpriteLib.get_sheet(kind, "idle")
+	var origin: Array = sheet["meta"].get("origin", [0, 0]) if not sheet.is_empty() else [0, 0]
+	sprite.offset = Vector2(-float(origin[0]), -float(origin[1]) + cut)
+	sprite.modulate = Color(0.85, 0.8, 0.7)
 
 
 func build_ratio() -> float:
@@ -79,6 +108,7 @@ func build_ratio() -> float:
 func _complete() -> void:
 	built = true
 	hp = max_hp
+	_update_construction_visual()
 	if team == 0:
 		GameState.set_pop_cap_delta(int(def.get("pop_bonus", 0)))
 		GameState.on_building_completed(kind)

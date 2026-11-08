@@ -1,0 +1,12 @@
+{
+ "frame_w": 96,
+ "frame_h": 96,
+ "frames": 1,
+ "directions": 1,
+ "fps": 10,
+ "origin": [
+  48.0,
+  77
+ ],
+ "player_color": false
+}
