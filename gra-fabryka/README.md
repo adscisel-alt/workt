@@ -14,6 +14,7 @@ i bractwa trzeźwości, targ, „miasto czterech kultur”, **bunt łódzki 1892
 ![Noc w famule – lampa naftowa i śpiąca rodzina](docs/zrzut_noc.png)
 ![Twarze z teksturą, stroje robocze](docs/zrzut_twarze.png)
 ![Niedziela – odświętne stroje w kościele](docs/zrzut_niedziela.png)
+![Ulica: szkoła, sklep, szynk i przechodnie](docs/zrzut_ulica.png)
 
 *(zrzuty z programowego renderowania bez karty graficznej – `tests/screenshot.gd`)*
 
