@@ -197,6 +197,15 @@ npm test          # test e2e (Playwright): pełny przepływ + walidacja pliku .d
   Po wyczyszczeniu danych przeglądarki zostaną usunięte — eksportuj protokół do `.docx`,
   aby zachować kopię.
 
+## Gra „Fabryka 1892 – Rodzina Walczaków” (Godot + Blender)
+
+W katalogu [`gra-fabryka/`](gra-fabryka/README.md) znajduje się osobny projekt: gra symulacyjna
+w stylu The Sims o życiu rodziny robotniczej w XIX-wiecznej Łodzi, z kartami wiedzy, quizem
+i decyzjami historycznymi (praca dzieci, Factory Acts, bunt łódzki 1892). Modele 3D generuje
+skrypt Blendera (`gra-fabryka/blender/`), gra działa w Godot 4.6 (`gra-fabryka/godot/`).
+Instrukcja uruchomienia, pipeline i lista materiałów potrzebnych do dopracowania grafiki –
+w README tego katalogu.
+
 ## Gry historyczne — osobne repozytorium
 
 Grywalne osie czasu i Forum Romanum zostały przeniesione do repozytorium

@@ -1,0 +1,37 @@
+; Engine configuration file.
+; Projekt Godot 4.6 – „Fabryka 1892 – Rodzina Walczaków”
+
+config_version=5
+
+[application]
+
+config/name="Fabryka 1892 – Rodzina Walczaków"
+config/description="Gra symulacyjna w stylu The Sims o życiu rodziny robotniczej w XIX-wiecznej Łodzi, z wątkami edukacyjnymi."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.6", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Game="*res://scripts/game_state.gd"
+Edu="*res://scripts/education.gd"
+
+[display]
+
+window/size/viewport_width=1366
+window/size/viewport_height=800
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[gui]
+
+theme/default_font_antialiasing=1
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=2
+anti_aliasing/quality/msaa_3d=2
+textures/vram_compression/import_etc2_astc=true

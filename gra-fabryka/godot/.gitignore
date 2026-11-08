@@ -1,0 +1,4 @@
+# Godot 4 – katalog roboczy edytora (cache importu); regeneruje się automatycznie
+.godot/
+*.import.tmp
+export/
