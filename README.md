@@ -197,17 +197,13 @@ npm test          # test e2e (Playwright): pełny przepływ + walidacja pliku .d
   Po wyczyszczeniu danych przeglądarki zostaną usunięte — eksportuj protokół do `.docx`,
   aby zachować kopię.
 
-## Gra „Fabryka 1892 – Rodzina Walczaków” (Godot + Blender)
+## Gra „Fabryka 1892 – Rodzina Walczaków” — osobne repozytorium
 
-W katalogu [`gra-fabryka/`](gra-fabryka/README.md) znajduje się osobny projekt: gra symulacyjna
-w stylu The Sims o życiu rodziny robotniczej w XIX-wiecznej Łodzi, z kartami wiedzy, quizem
-i decyzjami historycznymi (praca dzieci, Factory Acts, bunt łódzki 1892). Modele 3D, postacie
-ze szkieletem i tekstury generuje skrypt Blendera (`gra-fabryka/blender/`), gra działa w Godot 4.6
-(`gra-fabryka/godot/`). Gra jest projektem **niezależnym od aplikacji protokołów**: nie wchodzi do
-jej wdrożenia na GitHub Pages, a paczki na Windows i do przeglądarki powstają w osobnym workflow
-**Build game (Fabryka 1892)** (artefakty w Actions, Release po tagu `gra-v*`). Instrukcja
-uruchomienia, pipeline i lista materiałów potrzebnych do dopracowania grafiki – w README tego
-katalogu.
+Gra symulacyjna w stylu The Sims o życiu rodziny robotniczej w XIX-wiecznej Łodzi (Godot 4.6 +
+Blender, wątki edukacyjne) powstała w tym repozytorium, ale jest projektem niezależnym i została
+przeniesiona do [adscisel-alt/fabryka-1892](https://github.com/adscisel-alt/fabryka-1892).
+Wersja przeglądarkowa: https://adscisel-alt.github.io/fabryka-1892/ — ten adres (workt) serwuje
+wyłącznie aplikację protokołów.
 
 ## Gry historyczne — osobne repozytorium
 
