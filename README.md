@@ -203,10 +203,11 @@ W katalogu [`gra-fabryka/`](gra-fabryka/README.md) znajduje się osobny projekt:
 w stylu The Sims o życiu rodziny robotniczej w XIX-wiecznej Łodzi, z kartami wiedzy, quizem
 i decyzjami historycznymi (praca dzieci, Factory Acts, bunt łódzki 1892). Modele 3D, postacie
 ze szkieletem i tekstury generuje skrypt Blendera (`gra-fabryka/blender/`), gra działa w Godot 4.6
-(`gra-fabryka/godot/`). Wersja przeglądarkowa jest publikowana razem z tą aplikacją pod adresem
-https://adscisel-alt.github.io/workt/gra/, a paczka na Windows powstaje w workflow
-**Build game (Fabryka 1892)**. Instrukcja uruchomienia, pipeline i lista materiałów potrzebnych do
-dopracowania grafiki – w README tego katalogu.
+(`gra-fabryka/godot/`). Gra jest projektem **niezależnym od aplikacji protokołów**: nie wchodzi do
+jej wdrożenia na GitHub Pages, a paczki na Windows i do przeglądarki powstają w osobnym workflow
+**Build game (Fabryka 1892)** (artefakty w Actions, Release po tagu `gra-v*`). Instrukcja
+uruchomienia, pipeline i lista materiałów potrzebnych do dopracowania grafiki – w README tego
+katalogu.
 
 ## Gry historyczne — osobne repozytorium
 

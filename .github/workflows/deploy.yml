@@ -8,7 +8,6 @@ on:
       - main
       - master
       - claude/protocol-app-images-voice-liqxx7
-      - claude/upbeat-heisenberg-3v0vbj
   workflow_dispatch:
 
 permissions:
@@ -24,8 +23,6 @@ concurrency:
 env:
   # Aplikacja jest serwowana z podkatalogu /workt/ (https://<user>.github.io/workt/)
   VITE_BASE: /workt/
-  # Wersja Godota do eksportu gry „Fabryka 1892” (https://<user>.github.io/workt/gra/)
-  GODOT_VERSION: "4.6"
   # Nie pobieraj przeglądarek Playwright podczas instalacji (CI tylko buduje)
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
 
@@ -47,37 +44,6 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      # --- Gra „Fabryka 1892” (Godot 4.6) → dist/gra/ ---
-      - name: Cache Godot + export templates
-        id: godot-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/godot
-            ~/.local/share/godot/export_templates
-          key: godot-${{ env.GODOT_VERSION }}-templates
-
-      - name: Download Godot and export templates
-        if: steps.godot-cache.outputs.cache-hit != 'true'
-        run: |
-          set -e
-          mkdir -p ~/godot ~/.local/share/godot/export_templates
-          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
-          unzip -q godot.zip -d ~/godot
-          mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
-          chmod +x ~/godot/godot
-          curl -sSL -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
-          unzip -q templates.tpz -d /tmp/templates
-          mv /tmp/templates/templates ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
-
-      - name: Export game for Web
-        run: |
-          set -e
-          ~/godot/godot --headless --path gra-fabryka/godot --import || true
-          mkdir -p dist/gra
-          ~/godot/godot --headless --path gra-fabryka/godot --export-release "Web" "$PWD/dist/gra/index.html"
-          ls -la dist/gra
 
       - name: Setup Pages (auto-enable)
         uses: actions/configure-pages@v5

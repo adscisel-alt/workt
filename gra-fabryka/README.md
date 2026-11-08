@@ -22,8 +22,7 @@ i bractwa trzeźwości, targ, „miasto czterech kultur”, **bunt łódzki 1892
 
 | Sposób | Co zrobić |
 |---|---|
-| **W przeglądarce** | po wdrożeniu GitHub Pages gra jest pod adresem `https://adscisel-alt.github.io/workt/gra/` (workflow `deploy.yml` eksportuje ją obok aplikacji protokołów) |
-| **Windows** | pobierz `Fabryka1892-windows.zip` z zakładki **Actions → Build game (Fabryka 1892) → Artifacts** (lub z **Releases** po oznaczeniu tagu `gra-v1.0`), rozpakuj i uruchom `Fabryka1892.exe` (jeden plik, ~110 MB, bez instalacji; SmartScreen może wymagać „Uruchom mimo to”, bo plik nie jest podpisany) |
+| **W przeglądarce** | pobierz `Fabryka1892-web.zip` z zakładki **Actions → Build game (Fabryka 1892) → Artifacts** (lub z **Releases**), rozpakuj i uruchom lokalny serwer HTTP w rozpakowanym katalogu, np. `python -m http.server 8080`, potem otwórz http://localhost:8080. Aby wystawić grę publicznie, załóż osobne repozytorium (np. `fabryka-1892`) i wgraj tam zawartość paczki na gałąź `gh-pages` – patrz niżej „Publikacja w przeglądarce”. Gra **nie** jest częścią aplikacji protokołów i nie korzysta z jej GitHub Pages. |
 | **Z edytora** | Godot 4.6 → Import → `gra-fabryka/godot/project.godot` → F5 |
 
 Projekt składa się z trzech warstw narzędziowych, o które prosiłeś:
@@ -163,13 +162,26 @@ godot --headless --path gra-fabryka/godot --export-release "Web" ../export/web/i
 godot --headless --path gra-fabryka/godot --export-release "Windows Desktop" ../export/windows/Fabryka1892.exe
 ```
 
-- Preset **Web** ma wyłączoną obsługę wątków (`thread_support=false`), więc działa na GitHub
-  Pages bez nagłówków COOP/COEP. Workflow `.github/workflows/deploy.yml` kopiuje eksport do
-  `dist/gra/` i publikuje razem z aplikacją protokołów; service worker aplikacji omija ścieżkę
-  `/gra/` (`navigateFallbackDenylist` w `vite.config.js`).
+- Preset **Web** ma wyłączoną obsługę wątków (`thread_support=false`), więc działa na zwykłym
+  hostingu statycznym (GitHub Pages, dowolny serwer HTTP) bez nagłówków COOP/COEP.
 - Workflow `.github/workflows/build-game.yml` po każdej zmianie w `gra-fabryka/` uruchamia test
   symulacji, eksportuje grę na Windows i do przeglądarki i wystawia paczki jako artefakty; tag
-  `gra-v*` tworzy Release.
+  `gra-v*` tworzy Release. Workflow nie dotyka aplikacji protokołów ani jej wdrożenia.
+
+### Publikacja w przeglądarce (osobne repozytorium)
+
+Gra jest niezależnym projektem, więc jej wersja przeglądarkowa powinna mieć własną stronę,
+tak jak „gry historyczne” w repozytorium `gry-historyczne`:
+
+1. Utwórz na GitHubie puste repozytorium, np. `adscisel-alt/fabryka-1892`.
+2. Pobierz `Fabryka1892-web.zip` z artefaktów lub Release i rozpakuj.
+3. Wgraj zawartość katalogu `web/` do nowego repozytorium (gałąź `main`) i w **Settings → Pages**
+   wybierz „Deploy from a branch” → `main` → `/ (root)`.
+4. Gra będzie pod `https://adscisel-alt.github.io/fabryka-1892/`.
+
+Jeśli wolisz pełną automatyzację, mogę przenieść cały katalog `gra-fabryka/` do tego nowego
+repozytorium razem z workflow, który sam publikuje wersję Web na Pages po każdym pushu –
+wystarczy, że repozytorium powstanie i dostanę do niego dostęp.
 
 ### Testy automatyczne
 

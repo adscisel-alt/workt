@@ -6,4 +6,4 @@ description: Eksportuje grę do przeglądarki i na Windows (wymaga szablonów ek
 3. `godot --headless --path gra-fabryka/godot --export-release "Web" ../export/web/index.html`
 4. `godot --headless --path gra-fabryka/godot --export-release "Windows Desktop" ../export/windows/Fabryka1892.exe`
 5. Wersję Web sprawdź lokalnie: `python -m http.server -d gra-fabryka/export/web 8080` i otwórz http://localhost:8080 (preset bez wątków, nie wymaga COOP/COEP).
-6. W CI to samo robi `.github/workflows/build-game.yml` (artefakty) i `deploy.yml` (GitHub Pages, ścieżka /gra/).
+6. W CI to samo robi `.github/workflows/build-game.yml` (artefakty, Release po tagu `gra-v*`). Gra nie jest wdrażana razem z aplikacją protokołów – publikację Web zrób w osobnym repozytorium (README, sekcja „Publikacja w przeglądarce”).
