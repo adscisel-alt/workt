@@ -148,10 +148,10 @@ func _build() -> void:
 	tr.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	tr.position = Vector2(-10, 10)
 	tr.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	tr.add_child(_button("📖 Karty wiedzy", _show_knowledge))
-	tr.add_child(_button("🔤 Słowniczek", _show_glossary))
-	tr.add_child(_button("🧱 Ściany (H)", func(): walls_toggle_requested.emit()))
-	tr.add_child(_button("❔ Pomoc", _show_help))
+	tr.add_child(_button("Karty wiedzy", _show_knowledge))
+	tr.add_child(_button("Słowniczek", _show_glossary))
+	tr.add_child(_button("Ściany (H)", func(): walls_toggle_requested.emit()))
+	tr.add_child(_button("Pomoc", _show_help))
 	root.add_child(tr)
 
 	# --- dolny panel ---
@@ -173,7 +173,7 @@ func _build() -> void:
 	var sp := HBoxContainer.new()
 	left.add_child(sp)
 	for i in range(4):
-		var txt: String = ["⏸", "▶", "▶▶", "▶▶▶"][i]
+		var txt: String = ["II", ">", ">>", ">>>"][i]
 		var b := _button(txt, func(): Game.set_speed(i), 16)
 		b.toggle_mode = true
 		sp.add_child(b)
@@ -181,7 +181,7 @@ func _build() -> void:
 	left.add_child(_label("Tryb", 12, C_GOLD))
 	var mb := HBoxContainer.new()
 	left.add_child(mb)
-	for m in [["zyj", "🏠 Żyj"], ["kup", "🛒 Kup"]]:
+	for m in [["zyj", "Żyj"], ["kup", "Kup"]]:
 		var b := _button(m[1], func(): mode_requested.emit(m[0]), 15)
 		b.toggle_mode = true
 		mb.add_child(b)
@@ -289,8 +289,8 @@ func _build() -> void:
 # Odświeżanie
 # ---------------------------------------------------------------------------
 func _refresh_top() -> void:
-	lbl_money.text = "💰 " + Game.money_text()
-	lbl_food.text = "🍞 Zapasy jedzenia: %d porcji" % Game.food
+	lbl_money.text = "Kasa: " + Game.money_text()
+	lbl_food.text = "Zapasy jedzenia: %d porcji" % Game.food
 	if Game.money < 0:
 		lbl_money.add_theme_color_override("font_color", Color(1, 0.4, 0.4))
 	else:
@@ -362,7 +362,7 @@ func _refresh_needs() -> void:
 	info += "\nRelacje: " + ", ".join(rel)
 	lbl_sim_info.text = info
 	var hc := Color(0.3, 0.9, 0.3) if selected.health > 50 else Color(1, 0.5, 0.3)
-	lbl_health.text = "❤ Zdrowie: %d%%%s · Zarobione w tym tygodniu: %s" % [
+	lbl_health.text = "Zdrowie: %d%%%s · Zarobione w tym tygodniu: %s" % [
 		int(selected.health), " (CHORY)" if selected.sick else "", Catalog.price_text(int(maxf(0.0, selected.wages_owed)))]
 	lbl_health.add_theme_color_override("font_color", hc)
 
@@ -376,7 +376,7 @@ func _refresh_queue() -> void:
 	if labels.is_empty():
 		queue_box.add_child(_label("(wolny – zajmie się sam sobą)", 12, Color(0.7, 0.7, 0.7)))
 	for i in range(labels.size()):
-		var b := _button(("▶ " if i == 0 else "• ") + labels[i], func(): selected.cancel_queue_item(i), 12)
+		var b := _button(("> " if i == 0 else "- ") + labels[i], func(): selected.cancel_queue_item(i), 12)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		queue_box.add_child(b)
 
@@ -507,7 +507,7 @@ func _fact_card(fact_id: String) -> Control:
 	var p := _panel(Color(0.22, 0.26, 0.20, 0.95))
 	var v := VBoxContainer.new()
 	p.add_child(v)
-	v.add_child(_label("📜 Karta wiedzy: " + f["title"], 15, Color(0.75, 0.9, 0.7)))
+	v.add_child(_label("Karta wiedzy: " + f["title"], 15, Color(0.75, 0.9, 0.7)))
 	v.add_child(_text_block(f["text"], 14))
 	return p
 
@@ -570,7 +570,7 @@ func _on_fact_unlocked(id: String, fact: Dictionary) -> void:
 	# karty odkryte przez zdarzenie są pokazywane w jego oknie; pozostałe jako powiadomienie
 	if _modal_open:
 		return
-	Game.say("Nowa karta wiedzy: „%s” (📖 Karty wiedzy)." % fact["title"], "info")
+	Game.say("Nowa karta wiedzy: „%s” (przycisk Karty wiedzy)." % fact["title"], "info")
 
 
 func _on_quiz(sim: Sim) -> void:
@@ -596,10 +596,10 @@ func _on_quiz(sim: Sim) -> void:
 			var ok := Edu.answer(q, i)
 			if ok:
 				sim.needs["edukacja"] = clampf(sim.needs["edukacja"] + 4.0, 0.0, 100.0)
-				result.text = "✔ Dobrze! %s zapamięta to na długo (edukacja +4)." % sim.sim_name
+				result.text = "Dobrze! %s zapamięta to na długo (edukacja +4)." % sim.sim_name
 				result.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5))
 			else:
-				result.text = "✘ Niestety. Poprawna odpowiedź: %s" % q["a"][int(q["correct"])]
+				result.text = "Niestety. Poprawna odpowiedź: %s" % q["a"][int(q["correct"])]
 				result.add_theme_color_override("font_color", Color(1.0, 0.6, 0.5))
 			if panel_ref.size() > 0:
 				var card := _fact_card(String(q.get("fact", "")))
@@ -663,7 +663,7 @@ func _show_knowledge() -> void:
 			v.add_child(_fact_card(id))
 		else:
 			var p := _panel(Color(0.12, 0.12, 0.12, 0.8))
-			p.add_child(_label("🔒 %s – odkryj przez decyzje, pracę, szkołę lub quiz" % f["title"], 13, Color(0.6, 0.6, 0.6)))
+			p.add_child(_label("[zamknięte] %s – odkryj przez decyzje, pracę, szkołę lub quiz" % f["title"], 13, Color(0.6, 0.6, 0.6)))
 			v.add_child(p)
 	_modal("Karty wiedzy – życie w XIX-wiecznej Łodzi", scroll, [["Zamknij", func(): pass]], 760)
 
