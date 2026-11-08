@@ -5,11 +5,14 @@ name: Build game (Fabryka 1892)
 # Tag w formacie gra-v1.0 publikuje dodatkowo Release z paczkami do pobrania.
 on:
   push:
+    # bez wpisu "branches" workflow uruchamiałby się tylko dla tagów
+    branches:
+      - "**"
+    tags:
+      - "gra-v*"
     paths:
       - "gra-fabryka/**"
       - ".github/workflows/build-game.yml"
-    tags:
-      - "gra-v*"
   workflow_dispatch:
 
 permissions:
