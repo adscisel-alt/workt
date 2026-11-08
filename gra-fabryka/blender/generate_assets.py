@@ -74,6 +74,10 @@ PAL = {
     "sutanna": (0.08, 0.08, 0.09),
     "surdut": (0.16, 0.16, 0.20),
     "cylinder": (0.1, 0.1, 0.1),
+    "sukienka_swieto": (0.20, 0.27, 0.40),
+    "kokarda": (0.78, 0.18, 0.28),
+    "szelki": (0.26, 0.18, 0.12),
+    "pasek": (0.17, 0.11, 0.07),
 }
 
 ## Materiały, które dostają teksturę zamiast płaskiego koloru: nazwa → (generator, parametry)
@@ -99,6 +103,7 @@ TEXTURED = {
     "sutanna": ("fabric", {}),
     "surdut": ("fabric", {}),
     "chustka": ("fabric", {"stripes": True}),
+    "sukienka_swieto": ("fabric", {}),
 }
 
 ## Tekstury podłóg/ścian używane bezpośrednio przez Godot (nazwa pliku → generator, kolor)
@@ -718,7 +723,127 @@ def kosz():
 
 
 # ---------------------------------------------------------------------------
-# Postacie ze szkieletem i animacjami
+# Twarze – tekstury proceduralne (oczy, brwi, usta, wąsy, broda, okulary, piegi)
+# ---------------------------------------------------------------------------
+def _ellipse(size, cx, cy, rx, ry):
+    y, x = np.mgrid[0:size, 0:size].astype(np.float32)
+    return ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1.0
+
+
+def _blend(px, mask, color, alpha=1.0):
+    col = np.array(color, dtype=np.float32)
+    m = (mask.astype(np.float32) * alpha)[..., None]
+    px[...] = px * (1 - m) + col[None, None, :] * m
+
+
+def make_face(name, skin, iris=(0.35, 0.22, 0.12), brwi=(0.2, 0.13, 0.08), wasy=False, broda=False,
+              okulary=False, piegi=False, usmiech=True, rumience=True, zmarszczki=False, wlosy=None):
+    """Tekstura twarzy 256×256 mapowana walcowo na głowę (przód twarzy w u = 0.5, v rośnie ku górze)."""
+    if name in _materials:
+        return name
+    s = TEX_SIZE
+    rng = np.random.default_rng(abs(hash(name)) % 100000)
+    base = np.array(skin, dtype=np.float32)
+    n = _noise(s, 10, 3)
+    px = np.clip(base[None, None, :] * (0.96 + (n[..., None] - 0.5) * 0.08), 0, 1)
+    y, x = np.mgrid[0:s, 0:s].astype(np.float32)
+    cx = s * 0.5
+    ey = s * 0.58          # wysokość oczu
+    dx = s * 0.056         # odległość oczu od osi
+    hair = np.array(wlosy if wlosy else brwi, dtype=np.float32)
+    # rumieńce
+    if rumience:
+        for sx in (-1, 1):
+            _blend(px, _ellipse(s, cx + sx * s * 0.11, s * 0.47, s * 0.05, s * 0.03), (0.85, 0.45, 0.4), 0.18)
+    # oczy
+    for sx in (-1, 1):
+        ex = cx + sx * dx
+        _blend(px, _ellipse(s, ex, ey, s * 0.034, s * 0.021), (0.97, 0.97, 0.95))
+        _blend(px, _ellipse(s, ex, ey, s * 0.016, s * 0.016), iris)
+        _blend(px, _ellipse(s, ex, ey, s * 0.0075, s * 0.0075), (0.05, 0.04, 0.04))
+        _blend(px, _ellipse(s, ex + s * 0.006, ey + s * 0.006, s * 0.004, s * 0.004), (1, 1, 1), 0.9)
+        # powieka górna – cienka linia
+        _blend(px, _ellipse(s, ex, ey + s * 0.019, s * 0.036, s * 0.004), (0.3, 0.2, 0.15), 0.6)
+        # brwi (łuk: elipsa minus elipsa przesunięta w dół)
+        brow = _ellipse(s, ex, ey + s * 0.055, s * 0.04, s * 0.014) & ~_ellipse(s, ex, ey + s * 0.045, s * 0.04, s * 0.014)
+        _blend(px, brow, brwi, 0.95)
+    # nos – delikatny cień
+    _blend(px, _ellipse(s, cx, s * 0.50, s * 0.012, s * 0.02), (0.6, 0.4, 0.3), 0.25)
+    # usta
+    my = s * 0.41
+    if usmiech:
+        mouth = _ellipse(s, cx, my + s * 0.012, s * 0.045, s * 0.025) & ~_ellipse(s, cx, my + s * 0.024, s * 0.05, s * 0.028)
+    else:
+        mouth = _ellipse(s, cx, my, s * 0.04, s * 0.006)
+    _blend(px, mouth, (0.62, 0.3, 0.28), 0.9)
+    if wasy:
+        for sx in (-1, 1):
+            _blend(px, _ellipse(s, cx + sx * s * 0.03, my + s * 0.035, s * 0.045, s * 0.013), hair, 0.95)
+    if broda:
+        beard = (y < my - s * 0.02) & (np.abs(x - cx) < s * 0.11 + (my - y) * 0.15) & (y > s * 0.2)
+        _blend(px, beard, hair, 0.85)
+        _blend(px, _ellipse(s, cx, my - s * 0.08, s * 0.1, s * 0.05), hair, 0.6)
+    if okulary:
+        for sx in (-1, 1):
+            ex = cx + sx * dx
+            ring = _ellipse(s, ex, ey, s * 0.045, s * 0.032) & ~_ellipse(s, ex, ey, s * 0.038, s * 0.026)
+            _blend(px, ring, (0.15, 0.13, 0.1))
+        bridge = (np.abs(y - ey) < s * 0.004) & (np.abs(x - cx) < dx - s * 0.03)
+        _blend(px, bridge, (0.15, 0.13, 0.1))
+    if piegi:
+        for _ in range(26):
+            fx = cx + rng.uniform(-0.14, 0.14) * s
+            fy = s * 0.47 + rng.uniform(-0.03, 0.04) * s
+            _blend(px, _ellipse(s, fx, fy, s * 0.005, s * 0.005), (0.6, 0.38, 0.25), 0.5)
+    if zmarszczki:
+        for sx in (-1, 1):
+            for k in range(2):
+                ex = cx + sx * (dx + s * 0.05 + k * s * 0.012)
+                _blend(px, _ellipse(s, ex, ey - s * 0.01 * k, s * 0.004, s * 0.03), (0.55, 0.38, 0.3), 0.35)
+    rgba = np.concatenate([px, np.ones((s, s, 1), dtype=np.float32)], axis=2)
+    img = bpy.data.images.new("tex_" + name, s, s, alpha=False)
+    img.pixels.foreach_set(np.ascontiguousarray(rgba, dtype=np.float32).ravel())
+    if TEX_DIR:
+        img.filepath_raw = os.path.join(TEX_DIR, "tex_" + name + ".png")
+        img.file_format = "PNG"
+        img.save()
+    img.pack()
+    m = bpy.data.materials.new("M_" + name)
+    m.use_nodes = True
+    nodes = m.node_tree.nodes
+    bsdf = nodes.get("Principled BSDF")
+    bsdf.inputs["Roughness"].default_value = 0.65
+    tex = nodes.new("ShaderNodeTexImage")
+    tex.image = img
+    m.node_tree.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    _materials[name] = m
+    return name
+
+
+def face_uv(obj, mat_name, center, radius):
+    """UV walcowe dla wielokątów o materiale twarzy: przód (-Y) w u = 0.5."""
+    me = obj.data
+    uv = me.uv_layers.active.data
+    slot = -1
+    for i, m in enumerate(me.materials):
+        if m and m.name == "M_" + mat_name:
+            slot = i
+    if slot < 0:
+        return
+    cx, cy, cz = center
+    mw = obj.matrix_world
+    for poly in me.polygons:
+        if poly.material_index != slot:
+            continue
+        for li in poly.loop_indices:
+            co = mw @ me.vertices[me.loops[li].vertex_index].co   # współrzędne świata (origin obiektu = pierwsza część)
+            u = 0.5 + math.atan2(co.x - cx, -(co.y - cy)) / (2 * math.pi)
+            v = 0.5 + (co.z - cz) / (2.0 * radius) * 0.85
+            uv[li].uv = (u, v)
+
+
+# ---------------------------------------------------------------------------
+# Postacie ze szkieletem, teksturowaną twarzą, strojami z epoki i animacjami
 # ---------------------------------------------------------------------------
 def make_armature(name, bones):
     arm = bpy.data.armatures.new(name + "_armature")
@@ -791,7 +916,7 @@ def _push_nla(arm_obj, action, name, length):
 
 
 def animate(arm_obj, h):
-    """Zestaw animacji: idle, walk, work, sit, sleep. h – wzrost (skaluje przesunięcia)."""
+    """Zestaw animacji: idle, walk, work, sit, sleep, talk, eat. h – wzrost (skaluje przesunięcia)."""
     rig = Rig(arm_obj)
     s = h / 1.75
 
@@ -860,10 +985,41 @@ def animate(arm_obj, h):
         rig.rot("chest", f, rx=-1.5 * k)
     _push_nla(arm_obj, a, "sleep", 49)
 
+    # talk: gestykulacja i kiwanie głową
+    a = _new_action(arm_obj, "talk")
+    rig.reset(1)
+    for i, f in enumerate((1, 13, 25, 37, 49)):
+        ph = i * math.pi / 2
+        sw = math.sin(ph)
+        rig.rot("head", f, rx=-4 * sw, rz=6 * math.cos(ph))
+        rig.rot("upperarm.R", f, rx=-35 - 15 * sw, rz=15)
+        rig.rot("forearm.R", f, rx=-70 + 20 * sw)
+        rig.rot("upperarm.L", f, rx=-10 + 5 * sw)
+        rig.rot("forearm.L", f, rx=-25)
+        rig.rot("chest", f, rz=-3 * sw)
+    _push_nla(arm_obj, a, "talk", 49)
 
-def postac(name, height, ubranie, wlosy, skora="skora", czapka=None, kapelusz=None, kamizelka=False,
-           fartuch=False, spodnica=False, chustka=False, warkocze=False, sutanna=False, broda=False):
-    """Proporcjonalna postać (ok. 7 głów) z rigiem. Przód = -Y."""
+    # eat: siedzenie z łyżką do ust
+    a = _new_action(arm_obj, "eat")
+    rig.reset(1)
+    for i, f in enumerate((1, 13, 25, 37, 49)):
+        ph = i * math.pi / 2
+        sw = 0.5 + 0.5 * math.sin(ph)
+        rig.rot("chest", f, rx=-8)
+        rig.rot("head", f, rx=-10 * sw)
+        rig.rot("upperarm.R", f, rx=-30 - 25 * sw)
+        rig.rot("forearm.R", f, rx=-60 - 60 * sw)
+        rig.rot("upperarm.L", f, rx=-25)
+        rig.rot("forearm.L", f, rx=-70)
+    _push_nla(arm_obj, a, "eat", 49)
+
+
+def postac(name, height, ubranie, wlosy, skora="skora", spodnie=None, czapka=None, kapelusz=None,
+           melonik=None, kamizelka=None, fartuch=False, spodnica=False, chustka=False, warkocze=False,
+           sutanna=False, kolnierz=False, koloratka=False, guziki=False, pasek=False, szelki=False,
+           muszka=False, krawat=False, marynarka=None, chusta=None, kokarda=None, kok=False,
+           ponczochy=None, buty_wysokie=False, face=None):
+    """Proporcjonalna postać (ok. 7 głów) z rigiem. Przód = -Y. face – parametry make_face."""
     s = height / 1.75
     head_r = 0.115 * (s ** 0.75)
     z_hip = 0.92 * s
@@ -877,6 +1033,12 @@ def postac(name, height, ubranie, wlosy, skora="skora", czapka=None, kapelusz=No
     z_shoulder = 1.42 * s
     z_elbow = z_shoulder - 0.30 * s
     z_wrist = z_elbow - 0.27 * s
+    spodnie = spodnie or ubranie
+    face = dict(face or {})
+    face.setdefault("wlosy", PAL.get(wlosy))
+    face_mat = make_face("twarz_" + name, PAL[skora], **face)
+    head_center = (0, 0, z_head + head_r)
+    head_scale = (1.0, 1.05, 1.15)
 
     bones = {
         "hips": ((0, 0, z_hip), (0, 0, z_chest), None),
@@ -894,55 +1056,99 @@ def postac(name, height, ubranie, wlosy, skora="skora", czapka=None, kapelusz=No
     arm_obj = make_armature(name, bones)
 
     b = Builder(name)
-    torso_mat = ubranie
-    b.sphere(0.17 * s, (0, 0, z_hip + 0.02 * s), ubranie, scale=(1.0, 0.75, 0.55), bone="hips")
+    torso_mat = marynarka or ubranie
+    # tułów
+    b.sphere(0.17 * s, (0, 0, z_hip + 0.02 * s), spodnie if not spodnica else ubranie, scale=(1.0, 0.75, 0.55), bone="hips")
     b.cone(0.17 * s, 0.20 * s, z_neck - z_chest + 0.05 * s, (0, 0, (z_chest + z_neck) / 2), torso_mat, verts=14, bone="chest")
     b.sphere(0.20 * s, (0, 0, z_shoulder), torso_mat, scale=(1.05, 0.7, 0.35), bone="chest")
+    if marynarka:
+        # klapy marynarki i koszula pod spodem
+        b.box((0.07 * s, 0.02, 0.3 * s), (0, -0.195 * s, (z_chest + z_neck) / 2 + 0.02 * s), "koszula", bone="chest")
+        for sx in (-1, 1):
+            b.box((0.05 * s, 0.015, 0.24 * s), (sx * 0.055 * s, -0.2 * s, (z_chest + z_neck) / 2 + 0.03 * s), torso_mat, rot=(0, 0, sx * 0.25), bone="chest")
     if kamizelka:
-        b.cone(0.18 * s, 0.205 * s, (z_neck - z_chest) * 0.8, (0, 0, (z_chest + z_neck) / 2 - 0.02 * s), "kamizelka", verts=14, bone="chest")
+        b.cone(0.18 * s, 0.205 * s, (z_neck - z_chest) * 0.8, (0, 0, (z_chest + z_neck) / 2 - 0.02 * s), kamizelka, verts=14, bone="chest")
         b.box((0.09 * s, 0.02, 0.28 * s), (0, -0.19 * s, (z_chest + z_neck) / 2), "koszula", bone="chest")
+    if guziki:
+        for k in range(3):
+            b.sphere(0.012 * s, (0.0, -0.205 * s, z_chest + 0.08 * s + k * 0.07 * s), "mosiadz", bone="chest", segments=8, rings=6)
+    if szelki:
+        for sx in (-1, 1):
+            b.box((0.035 * s, 0.015, 0.34 * s), (sx * 0.07 * s, -0.19 * s, (z_chest + z_neck) / 2), "szelki", bone="chest")
+    if pasek:
+        b.cyl(0.175 * s, 0.035 * s, (0, 0, z_hip + 0.05 * s), "pasek", verts=14, bone="hips")
+        b.box((0.03 * s, 0.015, 0.03 * s), (0, -0.175 * s, z_hip + 0.05 * s), "mosiadz", bone="hips")
     if fartuch:
         b.box((0.26 * s, 0.02, 0.32 * s), (0, -0.19 * s, z_chest + 0.1 * s), "fartuch", bone="chest")
         b.cone(0.17 * s, 0.26 * s, 0.75 * s, (0, -0.06 * s, z_hip - 0.36 * s), "fartuch", verts=14, bone="hips")
+    if chusta:
+        b.cone(0.26 * s, 0.17 * s, 0.22 * s, (0, 0.01, z_shoulder - 0.08 * s), chusta, verts=16, bone="chest")
+        b.box((0.08 * s, 0.03, 0.3 * s), (0, -0.2 * s, z_chest + 0.08 * s), chusta, bone="chest")
+    if kolnierz or koloratka:
+        b.cyl(0.075 * s, 0.035 * s, (0, 0, z_neck + 0.03 * s), "bialy", verts=12, bone="head")
+        if kolnierz:
+            for sx in (-1, 1):
+                b.box((0.05 * s, 0.015, 0.06 * s), (sx * 0.04 * s, -0.185 * s, z_neck - 0.02 * s), "bialy", rot=(0, 0, sx * 0.5), bone="chest")
+    if muszka:
+        for sx in (-1, 1):
+            b.box((0.04 * s, 0.02, 0.025 * s), (sx * 0.025 * s, -0.2 * s, z_neck - 0.03 * s), "kokarda", bone="chest")
+    if krawat:
+        b.box((0.03 * s, 0.015, 0.2 * s), (0, -0.2 * s, z_neck - 0.14 * s), "pasek", bone="chest")
+    # nogi lub spódnica/sutanna
     if spodnica or sutanna:
         b.cone(0.17 * s, 0.30 * s, z_hip - 0.04 * s, (0, 0, z_hip / 2), "sutanna" if sutanna else ubranie, verts=16, bone="hips")
-        if sutanna:
-            b.box((0.26 * s, 0.03, 0.05 * s), (0, -0.19 * s, z_neck - 0.02 * s), "bialy", bone="chest")
     else:
         for side, sx in (("L", 1), ("R", -1)):
-            b.cone(0.085 * s, 0.065 * s, z_hip - z_knee, (sx * 0.09 * s, 0, (z_hip + z_knee) / 2), ubranie, verts=10, bone="thigh." + side)
-            b.cone(0.065 * s, 0.05 * s, z_knee - z_ankle, (sx * 0.09 * s, 0, (z_knee + z_ankle) / 2), ubranie, verts=10, bone="shin." + side)
+            b.cone(0.085 * s, 0.065 * s, z_hip - z_knee, (sx * 0.09 * s, 0, (z_hip + z_knee) / 2), spodnie, verts=10, bone="thigh." + side)
+            shin_mat = ponczochy if ponczochy else spodnie
+            b.cone(0.065 * s, 0.05 * s, z_knee - z_ankle, (sx * 0.09 * s, 0, (z_knee + z_ankle) / 2), shin_mat, verts=10, bone="shin." + side)
     for side, sx in (("L", 1), ("R", -1)):
+        bh = 0.22 * s if buty_wysokie else 0.07 * s
         b.box((0.11 * s, 0.24 * s, 0.07 * s), (sx * 0.09 * s, -0.04 * s, 0.035 * s), "buty", bone="shin." + side)
+        if buty_wysokie:
+            b.cyl(0.058 * s, bh, (sx * 0.09 * s, 0, bh / 2 + 0.03 * s), "buty", verts=10, bone="shin." + side)
+        # ręce
         b.cone(0.065 * s, 0.05 * s, z_shoulder - z_elbow, (sx * sh, 0, (z_shoulder + z_elbow) / 2), torso_mat, verts=10, bone="upperarm." + side)
-        b.cone(0.05 * s, 0.045 * s, z_elbow - z_wrist, (sx * sh, 0, (z_elbow + z_wrist) / 2), torso_mat if not fartuch else "koszula", verts=10, bone="forearm." + side)
+        sleeve = "koszula" if (fartuch and not chusta) else torso_mat
+        b.cone(0.05 * s, 0.045 * s, z_elbow - z_wrist, (sx * sh, 0, (z_elbow + z_wrist) / 2), sleeve, verts=10, bone="forearm." + side)
         b.sphere(0.05 * s, (sx * sh, 0, z_wrist - 0.03 * s), skora, scale=(1, 0.7, 1.3), bone="forearm." + side)
+    # szyja, głowa z teksturą twarzy, nos, uszy
     b.cyl(0.05 * s, 0.08 * s, (0, 0, z_neck + 0.02 * s), skora, verts=10, bone="head")
-    b.sphere(head_r, (0, 0, z_head + head_r), skora, scale=(1.0, 1.05, 1.15), bone="head")
-    for sx in (-1, 1):
-        b.sphere(0.018 * s, (sx * 0.045 * s, -head_r * 0.92, z_head + head_r * 1.05), "oko", bone="head", segments=8, rings=6)
+    b.sphere(head_r, head_center, face_mat, scale=head_scale, bone="head", segments=24, rings=16)
     b.sphere(0.02 * s, (0, -head_r * 1.02, z_head + head_r * 0.85), skora, bone="head", segments=8, rings=6)
+    for sx in (-1, 1):
+        b.sphere(0.025 * s, (sx * head_r * 0.98, 0.0, z_head + head_r * 0.95), skora, scale=(0.5, 0.8, 1.0), bone="head", segments=8, rings=6)
+    # włosy – czapa z tyłu i na górze, twarz odsłonięta
+    hair = "chustka" if chustka else wlosy
     if not czapka or chustka:
-        hair = "chustka" if chustka else wlosy
-        b.sphere(head_r * 1.08, (0, 0.02 * s, z_head + head_r * 1.12), hair, scale=(1.0, 1.0, 0.95), bone="head")
-        b.box((head_r * 2.0, head_r * 0.6, head_r * 0.5), (0, head_r * 0.85, z_head + head_r * 0.7), hair, bone="head")
+        b.sphere(head_r * 1.07, (0, head_r * 0.22, z_head + head_r * 1.22), hair, scale=(1.0, 0.95, 0.82), bone="head")
+        b.box((head_r * 1.9, head_r * 0.7, head_r * 0.9), (0, head_r * 0.8, z_head + head_r * 0.75), hair, bone="head")
     else:
-        b.sphere(head_r * 1.04, (0, 0.02 * s, z_head + head_r * 1.05), wlosy, scale=(1.0, 1.0, 0.9), bone="head")
+        b.sphere(head_r * 1.03, (0, head_r * 0.2, z_head + head_r * 1.1), wlosy, scale=(1.0, 0.95, 0.8), bone="head")
+    if kok:
+        b.sphere(head_r * 0.45, (0, head_r * 1.05, z_head + head_r * 1.35), wlosy, bone="head")
     if warkocze:
         for sx in (-1, 1):
-            b.cyl(0.02 * s, 0.3 * s, (sx * head_r * 0.95, 0.02, z_head + head_r * 0.6 - 0.1 * s), wlosy, verts=8, bone="head")
+            b.cyl(0.02 * s, 0.3 * s, (sx * head_r * 0.95, 0.03, z_head + head_r * 0.6 - 0.1 * s), wlosy, verts=8, bone="head")
+            b.box((0.05 * s, 0.03, 0.03 * s), (sx * head_r * 0.95, 0.03, z_head + head_r * 0.6 - 0.26 * s), "kokarda", bone="head")
     if chustka:
         b.box((0.08 * s, 0.03, 0.18 * s), (0, head_r * 1.0, z_head + head_r * 0.2), "chustka", bone="head")
-    if broda:
-        b.box((head_r * 1.4, head_r * 0.6, head_r * 0.5), (0, -head_r * 0.75, z_head + head_r * 0.45), wlosy, bone="head")
+        b.box((0.12 * s, 0.05, 0.04 * s), (0, -head_r * 0.2, z_head + head_r * 1.95), "chustka", bone="head")
+    if kokarda:
+        for sx in (-1, 1):
+            b.box((0.05 * s, 0.03, 0.035 * s), (sx * 0.03 * s, head_r * 0.3, z_head + head_r * 2.0), kokarda, rot=(0, 0.3 * sx, 0), bone="head")
     if czapka:
         b.cyl(head_r * 1.15, 0.05 * s, (0, 0, z_head + head_r * 1.8), czapka, verts=14, bone="head")
         b.box((head_r * 1.8, head_r * 0.9, 0.02), (0, -head_r * 1.1, z_head + head_r * 1.62), czapka, bone="head")
     if kapelusz:
         b.cyl(head_r * 1.6, 0.03, (0, 0, z_head + head_r * 1.85), kapelusz, verts=16, bone="head")
         b.cyl(head_r * 1.0, 0.22 * s, (0, 0, z_head + head_r * 1.85 + 0.11 * s), kapelusz, verts=16, bone="head")
+    if melonik:
+        b.cyl(head_r * 1.45, 0.025, (0, 0, z_head + head_r * 1.8), melonik, verts=16, bone="head")
+        b.sphere(head_r * 1.0, (0, 0, z_head + head_r * 1.75), melonik, scale=(1.0, 1.0, 0.7), bone="head")
 
     mesh = b.finish(smooth=True)
+    face_uv(mesh, face_mat, head_center, head_r * head_scale[2])
     mesh.parent = arm_obj
     mod = mesh.modifiers.new("Armature", "ARMATURE")
     mod.object = arm_obj
@@ -951,16 +1157,40 @@ def postac(name, height, ubranie, wlosy, skora="skora", czapka=None, kapelusz=No
 
 
 POSTACIE = [
-    lambda: postac("sim_ojciec", 1.78, "ubranie_robotnik", "wlosy_ciemne", czapka="czapka", kamizelka=True),
-    lambda: postac("sim_matka", 1.64, "ubranie_kobieta", "wlosy_jasne", fartuch=True, spodnica=True, chustka=True),
-    lambda: postac("sim_chlopiec", 1.30, "ubranie_chlopiec", "wlosy_ciemne", skora="skora_dziecko", czapka="czapka"),
-    lambda: postac("sim_dziewczynka", 1.18, "ubranie_dziewczynka", "wlosy_jasne", skora="skora_dziecko", spodnica=True, warkocze=True),
-    lambda: postac("npc_majster", 1.80, "kamizelka", "wlosy_ciemne", kapelusz="cylinder", broda=True),
-    lambda: postac("npc_nauczyciel", 1.74, "surdut", "wlosy_siwe", broda=True),
-    lambda: postac("npc_ksiadz", 1.76, "sutanna", "wlosy_siwe", sutanna=True),
-    lambda: postac("npc_szynkarz", 1.72, "koszula", "wlosy_ciemne", fartuch=True, broda=True),
-    lambda: postac("npc_przekupka", 1.60, "ubranie_kobieta", "wlosy_ciemne", spodnica=True, chustka=True),
+    # rodzina – strój roboczy
+    lambda: postac("sim_ojciec", 1.78, "ubranie_robotnik", "wlosy_ciemne", czapka="czapka", kamizelka="kamizelka",
+                   pasek=True, kolnierz=True, buty_wysokie=True, face={"wasy": True, "usmiech": False}),
+    lambda: postac("sim_matka", 1.64, "ubranie_kobieta", "wlosy_jasne", fartuch=True, spodnica=True, chustka=True,
+                   face={"iris": (0.3, 0.45, 0.5)}),
+    lambda: postac("sim_chlopiec", 1.30, "ubranie_chlopiec", "wlosy_ciemne", skora="skora_dziecko", czapka="czapka",
+                   szelki=True, ponczochy="koszula", face={"piegi": True}),
+    lambda: postac("sim_dziewczynka", 1.18, "ubranie_dziewczynka", "wlosy_jasne", skora="skora_dziecko", spodnica=True,
+                   warkocze=True, fartuch=True, face={"piegi": True, "iris": (0.3, 0.45, 0.5)}),
+    # rodzina – strój świąteczny (niedziela, kościół)
+    lambda: postac("sim_ojciec_swieto", 1.78, "koszula", "wlosy_ciemne", spodnie="surdut", marynarka="surdut", melonik="cylinder",
+                   kolnierz=True, krawat=True, guziki=True, buty_wysokie=True, face={"wasy": True, "usmiech": False}),
+    lambda: postac("sim_matka_swieto", 1.64, "sukienka_swieto", "wlosy_jasne", spodnica=True, kolnierz=True, chusta="koc", kok=True,
+                   face={"iris": (0.3, 0.45, 0.5)}),
+    lambda: postac("sim_chlopiec_swieto", 1.30, "koszula", "wlosy_ciemne", skora="skora_dziecko", spodnie="surdut", marynarka="surdut",
+                   kolnierz=True, muszka=True, ponczochy="koszula", face={"piegi": True}),
+    lambda: postac("sim_dziewczynka_swieto", 1.18, "sukienka_swieto", "wlosy_jasne", skora="skora_dziecko", spodnica=True,
+                   warkocze=True, kolnierz=True, kokarda="kokarda", face={"piegi": True, "iris": (0.3, 0.45, 0.5)}),
+    # postacie niezależne
+    lambda: postac("npc_majster", 1.80, "koszula", "wlosy_ciemne", spodnie="surdut", kamizelka="kamizelka", kapelusz="cylinder",
+                   pasek=True, guziki=True, buty_wysokie=True, face={"broda": True, "wasy": True, "usmiech": False}),
+    lambda: postac("npc_nauczyciel", 1.74, "koszula", "wlosy_siwe", spodnie="surdut", marynarka="surdut", kolnierz=True, krawat=True,
+                   face={"broda": True, "okulary": True, "zmarszczki": True, "usmiech": False}),
+    lambda: postac("npc_ksiadz", 1.76, "sutanna", "wlosy_siwe", sutanna=True, koloratka=True, face={"okulary": True, "zmarszczki": True}),
+    lambda: postac("npc_szynkarz", 1.72, "koszula", "wlosy_ciemne", spodnie="ubranie_robotnik", fartuch=True, pasek=True,
+                   face={"wasy": True}),
+    lambda: postac("npc_przekupka", 1.60, "ubranie_kobieta", "wlosy_ciemne", spodnica=True, chustka=True, chusta="koc",
+                   face={"zmarszczki": True}),
+    lambda: postac("npc_robotnik", 1.74, "ubranie_robotnik", "wlosy_jasne", czapka="czapka", pasek=True, face={"wasy": True}),
+    lambda: postac("npc_robotnica", 1.62, "ubranie_kobieta", "wlosy_ciemne", spodnica=True, chustka=True, fartuch=True, face={}),
+    lambda: postac("npc_pan", 1.78, "koszula", "wlosy_siwe", spodnie="surdut", marynarka="surdut", kapelusz="cylinder", krawat=True,
+                   buty_wysokie=True, face={"wasy": True, "broda": True, "usmiech": False}),
 ]
+
 
 GENERATORS = [
     lozko, stol, krzeslo, piec, kredens, balia, wiadro, studnia, wychodek, lampa,

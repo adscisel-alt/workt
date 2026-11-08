@@ -110,14 +110,22 @@ const NPCS := [
 ]
 
 const FAMILY := [
-	{"id": "jozef", "name": "Józef", "age": 38, "model": "sim_ojciec", "job": "tkacz", "color": Color(0.30, 0.34, 0.50),
+	{"id": "jozef", "name": "Józef", "age": 38, "model": "sim_ojciec", "job": "tkacz", "color": Color(0.30, 0.34, 0.50), "traits": ["pracowity", "towarzyski"],
 		"needs": {"glod": 65.0, "energia": 80.0, "higiena": 55.0, "potrzeba": 70.0, "zabawa": 50.0, "towarzystwo": 60.0, "komfort": 60.0}, "edukacja": 25.0, "tile": Vector2i(3, 15)},
-	{"id": "marianna", "name": "Marianna", "age": 34, "model": "sim_matka", "job": "przadka", "color": Color(0.50, 0.28, 0.36),
+	{"id": "marianna", "name": "Marianna", "age": 34, "model": "sim_matka", "job": "przadka", "color": Color(0.50, 0.28, 0.36), "traits": ["gospodarna", "pobozna"],
 		"needs": {"glod": 60.0, "energia": 75.0, "higiena": 60.0, "potrzeba": 65.0, "zabawa": 45.0, "towarzystwo": 65.0, "komfort": 55.0}, "edukacja": 30.0, "tile": Vector2i(6, 15)},
-	{"id": "antek", "name": "Antek", "age": 12, "model": "sim_chlopiec", "job": "", "enrolled": true, "color": Color(0.42, 0.34, 0.24),
+	{"id": "antek", "name": "Antek", "age": 12, "model": "sim_chlopiec", "job": "", "enrolled": true, "color": Color(0.42, 0.34, 0.24), "traits": ["ciekawski", "lakomczuch"],
 		"needs": {"glod": 55.0, "energia": 85.0, "higiena": 50.0, "potrzeba": 70.0, "zabawa": 60.0, "towarzystwo": 70.0, "komfort": 65.0}, "edukacja": 15.0, "tile": Vector2i(2, 17)},
-	{"id": "zosia", "name": "Zosia", "age": 9, "model": "sim_dziewczynka", "job": "", "enrolled": true, "color": Color(0.58, 0.40, 0.46),
+	{"id": "zosia", "name": "Zosia", "age": 9, "model": "sim_dziewczynka", "job": "", "enrolled": true, "color": Color(0.58, 0.40, 0.46), "traits": ["wesola", "ksiazkowa"],
 		"needs": {"glod": 60.0, "energia": 90.0, "higiena": 55.0, "potrzeba": 75.0, "zabawa": 55.0, "towarzystwo": 75.0, "komfort": 70.0}, "edukacja": 8.0, "tile": Vector2i(6, 18)},
+]
+
+## Przechodnie: model, punkty trasy, podpis
+const WANDERERS := [
+	["npc_robotnik", [Vector2i(1, 11), Vector2i(26, 11), Vector2i(54, 11), Vector2i(26, 12)], "robotnik"],
+	["npc_robotnica", [Vector2i(54, 12), Vector2i(38, 12), Vector2i(23, 12), Vector2i(2, 12)], "robotnica"],
+	["npc_pan", [Vector2i(37, 11), Vector2i(47, 20), Vector2i(43, 21), Vector2i(36, 22), Vector2i(30, 26)], "pan z kantoru"],
+	["npc_przekupka", [Vector2i(40, 20), Vector2i(51, 20), Vector2i(50, 14), Vector2i(42, 14)], "przekupka"],
 ]
 
 var astar := AStarGrid2D.new()
@@ -159,6 +167,10 @@ func _ready() -> void:
 		sims_root.add_child(s)
 		s.setup(f, self, f["tile"])
 		sims.append(s)
+	for wdef in WANDERERS:
+		var w := Wanderer.new()
+		add_child(w)
+		w.setup(wdef[0], self, wdef[1], wdef[2])
 	set_walls_low(true)
 
 

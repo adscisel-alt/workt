@@ -281,6 +281,8 @@ func _restart() -> void:
 	Game.money = 420
 	Game.food = 5
 	Game.flags.clear()
+	Game.wishes_done = 0
+	Game.wish_points = 0
 	Game.messages.clear()
 	Game.fines_total = 0
 	Game.wages_total = 0

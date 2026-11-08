@@ -22,6 +22,8 @@ func _ready() -> void:
 		main.cam.yaw_deg = float(args[3])
 	if args.size() > 6:
 		main.cam.pitch_deg = float(args[6])
+	if args.size() > 8:
+		main.cam.position.y = float(args[8])
 	if args.size() > 5:
 		main.cam.focus_on(Vector3(float(args[4]), 0, float(args[5])))
 	# zamknij okno wstępu (modal) – usuń warstwę modalną

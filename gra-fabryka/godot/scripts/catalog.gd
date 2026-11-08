@@ -47,7 +47,7 @@ const DEF := {
 		"name": "Kuchnia kaflowa", "model": "piec", "footprint": Vector2i(1, 1), "price": 800,
 		"use_offset": Vector2i(0, 1), "category": "mieszkanie",
 		"actions": [
-			{"id": "ugotuj", "label": "Ugotuj i zjedz (1 porcja zapasów)", "need": "glod", "rate": 120.0, "duration": 35, "food": 1, "side": {"komfort": 5.0}, "anim": "work"},
+			{"id": "ugotuj", "label": "Ugotuj i zjedz (1 porcja zapasów)", "need": "glod", "rate": 120.0, "duration": 35, "food": 1, "side": {"komfort": 5.0}, "anim": "eat"},
 			{"id": "ugotuj_rodzina", "label": "Ugotuj obiad dla wszystkich (4 porcje)", "need": "glod", "rate": 120.0, "duration": 50, "food": 4, "who": "dorosly", "family_meal": true, "anim": "work"},
 		],
 	},
@@ -55,7 +55,7 @@ const DEF := {
 		"name": "Kredens", "model": "kredens", "footprint": Vector2i(1, 1), "price": 250,
 		"use_offset": Vector2i(0, 1), "category": "mieszkanie",
 		"actions": [
-			{"id": "chleb", "label": "Zjedz kromkę chleba", "need": "glod", "rate": 150.0, "duration": 10, "cost": 3},
+			{"id": "chleb", "label": "Zjedz kromkę chleba", "need": "glod", "rate": 150.0, "duration": 10, "cost": 3, "anim": "eat"},
 		],
 	},
 	"balia": {
@@ -183,7 +183,7 @@ const DEF := {
 		"use_offset": Vector2i(1, 0), "category": "szynk",
 		"actions": [
 			{"id": "piwo", "label": "Wypij kufel piwa (5 kop.)", "need": "zabawa", "rate": 60.0, "duration": 40, "cost": 5, "who": "dorosly", "side": {"towarzystwo": 20.0, "higiena": -5.0}, "health": -1.0, "fact": "szynk"},
-			{"id": "pogawedka", "label": "Pogawędka z sąsiadami", "need": "towarzystwo", "rate": 70.0, "duration": 30, "who": "dorosly", "side": {"zabawa": 10.0}},
+			{"id": "pogawedka", "label": "Pogawędka z sąsiadami", "need": "towarzystwo", "rate": 70.0, "duration": 30, "who": "dorosly", "side": {"zabawa": 10.0}, "anim": "talk"},
 		],
 	},
 	"beczka": {"name": "Beczka", "model": "beczka", "footprint": Vector2i(1, 1), "price": 0, "use_offset": Vector2i(1, 0), "category": "szynk", "actions": []},

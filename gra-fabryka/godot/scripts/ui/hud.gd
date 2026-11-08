@@ -157,7 +157,7 @@ func _build() -> void:
 	# --- dolny panel ---
 	var bottom := _panel()
 	bottom.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	bottom.offset_top = -170
+	bottom.offset_top = -228
 	bottom.offset_left = 10
 	bottom.offset_right = -10
 	bottom.offset_bottom = -10
@@ -206,8 +206,8 @@ func _build() -> void:
 		b.add_theme_stylebox_override("hover", _style(s.portrait_color, 6))
 		pg.add_child(b)
 		portrait_buttons[s.sim_id] = b
-	lbl_sim_info = _label("", 12)
-	lbl_sim_info.custom_minimum_size = Vector2(230, 0)
+	lbl_sim_info = _label("", 11)
+	lbl_sim_info.custom_minimum_size = Vector2(300, 0)
 	lbl_sim_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	pv.add_child(lbl_sim_info)
 
@@ -349,6 +349,17 @@ func _refresh_needs() -> void:
 		info += " · bez zajęcia"
 	if selected.striking:
 		info += " · STRAJKUJE"
+	var tr := []
+	for t in selected.traits:
+		tr.append(Sim.TRAITS.get(t, {}).get("name", t))
+	info += "\nNastrój: %s · Cechy: %s" % [selected.mood_text(), ", ".join(tr)]
+	var wt := selected.wish_texts()
+	info += "\nŻyczenia: " + (" · ".join(wt) if not wt.is_empty() else "—")
+	var rel := []
+	for s in Game.family:
+		if s != selected:
+			rel.append("%s %d" % [s.sim_name, int(selected.relation_with(s))])
+	info += "\nRelacje: " + ", ".join(rel)
 	lbl_sim_info.text = info
 	var hc := Color(0.3, 0.9, 0.3) if selected.health > 50 else Color(1, 0.5, 0.3)
 	lbl_health.text = "❤ Zdrowie: %d%%%s · Zarobione w tym tygodniu: %s" % [
@@ -632,6 +643,8 @@ func _show_help() -> void:
 		"• W poniedziałek rano płacisz czynsz 1 rb 50 kop. Dwukrotny brak czynszu = eksmisja.\n" +
 		"• Gotowanie zużywa porcje zapasów – kupuj je w sklepie po drugiej stronie podwórza.\n" +
 		"• Zdrowie spada przy głodzie, brudzie, braku snu i pracy w pyle; chory Sim nie pracuje.\n" +
+		"• Każdy Sim ma dwie cechy charakteru (np. Pracowity, Książkowa) i dwa życzenia; spełnione życzenie poprawia nastrój i daje punkty. Nastrój (kolor plumboba) wpływa na zarobek.\n" +
+		"• W niedzielę rodzina zakłada odświętne ubrania i idzie do kościoła.\n" +
 		"• Gra kończy się po 5 tygodniach raportem: pieniądze, zdrowie, edukacja dzieci, odkryte karty wiedzy.")
 	_modal("Pomoc", body, [["Zamknij", func(): pass]], 760)
 
@@ -680,8 +693,8 @@ func _on_game_over(report: Dictionary) -> void:
 	var txt := "[b]%s[/b]\n\nDni: %d · Kasa: %s · Zarobki łącznie: %s · Kary: %s\n" % [
 		ocena, report["days"], Game.money_text(), Catalog.price_text(int(report["wages"])), Catalog.price_text(int(report["fines"]))]
 	txt += "Średnie zdrowie rodziny: %d%% · Edukacja dzieci: %d%%\n" % [int(report["health"]), int(report["edu"])]
-	txt += "Odkryte karty wiedzy: %d / %d · Quiz: %d poprawnych\n\n[b]Wynik: %d punktów[/b]\n\n" % [
-		report["facts"], Edu.facts.size(), report["quiz"], report["score"]]
+	txt += "Odkryte karty wiedzy: %d / %d · Quiz: %d poprawnych · Spełnione życzenia: %d (+%d pkt) · Nastrój rodziny: %d%%\n\n[b]Wynik: %d punktów[/b]\n\n" % [
+		report["facts"], Edu.facts.size(), report["quiz"], report["wishes"], report["wish_points"], int(report["mood"]), report["score"]]
 	txt += "[i]W 1897 r. nowe prawo skróciło dzień pracy do 11,5 godziny, a w 1905 r. łódzcy robotnicy znów wyszli na ulice. " + \
 		"Dzieci z fabryk, które nauczyły się czytać, często jako pierwsze w rodzinie zdobywały zawód poza halą.[/i]"
 	body.add_child(_text_block(txt))

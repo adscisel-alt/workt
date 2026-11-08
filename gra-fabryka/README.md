@@ -12,6 +12,8 @@ i bractwa trzeźwości, targ, „miasto czterech kultur”, **bunt łódzki 1892
 ![Parcela: fabryka, szkoła, kościół, ulica, famuła, podwórze, sklep, szynk, targ](docs/zrzut_parcela.png)
 ![Izba Walczaków rano – postacie ze szkieletem i animacją](docs/zrzut_izba.png)
 ![Noc w famule – lampa naftowa i śpiąca rodzina](docs/zrzut_noc.png)
+![Twarze z teksturą, stroje robocze](docs/zrzut_twarze.png)
+![Niedziela – odświętne stroje w kościele](docs/zrzut_niedziela.png)
 
 *(zrzuty z programowego renderowania bez karty graficznej – `tests/screenshot.gd`)*
 
@@ -27,7 +29,7 @@ Projekt składa się z trzech warstw narzędziowych, o które prosiłeś:
 
 | Narzędzie | Rola w projekcie | Katalog |
 |---|---|---|
-| **Blender** | skrypt Pythona generuje tekstury proceduralne, 32 modele otoczenia oraz 9 postaci **ze szkieletem i animacjami** (idle, chód, praca, siedzenie, sen) → pliki `.glb` | `blender/` |
+| **Blender** | skrypt Pythona generuje tekstury proceduralne, 32 modele otoczenia oraz 16 postaci **z teksturowanymi twarzami, strojami z epoki, szkieletem i 7 animacjami** (idle, chód, praca, siedzenie, sen, rozmowa, jedzenie) → pliki `.glb` | `blender/` |
 | **Godot 4.6** | silnik gry: świat 3D z kamerą swobodną, Simowie, potrzeby, praca, szkoła, kościół, szynk, targ, ekonomia, UI, dźwięk, zdarzenia edukacyjne, eksport Web i Windows | `godot/` |
 | **Antigravity** | agentowe IDE do dalszego rozwijania kodu – gotowe reguły i workflowy dla agenta | `.agent/`, `AGENTS.md` |
 
@@ -79,8 +81,15 @@ do grania** – tylko do zmiany wyglądu obiektów.
   (niedzielna msza, dzwony), famuła z izbą Walczaków, podwórze (studnia, wychodek), sklep,
   **szynk** (piwo, wódka, pogawędki – kosztem zdrowia i kasy), **targ** (tańsze zakupy do 14:00),
   skwer.
-- **Autonomia**: gdy nic nie zlecisz, Simowie sami idą do pracy / szkoły, jedzą, myją się,
-  śpią, robią zakupy, w niedzielę idą do kościoła, a dorośli wieczorem bywają w szynku.
+- **Żywe postacie**: każdy Sim ma **dwie cechy charakteru** (Pracowity, Towarzyski, Gospodarna,
+  Pobożna, Ciekawski, Łakomczuch, Wesoła, Książkowa), **nastrój** liczony z potrzeb (kolor plumboba,
+  wpływa na zarobek), **dwa życzenia** dziennie (np. „przeczytać gazetę”, „zjeść wspólny obiad”) –
+  spełnione poprawiają nastrój i dają punkty – oraz **relacje** z resztą rodziny (rosną przez rozmowy
+  i wspólne obiady). Nad głową pojawia się „myśl”, gdy czegoś brakuje.
+- **Autonomia z wyprzedzeniem**: Simowie reagują, zanim potrzeba stanie się krytyczna (próg 60),
+  jedzą śniadanie przed pracą, sami idą do pracy / szkoły, robią zakupy, w niedzielę zakładają
+  **odświętne stroje** i idą do kościoła, a dorośli wieczorem bywają w szynku. Gdy nic ich nie
+  goni, realizują własne życzenia, rozmawiają albo idą na spacer. Ulicą i targiem krążą przechodnie.
 - **Zdarzenia i decyzje** (pauzują grę): propozycja pracy dla Antka (legalna, 8 h) i dla Zosi
   (nielegalna – ryzyko inspektora), kary fabryczne, zaproszenie do szynku, choroba, tajne
   nauczanie po polsku, bunt łódzki w maju 1892, eksmisja za niepłacony czynsz.
@@ -105,7 +114,8 @@ gra-fabryka/
 │   ├── scripts/
 │   │   ├── main.gd            # wejście, tryby Żyj/Kup, raycast, dzień/noc, światła lamp
 │   │   ├── world.gd           # parcela 56×34 kafelków, podłogi i ściany z teksturami, A*
-│   │   ├── sim.gd             # Sim: potrzeby, zdrowie, kolejka, animacje, autonomia
+│   │   ├── sim.gd             # Sim: potrzeby, nastrój, cechy, życzenia, relacje, animacje, autonomia
+│   │   ├── wanderer.gd        # przechodnie krążący po ulicy i targu
 │   │   ├── interactable.gd    # obiekt świata: footprint, obrót, kafelek użycia, siedziska, lampy
 │   │   ├── catalog.gd         # katalog obiektów, czynności, prac, cen
 │   │   ├── game_state.gd      # autoload Game: czas, pieniądze, zapasy, zdarzenia, raport
@@ -175,9 +185,10 @@ xvfb-run -a -s "-screen 0 1366x800x24" godot --path gra-fabryka/godot --renderin
 
 ## Co dalej, żeby zbliżyć się do The Sims 3
 
-Zrealizowane w tej wersji: perspektywiczna kamera ze swobodnym obrotem, tekstury, miękkie
-cienie i światło krawędziowe, proporcjonalne postacie ze szkieletem i pięcioma animacjami,
-lampy świecące nocą, dźwięk, nowe lokacje, eksport do przeglądarki i na Windows.
+Zrealizowane dotąd: perspektywiczna kamera ze swobodnym obrotem, tekstury, miękkie cienie
+i światło krawędziowe, proporcjonalne postacie z teksturowanymi twarzami, strojami roboczymi
+i odświętnymi, szkieletem i siedmioma animacjami, cechy charakteru, nastrój, życzenia, relacje,
+przechodnie, lampy świecące nocą, dźwięk, nowe lokacje, eksport do przeglądarki i na Windows.
 
 Do dopracowania przydadzą mi się od Ciebie:
 
@@ -190,8 +201,9 @@ Do dopracowania przydadzą mi się od Ciebie:
    klatka po klatce).
 3. **Tekstury fotograficzne** (opcjonalnie) albo zgoda na pakiety CC0 z ambientCG / Poly Haven –
    obecne tekstury są proceduralne.
-4. **Twarze i ubrania**: czy postacie mają dostać teksturowane twarze (oczy, brwi, usta jako
-   tekstura) i więcej strojów? To kolejny etap skryptu Blendera.
+4. **Twarze i ubrania** są teraz generowane proceduralnie (oczy, brwi, usta, wąsy, brody, okulary,
+   piegi; kamizelki, szelki, kołnierzyki, krawaty, chusty, meloniki, cylindry, koloratka). Jeśli
+   masz zdjęcia lub ryciny strojów łódzkich robotników z lat 90. XIX w., dopasuję kroje i kolory.
 5. **Głosy / muzyka**: obecne dźwięki są syntetyczne; jeśli chcesz muzykę z epoki (np. nagrania
    domeny publicznej), wskaż źródła na wolnej licencji.
 6. **Ikona i nazwa pliku Windows**: podpisanie pliku `.exe` certyfikatem usuwa ostrzeżenie

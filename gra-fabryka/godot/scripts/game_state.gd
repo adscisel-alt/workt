@@ -41,6 +41,8 @@ var messages: Array = []
 var fines_total: int = 0
 var wages_total: int = 0
 var inspector_cooldown: int = 0
+var wishes_done: int = 0
+var wish_points: int = 0
 var strike_active: bool = false
 
 var _last_hour: int = -1
@@ -405,9 +407,14 @@ func build_report() -> Dictionary:
 	var edu_avg := edu_sum / maxf(1.0, kids.size())
 	var health_avg := health_sum / maxf(1.0, family.size())
 	var facts := Edu.unlocked.size()
-	var score := int(clampf(money / 10.0, -50, 200) + edu_avg * 1.5 + health_avg + facts * 5 + Edu.quiz_correct * 4)
+	var mood_sum := 0.0
+	for s in family:
+		mood_sum += s.mood()
+	var mood_avg := mood_sum / maxf(1.0, family.size())
+	var score := int(clampf(money / 10.0, -50, 200) + edu_avg * 1.5 + health_avg + facts * 5 + Edu.quiz_correct * 4 + wish_points / 4 + mood_avg * 0.5)
 	return {
 		"money": money, "edu": edu_avg, "health": health_avg, "facts": facts,
 		"quiz": Edu.quiz_correct, "wages": wages_total, "fines": fines_total, "score": score,
+		"wishes": wishes_done, "wish_points": wish_points, "mood": mood_avg,
 		"days": min(day, DAYS_TOTAL + 1) - 1,
 	}

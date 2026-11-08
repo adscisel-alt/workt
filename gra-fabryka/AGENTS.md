@@ -39,6 +39,10 @@ xvfb-run -a -s "-screen 0 1366x800x24" godot --path godot --rendering-driver ope
   efekty wyborów w `Game._apply_choice_effect`.
 - Sygnały zamiast bezpośrednich odwołań z `Game` do HUD.
 - Postacie: szkielet 11 kości (`hips, chest, head, upperarm/forearm.L/R, thigh/shin.L/R`), animacje
-  `idle, walk, work, sit, sleep` kluczowane w osiach świata (`Rig.rot/loc`). Nowa animacja = nowy
+  `idle, walk, work, sit, sleep, talk, eat` kluczowane w osiach świata (`Rig.rot/loc`). Nowa animacja = nowy
   blok w `animate()` + ewentualnie `anim` w czynności katalogu.
+- Twarze: `make_face()` rysuje teksturę 256×256 (numpy), `face_uv()` mapuje ją walcowo na głowę;
+  stroje to flagi `postac()` (kamizelka, szelki, kolnierz, krawat, chusta, melonik…). Każdy Sim rodziny ma
+  model roboczy i `_swieto` (niedziela) – `Sim._update_outfit()` przełącza widoczność.
+- Cechy (`Sim.TRAITS`), życzenia (`Sim.WISHES`) i relacje są w `sim.gd`; nastrój = `Sim.mood()`.
 - Dźwięki są syntetyczne (własne, CC0) – nie dodawaj plików o niejasnej licencji.
